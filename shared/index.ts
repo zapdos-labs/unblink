@@ -1,3 +1,8 @@
+export type FrameMessage = {
+    type: "frame_file";
+    path: string;
+}
+
 export type StreamMessage = {
     type: "codec";
     mimeType: string | null;
@@ -11,10 +16,7 @@ export type StreamMessage = {
 } | {
     type: 'frame';
     data: Uint8Array;
-} | {
-    type: "frame_file";
-    path: string;
-}
+} | FrameMessage;
 
 export type MediaUnit = {
     id: string;
@@ -35,7 +37,7 @@ export type ClientToServerMessage = {
     subscription: Subscription | undefined | null;
 }
 
-export type WorkerToServerMessage = (WorkerObjectDetectionToServerMessage | WorkerStreamToServerMessage)
+export type WorkerToServerMessage = WorkerObjectDetectionToServerMessage | WorkerStreamToServerMessage
 export type ServerToClientMessage = WorkerToServerMessage & {
     session_id?: string;
 }
@@ -61,10 +63,8 @@ export type ServerToWorkerStreamMessage = WorkerStreamToServerMessage | {
 }
 
 export type ServerToWorkerObjectDetectionMessage = {
-    type: 'detect';
     stream_id: string;
-    path: string;
-}
+} & FrameMessage
 
 export type DetectionObject = {
     label: string;

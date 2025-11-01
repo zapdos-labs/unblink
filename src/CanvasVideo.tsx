@@ -229,7 +229,8 @@ export default function createCanvasVideo(props: { stream_id: string }) {
     });
 
     return (
-        <div ref={setContainerRef} style={{ position: "relative", width: "100%", height: "100%" }}>
+        <div ref={setContainerRef}
+            style={{ position: "relative", width: "100%", height: "100%" }}>
             <canvas
                 ref={setCanvasRef}
                 style={{

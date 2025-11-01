@@ -9,13 +9,14 @@ declare var self: Worker;
 
 logger.info("Worker 'object detection' started");
 
-const INFERENCE_INTERVAL_MS = 100; // How often to run the inference loop
+const INFERENCE_INTERVAL_MS = 10; // How often to run the inference loop
 const MAX_IMAGES_TO_PROCESS = 30;
 
 // Map to hold the latest image for each stream
 const latestImageMap = new Map<string, ServerToWorkerObjectDetectionMessage>();
 
 function sendMessage(msg: WorkerObjectDetectionToServerMessage) {
+    console.log("Sending message to server:", msg);
     const worker_msg = encode(msg);
     self.postMessage(worker_msg, [worker_msg.buffer]);
 }
@@ -83,7 +84,8 @@ async function continuousInferenceLoop() {
 
 self.addEventListener("message", (event) => {
     const msg: ServerToWorkerObjectDetectionMessage = event.data;
-    if (msg.type === 'detect') {
+    console.log("Object Detection Worker received message:", msg);
+    if (msg.type === 'frame_file') {
         // Store the latest message for the stream
         latestImageMap.set(msg.stream_id, msg);
     }

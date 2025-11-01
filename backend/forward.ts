@@ -1,6 +1,6 @@
 import type { ServerWebSocket } from "bun";
 import { decode } from "cbor-x";
-import type { WorkerToServerMessage } from "~/shared";
+import type { ServerToWorkerObjectDetectionMessage, WorkerToServerMessage } from "~/shared";
 import type { WsClient } from "./WsClient";
 
 export const createForwardFunction = (opts: {
@@ -11,7 +11,7 @@ export const createForwardFunction = (opts: {
     const encoded = msg.data;
     const decoded = decode(encoded) as WorkerToServerMessage;
 
-    if (decoded.type === 'codec' || decoded.type === 'frame') {
+    if (decoded.type === 'codec' || decoded.type === 'frame' || decoded.type === 'object_detection') {
         // Forward to clients
         for (const [, client] of opts.clients) {
             client.send(decoded);
@@ -19,7 +19,8 @@ export const createForwardFunction = (opts: {
     }
 
     if (decoded.type === 'frame_file') {
+        const msg: ServerToWorkerObjectDetectionMessage = decoded;
         // Forward to object detection worker
-        opts.worker_object_detection().postMessage(encoded);
+        opts.worker_object_detection().postMessage(msg);
     }
 }
