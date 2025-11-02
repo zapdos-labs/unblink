@@ -66,6 +66,27 @@ class MjpegPlayer {
 
         if (this.img) {
             const geom = this.calculateRenderGeometry();
+            const r = 16;
+
+            const x = geom.offsetX;
+            const y = geom.offsetY;
+            const w = geom.renderWidth;
+            const h = geom.renderHeight;
+
+            this.ctx.save();
+            this.ctx.beginPath();
+            this.ctx.moveTo(x + r, y);
+            this.ctx.lineTo(x + w - r, y);
+            this.ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+            this.ctx.lineTo(x + w, y + h - r);
+            this.ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+            this.ctx.lineTo(x + r, y + h);
+            this.ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+            this.ctx.lineTo(x, y + r);
+            this.ctx.quadraticCurveTo(x, y, x + r, y);
+            this.ctx.closePath();
+            this.ctx.clip();
+
             this.ctx.drawImage(
                 this.img,
                 geom.offsetX,
@@ -73,6 +94,8 @@ class MjpegPlayer {
                 geom.renderWidth,
                 geom.renderHeight
             );
+            this.ctx.restore();
+
             this.drawDetections(geom);
         }
 
@@ -230,7 +253,9 @@ export default function createCanvasVideo(props: { stream_id: string }) {
 
     return (
         <div ref={setContainerRef}
-            style={{ position: "relative", width: "100%", height: "100%" }}>
+            style={{ position: "relative", width: "100%", height: "100%" }}
+        >
+
             <canvas
                 ref={setCanvasRef}
                 style={{

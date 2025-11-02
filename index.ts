@@ -1,6 +1,7 @@
+import { statSync } from "fs";
 import { decode } from "cbor-x";
 import { randomUUID } from "crypto";
-import { RUNTIME_DIR } from "./backend/appdir";
+import { RECORDINGS_DIR, RUNTIME_DIR } from "./backend/appdir";
 import { table_media } from "./backend/database";
 import { logger } from "./backend/logger";
 
@@ -61,6 +62,65 @@ const server = Bun.serve({
                 return Response.json({ success: true, id });
             },
         },
+        '/recordings': {
+            GET: async () => {
+                const recordingsByStream: Record<string, string[]> = {};
+                const glob = new Bun.Glob("*/*.mkv");
+                for await (const file of glob.scan(RECORDINGS_DIR)) {
+                    const parts = file.split("/");
+                    if (parts.length < 2) {
+                        continue;
+                    }
+                    const streamId = parts[0]!;
+                    const filename = parts[1]!;
+
+                    if (!recordingsByStream[streamId]) {
+                        recordingsByStream[streamId] = [];
+                    }
+                    recordingsByStream[streamId].push(filename);
+                }
+                return Response.json(recordingsByStream);
+            }
+        },
+        '/recordings/:streamId/:filename': {
+            GET: (req) => {
+                const { streamId, filename } = req.params as { streamId: string, filename: string };
+                const filePath = `${RECORDINGS_DIR}/${streamId}/${filename}`;
+
+                const range = req.headers.get("range");
+                const { size } = statSync(filePath);
+
+                if (range) {
+                    const [startStr, endStr] = range.replace(/bytes=/, "").split("-");
+                    let start = startStr ? parseInt(startStr, 10) : 0;
+                    let end = endStr ? parseInt(endStr, 10) : size - 1;
+
+                    if (!startStr) {
+                        start = size - parseInt(endStr || '0', 10);
+                        end = size - 1;
+                    }
+
+                    const chunkSize = (end - start) + 1;
+                    const file = Bun.file(filePath);
+
+                    const headers = {
+                        "Content-Range": `bytes ${start}-${end}/${size}`,
+                        "Accept-Ranges": "bytes",
+                        "Content-Length": chunkSize.toString(),
+                        "Content-Type": "video/mkv",
+                    };
+
+                    return new Response(file.slice(start, end + 1), { headers, status: 206 });
+                } else {
+                    const headers = {
+                        "Content-Length": size.toString(),
+                        "Content-Type": "video/mkv",
+                        "Accept-Ranges": "bytes",
+                    };
+                    return new Response(Bun.file(filePath), { headers });
+                }
+            }
+        }
     },
     websocket: {
         open(ws) {

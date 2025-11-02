@@ -1,8 +1,8 @@
 
 import { BsGithub, BsPencilFill } from 'solid-icons/bs';
 import { FaSolidChevronDown } from 'solid-icons/fa';
-import { FiClock, FiFilm, FiGrid, FiSearch } from 'solid-icons/fi';
-import { createSignal, For, Show, createMemo, onMount } from 'solid-js';
+import { FiClock, FiFilm, FiGrid, FiMonitor, FiSearch } from 'solid-icons/fi';
+import { createSignal, For, Show, createMemo, onMount, batch } from 'solid-js';
 import logoSVG from '~/assets/logo.svg';
 import AddCameraButton from './AddCameraButton';
 import { cameras, setTabId, tabId, fetchCameras, camerasLoading, type Camera, setViewedMedias } from './shared';
@@ -14,16 +14,30 @@ function MediaGroup(props: { group: { label: string; cameras: Camera[] } }) {
         <div class="mx-2 select-none">
             <div
                 onClick={() => setIsOpen((o) => !o)}
-                class="cursor-pointer flex items-center px-1 rounded-lg py-2 hover:text-white hover:bg-neutral-800 text-neutral-500 group"
+                class="cursor-pointer flex items-center px-1 rounded-lg py-2  hover:bg-neutral-800 text-neutral-500 group"
             >
-                <div class="ml-2 mr-2">
+                <div class="ml-2 mr-2 group-hover:text-white">
                     <FaSolidChevronDown
                         data-open={isOpen()}
                         class="w-4 h-4 data-[open=true]:-rotate-180 transition-transform"
                     />
                 </div>
 
-                <div class="font-semibold ml-1">{props.group.label}</div>
+                <div class="font-semibold ml-1 group-hover:text-white">{props.group.label}</div>
+
+                <div class="flex-1" />
+
+                <div
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        batch(() => {
+                            setTabId('view');
+                            setViewedMedias(props.group.cameras.map(c => c.id));
+                        });
+                    }}
+                    class="p-1.5 rounded hover:bg-neu-700 hover:text-white opacity-0 group-hover:opacity-100 transition-all">
+                    <FiMonitor class="w-4 h-4" />
+                </div>
             </div>
             <div
                 data-open={isOpen()}

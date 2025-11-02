@@ -52,7 +52,7 @@ export default function ViewContent() {
 
     return (
         <div class="flex flex-col h-screen">
-            <div class="flex-1 mr-2">
+            <div class="flex-1 mr-2 my-2">
                 <Show
                     when={streamId()}
                     fallback={<div>No camera selected</div>}
