@@ -1,3 +1,4 @@
+import fs from "fs/promises";
 import type { AVPixelFormat, AVSampleFormat, Frame, Packet, Stream } from "node-av";
 import {
     AV_CODEC_ID_AAC,
@@ -35,13 +36,17 @@ import {
     FilterAPI,
     FilterPreset,
     MediaInput,
+    MediaOutput,
 } from "node-av";
+import path from "path";
+import { FRAMES_DIR, RECORDINGS_DIR } from "~/backend/appdir";
 import { logger as _logger } from "~/backend/logger";
 import type { StreamMessage } from "~/shared";
-import { FILES_DIR } from "~/backend/appdir";
 
 const logger = _logger.child({ worker: 'stream' });
 const MAX_SIZE = 720;
+const OUTPUT_ROLLING_INTERVAL_MS = 3600 * 1000; // 1 hour
+// const OUTPUT_ROLLING_INTERVAL_MS = 60 * 1000; // 1 min for testing
 
 function getCodecs(
     videoStream: Stream,
@@ -137,6 +142,37 @@ function shouldSkipTranscode(videoStream: Stream): boolean {
 
     return isMjpeg && hasCompatibleFormat;
 }
+
+type OutputFileObject = {
+    from: Date;
+    mediaOutput: MediaOutput;
+    videoFileOutputIndex: number;
+    path: string;
+};
+class OutputFile {
+    static async create(streamId: string, videoStream: Stream): Promise<OutputFileObject> {
+        const from = new Date();
+        const dir = `${RECORDINGS_DIR}/${streamId}`;
+        await fs.mkdir(dir, { recursive: true });
+        const filePath = path.join(dir, `from_${from.getTime()}_ms.mkv`);
+        const mediaOutput = await MediaOutput.open(filePath, {
+            format: 'matroska',  // Always use Matroska/MKV
+        });
+        const videoFileOutputIndex = mediaOutput.addStream(videoStream);
+        return { from, mediaOutput, videoFileOutputIndex, path: filePath };
+    }
+
+    static async close(obj: OutputFileObject) {
+        await obj.mediaOutput.close();
+        // Rename to have closed_at timestamp
+        const to = new Date();
+        const newName = `from_${obj.from.getTime()}_ms_to_${to.getTime()}_ms.mkv`;
+        const newPath = path.join(path.dirname(obj.path), newName);
+        await fs.rename(obj.path, newPath);
+        logger.info({ old: obj.path, new: newPath }, "Closed output file");
+    }
+}
+
 
 export async function streamMedia(stream: {
     id: string;
@@ -243,13 +279,15 @@ export async function streamMedia(stream: {
         onMessage(frame_msg);
     }
 
+
+
     let last_save_time = 0;
     async function saveFrameForObjectDetection(encodedData: Uint8Array) {
         const now = Date.now();
         if (now - last_save_time < 1000) return;
         last_save_time = now;
 
-        const path = `${FILES_DIR}/${stream.id}.jpg`;
+        const path = `${FRAMES_DIR}/${stream.id}.jpg`;
         await Bun.write(path, encodedData);
 
         const frame_file_msg: StreamMessage = {
@@ -297,6 +335,9 @@ export async function streamMedia(stream: {
     let last_send_time = 0;
 
     logger.info("Entering main streaming loop");
+
+    let output = null;
+
     while (true) {
         const res = await raceWithTimeout(packets.next(), signal, 10000);
 
@@ -307,7 +348,23 @@ export async function streamMedia(stream: {
 
         const packet = res.value;
 
+        // Initialize rolling file output on first video packet
+        // Or if it has been 1 hour since last output creation
+        const now = Date.now();
+        if (output === null || (now - output.from.getTime() >= OUTPUT_ROLLING_INTERVAL_MS)) {
+            if (output) {
+                logger.info("Closing previous file output due to rolling interval");
+                await OutputFile.close(output);
+            }
+
+            output = await OutputFile.create(stream.id, videoStream);
+            logger.info({ path: output.path }, "Created new rolling output file");
+        }
+
         if (packet.streamIndex === videoStream.index) {
+            // Write to file output
+            await output.mediaOutput.writePacket(packet, output.videoFileOutputIndex);
+
             const decodedFrame = await videoDecoder.decode(packet);
 
             if (!decodedFrame) {

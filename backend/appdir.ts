@@ -13,9 +13,13 @@ export const appdir = () => process.env.APPDATA || (process.platform == 'darwin'
 export const APP_NAME = "unblink";
 export const RUNTIME_DIR = path.join(appdir(), APP_NAME);
 export const MODELS_DIR = path.join(RUNTIME_DIR, 'models');
-export const FILES_DIR = path.join(RUNTIME_DIR, 'files');
+
+
 export const DATABASE_PATH = path.join(RUNTIME_DIR, 'database');
 export const DATABASE_EMBEDDING_DIMENSION = 2048;
+export const FILES_DIR = path.join(RUNTIME_DIR, 'files');
+export const FRAMES_DIR = path.join(FILES_DIR, 'frames');
+export const RECORDINGS_DIR = path.join(FILES_DIR, 'recordings');
 
 // Create directories if they don't exist
 await ensureDirExists(RUNTIME_DIR);
