@@ -35,7 +35,7 @@ export default function SearchBar(props?: { variant?: "md" | "lg" | 'xl', placeh
 
         searchTimeout = setTimeout(async () => {
             try {
-                const response = await fetch(`/api/v1/autocomplete`, {
+                const response = await fetch(`/api/autocomplete`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",

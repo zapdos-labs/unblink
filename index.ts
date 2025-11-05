@@ -281,9 +281,9 @@ const server = Bun.serve({
         }
 
         // API Proxying
-        if (url.pathname.startsWith("/api/v1/")) {
+        if (url.pathname.startsWith("/api")) {
             const targetUrl = new URL(req.url);
-            targetUrl.host = "backend.zapdoslabs.com";
+            targetUrl.host = ENGINE_URL;
             targetUrl.protocol = "https:";
 
             const headers = new Headers(req.headers);
