@@ -23,6 +23,8 @@ export async function initializeDatabase(opts: {
             new arrow.Field('at_time', new arrow.Timestamp(arrow.TimeUnit.MILLISECOND)),
             new arrow.Field('description', new arrow.Utf8(), true),
             new arrow.Field('embedding', new arrow.FixedSizeList(opts.embeddingDimension, new arrow.Field('item', new arrow.Float32(), true)), true),
+            new arrow.Field('path', new arrow.Utf8()),
+            new arrow.Field('type', new arrow.Utf8()),
         ]);
         await db.createTable({ name: 'media_units', data: [], schema, mode: 'overwrite' });
         console.log("Table 'media_units' created.");
@@ -80,12 +82,11 @@ export async function processWriteQueue() {
     try {
         const updates = queue.filter(w => w.type === 'update').map(w => w.data as (Partial<MediaUnit> & { id: string }));
         const adds = queue.filter(w => w.type === 'add').map(w => w.data as MediaUnit);
+        console.log(`Processing write queue immediately with ${adds.length} adds and ${updates.length} updates`);
         if (adds.length > 0) {
-            console.log(`Processing write queue immediately with ${adds.length} adds and ${updates.length} updates`);
             await table_media_units.add(adds);
         }
         if (updates.length > 0) {
-            console.log(`Processing write queue immediately with ${adds.length} adds and ${updates.length} updates`);
             await updateMediaUnitBatch(updates);
         }
     } catch (e) {
@@ -94,15 +95,13 @@ export async function processWriteQueue() {
 }
 
 export function processWriteQueue_lazy() {
-    console.log('this is called')
     if (write_queue.length === 0) return;
     if (write_timeout) clearTimeout(write_timeout);
-    if (write_queue.length > 1000) {
-        console.log('more than 1000 items, processing immediately, length:', write_queue.length);
-        // If more than 100 items, process immediately
+    if (write_queue.length > 20) {
+        console.log('more than 20 items, processing immediately, length:', write_queue.length);
+        // If more than 20 items, process immediately
         processWriteQueue();
     } else {
-        console.log('scheduling write queue processing in 5 seconds, length:', write_queue.length);
         write_timeout = setTimeout(() => {
             console.log('5 seconds passed, processing write queue, length:', write_queue.length);
             processWriteQueue();
@@ -132,12 +131,14 @@ export function addMediaUnit(mediaUnit: MediaUnit) {
 
 export function partialMediaUnitToUpdate(mediaUnit: Partial<MediaUnit> & { id: string }, coalesce?: Record<string, any>) {
     const update: Record<string, any> = {};
+    // Only include defined fields
     for (const key in mediaUnit) {
         if (mediaUnit[key as keyof Partial<MediaUnit>] !== undefined) {
             update[key] = mediaUnit[key as keyof Partial<MediaUnit>];
         }
     }
 
+    // Coalesce fields
     for (const key in coalesce) {
         if (update[key] === undefined || update[key] === null) {
             update[key] = coalesce[key];
@@ -148,7 +149,7 @@ export function partialMediaUnitToUpdate(mediaUnit: Partial<MediaUnit> & { id: s
 }
 
 
-export async function updateMediaUnit(mediaUnit: Partial<MediaUnit> & { id: string }): Promise<void> {
+export function updateMediaUnit(mediaUnit: Partial<MediaUnit> & { id: string }) {
     try {
         write_queue.push({
             type: 'update',
@@ -160,24 +161,23 @@ export async function updateMediaUnit(mediaUnit: Partial<MediaUnit> & { id: stri
         console.error('Error updating media unit outer', e);
     }
 }
-
 export async function updateMediaUnitBatch(mediaUnits: (Partial<MediaUnit> & { id: string })[]): Promise<void> {
     try {
-        // Temporary fix before NPM package is updated
-        const updates = mediaUnits.map(mu => partialMediaUnitToUpdate(mu, { embedding: null }));
-        // Merge updates by id
-        const mergedUpdates: Record<string, Partial<MediaUnit>> = {};
-        for (const update of updates) {
-            const id = update.id;
-            if (!mergedUpdates[id]) mergedUpdates[id] = {};
-            Object.assign(mergedUpdates[id], update);
+        // Merge updates by id first
+        const mergedUpdates: Record<string, Partial<MediaUnit> & { id: string }> = {};
+        for (const mu of mediaUnits) {
+            const id = mu.id;
+            if (!mergedUpdates[id]) mergedUpdates[id] = { id };
+            Object.assign(mergedUpdates[id], mu);
         }
 
-        const rowUpdates = Object.values(mergedUpdates);
+        // NOW call partialMediaUnitToUpdate on the merged updates
+        const rowUpdates = Object.values(mergedUpdates).map(merged =>
+            partialMediaUnitToUpdate(merged, { embedding: null })
+        );
 
         const result = await table_media_units.mergeInsert("id")
             .whenMatchedUpdateAll()
-            // ignore unmatched (not inserted)
             .execute(rowUpdates);
 
         console.log('updated media units:', result)
@@ -185,7 +185,6 @@ export async function updateMediaUnitBatch(mediaUnits: (Partial<MediaUnit> & { i
         console.error("Error updating media unit batch:", error);
     }
 }
-
 
 /**
  * Searches for media units by embedding similarity.
@@ -211,12 +210,4 @@ export async function getMediaUnitById(id: string): Promise<MediaUnit | null> {
         console.error("Error retrieving media unit by id:", error);
         return null;
     }
-}
-
-
-// For testing
-// If run this file directly, try dumping the table
-if (require.main === module) {
-    const mediaUnits = await table_media_units.query().limit(10).toArray() as (MediaUnit)[];
-    console.log(JSON.stringify(mediaUnits.map(mu => ({ id: mu.id, description: mu.description })), null, 2));
 }

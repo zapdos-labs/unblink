@@ -21,6 +21,7 @@ export type StreamMessage = {
 
 export type MediaUnit = {
     id: string;
+    type: 'frame';
     description: string | null;
     at_time: Date;
     embedding: number[] | null;
@@ -114,9 +115,15 @@ export type ServerToEngine = {
     token?: string;
 }
 
+
 export type EngineToServer = {
     type: "frame_description";
     frame_id: string;
     stream_id: string;
     description: string;
+} | {
+    type: "frame_embedding";
+    frame_id: string;
+    stream_id: string;
+    embedding: number[];
 }

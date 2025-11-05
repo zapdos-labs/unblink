@@ -4,6 +4,7 @@ import type { EngineToServer, ServerToEngine, ServerToWorkerObjectDetectionMessa
 import type { WsClient } from "./WsClient";
 import type { Conn } from "~/shared/Conn";
 import fs from "fs/promises";
+import { addMediaUnit, table_media_units } from "./database";
 
 export const createForwardFunction = (opts: {
     clients: Map<ServerWebSocket, WsClient>,
@@ -35,6 +36,18 @@ export const createForwardFunction = (opts: {
                     return;
                 }
                 state.last_engine_sent = now;
+
+                // Store in database
+                addMediaUnit({
+                    id: decoded.frame_id,
+                    type: 'frame',
+                    at_time: new Date(),
+                    description: null,
+                    embedding: null,
+                    media_id: decoded.stream_id,
+                    path: decoded.path,
+                })
+
                 // Forward to AI engine for 
                 // 1. Compute embedding  
                 // 2. VLM inference

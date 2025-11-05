@@ -92,13 +92,17 @@ export default function ViewContent() {
         if (!m) return;
 
         if (m.type === 'frame_description') {
-            const included = viewedMedias().some(media => media.stream_id === m.stream_id);
+            const included = viewedMedias().filter(m => !m.file_name).some(media => media.stream_id === m.stream_id);
             if (!included) return;
             setAgentCards(prev => {
                 return [...prev, { created_at: Date.now(), stream_id: m.stream_id, content: m.description }].slice(-200);
             });
         }
     })
+
+    const some_media_is_live = () => {
+        return viewedMedias().some(media => !media.file_name);
+    }
 
     return (
         <div class="flex items-start h-screen">
@@ -151,38 +155,41 @@ export default function ViewContent() {
                 </div>
             </div>
 
-            <div
-                data-show={agentBar.showAgentBar()}
-                class="flex-none data-[show=true]:w-xl w-0 h-screen transition-[width] duration-300 ease-in-out overflow-hidden  flex flex-col">
-                <div class="border-l border-neu-800 bg-neu-900 shadow-2xl rounded-2xl flex-1 mr-2 my-2 flex flex-col h-full overflow-hidden">
-                    <div class="h-14 flex items-center p-2">
-                        <agentBar.Toggle />
-                    </div>
-
-                    <Show when={agentBar.showAgentBar()}>
-                        <div class="flex-1 p-2 overflow-y-auto space-y-4">
-                            <Show when={agentCards().length > 0} fallback={<div class="text-neu-500">Waiting for VLM responses...</div>}>
-                                <For each={agentCards()}>
-                                    {(card) => {
-                                        const stream_name = () => {
-                                            const camera = cameras().find(c => c.id === card.stream_id);
-                                            return camera ? camera.name : 'Unknown Stream';
-                                        }
-                                        return <div class="animate-push-down p-4 bg-neu-850 rounded-2xl space-y-2">
-                                            <div class="font-semibold">{stream_name()}</div>
-                                            <div class="text-neu-400 text-sm">{formatDistance(card.created_at, Date.now(), {
-                                                addSuffix: true
-                                            })}</div>
-                                            <div>{card.content}</div>
-                                        </div>
-                                    }}
-                                </For>
-                            </Show>
+            <Show when={some_media_is_live()}>
+                <div
+                    data-show={agentBar.showAgentBar()}
+                    class="flex-none data-[show=true]:w-xl w-0 h-screen transition-[width] duration-300 ease-in-out overflow-hidden  flex flex-col">
+                    <div class="border-l border-neu-800 bg-neu-900 shadow-2xl rounded-2xl flex-1 mr-2 my-2 flex flex-col h-full overflow-hidden">
+                        <div class="h-14 flex items-center p-2">
+                            <agentBar.Toggle />
                         </div>
-                    </Show>
 
+                        <Show when={agentBar.showAgentBar()}>
+                            <div class="flex-1 p-2 overflow-y-auto space-y-4">
+                                <Show when={agentCards().length > 0} fallback={<div class="text-neu-500">Waiting for VLM responses...</div>}>
+                                    <For each={agentCards()}>
+                                        {(card) => {
+                                            const stream_name = () => {
+                                                const camera = cameras().find(c => c.id === card.stream_id);
+                                                return camera ? camera.name : 'Unknown Stream';
+                                            }
+                                            return <div class="animate-push-down p-4 bg-neu-850 rounded-2xl space-y-2">
+                                                <div class="font-semibold">{stream_name()}</div>
+                                                <div class="text-neu-400 text-sm">{formatDistance(card.created_at, Date.now(), {
+                                                    addSuffix: true
+                                                })}</div>
+                                                <div>{card.content}</div>
+                                            </div>
+                                        }}
+                                    </For>
+                                </Show>
+                            </div>
+                        </Show>
+
+                    </div>
                 </div>
-            </div>
+            </Show>
         </div>
+
     );
 }

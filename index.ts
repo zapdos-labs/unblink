@@ -1,7 +1,7 @@
 import { decode, encode } from "cbor-x";
 import { randomUUID } from "crypto";
 import { RECORDINGS_DIR, RUNTIME_DIR } from "./backend/appdir";
-import { table_media, table_settings } from "./backend/database";
+import { table_media, table_media_units, table_settings, updateMediaUnit } from "./backend/database";
 import { logger } from "./backend/logger";
 
 import type { ServerWebSocket } from "bun";
@@ -55,14 +55,26 @@ const engine_conn = new Conn<ServerToEngine, EngineToServer>(`wss://${ENGINE_URL
         logger.error(event, "WebSocket to engine error:");
     },
     onMessage(decoded) {
-        logger.info(decoded, "Message from Zapdos Labs engine:");
-
         if (decoded.type === 'frame_description') {
+            // Store in database
+            updateMediaUnit({
+                id: decoded.frame_id,
+                description: decoded.description,
+            })
+
             // Forward to clients
             for (const [id, client] of clients) {
                 client.send(decoded);
             }
+        }
 
+        if (decoded.type === 'frame_embedding') {
+            console.log('Received embedding for frame', decoded.frame_id, 'embedding length:', decoded.embedding.length);
+            // Store in database
+            updateMediaUnit({
+                id: decoded.frame_id,
+                embedding: decoded.embedding,
+            })
         }
     }
 });
@@ -102,6 +114,18 @@ const server = Bun.serve({
                 await table_media.delete(`id = '${id}'`);
                 return Response.json({ success: true });
             }
+        },
+        '/media_units/media/:id': {
+            GET: async () => {
+                const media_units = await table_media_units.query().toArray();
+                // @ts-ignore
+                media_units.sort((a, b) => b.at_time.localeCompare(a.at_time));
+                // mask out embedding for response
+                for (const mu of media_units) {
+                    mu.embedding = null;
+                }
+                return Response.json(media_units);
+            },
         },
         '/media': {
             GET: async () => {
