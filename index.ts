@@ -86,9 +86,10 @@ for (const setting of settings_db) {
 }
 logger.info({ SETTINGS }, "Caches loaded");
 
+const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 // Create Bun server
 const server = Bun.serve({
-    port: 3000,
+    port: PORT,
     routes: {
         "/": homepage,
         "/test": async (req) => {
@@ -342,7 +343,7 @@ const server = Bun.serve({
     development: process.env.NODE_ENV === "development",
 });
 
-logger.info("Server running on http://localhost:3000");
+logger.info(`Server running on http://localhost:${PORT}`);
 
 const forward = createForwardFunction({
     clients,
