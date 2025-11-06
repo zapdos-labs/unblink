@@ -1,11 +1,9 @@
-import { For, Show, createEffect, onCleanup, createSignal } from "solid-js";
-import CanvasVideo from "./CanvasVideo";
-import { agentCards, cameras, relevantAgentCards, setSubscription, settings, tab, } from "./shared";
-import { FaSolidChevronLeft, FaSolidChevronRight, FaSolidObjectGroup } from "solid-icons/fa";
-import ArkSwitch from "./ark/ArkSwitch";
-import { BiSolidChevronLeft } from "solid-icons/bi";
-import { newMessage } from "./video/connection";
 import { formatDistance } from "date-fns";
+import { FaSolidChevronLeft, FaSolidChevronRight } from "solid-icons/fa";
+import { For, Show, createEffect, createSignal, onCleanup } from "solid-js";
+import ArkSwitch from "./ark/ArkSwitch";
+import CanvasVideo from "./CanvasVideo";
+import { cameras, relevantAgentCards, setSubscription, settings, tab } from "./shared";
 
 const GAP_SIZE = '8px';
 
@@ -95,7 +93,7 @@ export default function ViewContent() {
                     >
                         <div class="h-full w-full flex flex-col space-y-2">
                             <div class="flex-none flex items-center space-x-6 py-2 px-4 bg-neu-900 rounded-2xl border border-neu-800 h-14">
-                                <div class="flex-1 text-sm text-neu-400">Viewing {viewedMedias().length} streams</div>
+                                <div class="flex-1 text-sm text-neu-400 line-clamp-1">Viewing {viewedMedias().length} streams</div>
                                 <Show when={settings()['object_detection_enabled'] === 'true'}>
                                     <div>
                                         <ArkSwitch

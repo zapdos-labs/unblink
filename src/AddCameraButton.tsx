@@ -92,13 +92,13 @@ export default function AddCameraButton() {
             </div>
             <div class="flex justify-end pt-4">
                 {/* There should be no asChild here */}
-                {/* <Dialog.CloseTrigger> */}
-                <button
-                    onClick={handleSave}
-                    class="btn-primary">
-                    Save Camera
-                </button>
-                {/* </Dialog.CloseTrigger> */}
+                <Dialog.CloseTrigger>
+                    <button
+                        onClick={handleSave}
+                        class="btn-primary">
+                        Save Camera
+                    </button>
+                </Dialog.CloseTrigger>
             </div>
         </div>
     </ArkDialog>

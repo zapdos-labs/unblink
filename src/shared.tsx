@@ -14,7 +14,7 @@ export type Camera = {
 };
 
 export const [tab, setTab] = createSignal<{
-    type: 'home' | 'search' | 'moments' | 'history' | 'settings' | 'alerts';
+    type: 'home' | 'search' | 'moments' | 'history' | 'settings';
 } | {
     type: 'view';
     medias: {
@@ -39,23 +39,23 @@ export const fetchSettings = async () => {
         for (const setting of data) {
             settingsMap[setting.key] = setting.value;
         }
+
+        console.log("Fetched settings:", settingsMap);
         setSettings(settingsMap);
     } catch (error) {
         console.error("Error fetching settings:", error);
     }
 };
 
-export const saveSettings = async (newSettings: Record<string, string>) => {
+export const saveSettings = async (key: string, value: string) => {
     toaster.promise(async () => {
-        for (const key in newSettings) {
-            await fetch("/settings", {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ key, value: newSettings[key] }),
-            });
-        }
+        await fetch("/settings", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ key, value }),
+        });
         await fetchSettings(); // Refresh settings after saving
     }, {
         loading: {

@@ -11,7 +11,6 @@ import ViewContent from './ViewContent';
 import HistoryContent from './content/HistoryContent';
 import SettingsContent from './content/SettingsContent';
 import SearchContent from './content/SearchContent';
-import AlertsContent from './content/AlertsContent';
 
 export default function App() {
     onMount(() => {
@@ -50,7 +49,6 @@ export default function App() {
             'history': HistoryContent,
             'search': SearchContent,
             'settings': SettingsContent,
-            'alerts': AlertsContent,
         }
 
     }

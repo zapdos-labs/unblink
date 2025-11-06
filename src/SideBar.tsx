@@ -131,11 +131,6 @@ export default function SideBar() {
             name: 'History',
             icon: FiClock,
         },
-        {
-            id: 'alerts',
-            name: 'Alerts',
-            icon: FiBell,
-        }
     ];
 
     return <div class="w-80 h-screen pl-2 py-2">

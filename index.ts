@@ -185,7 +185,9 @@ const server = Bun.serve({
                 }
                 await table_settings.mergeInsert("key")
                     .whenMatchedUpdateAll()
+                    .whenNotMatchedInsertAll()
                     .execute([{ key, value: value.toString() }]);
+
                 SETTINGS[key] = value.toString();
                 return Response.json({ success: true });
             }
