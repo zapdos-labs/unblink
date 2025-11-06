@@ -5,12 +5,14 @@ import type { WsClient } from "./WsClient";
 import type { Conn } from "~/shared/Conn";
 import fs from "fs/promises";
 import { addMediaUnit, table_media_units } from "./database";
+import type { WebhookMessage } from "~/shared/alert";
 
 export const createForwardFunction = (opts: {
     clients: Map<ServerWebSocket, WsClient>,
     worker_object_detection: () => Worker,
     settings: () => Record<string, string>,
     engine_conn: () => Conn<ServerToEngine, EngineToServer>,
+    forward_to_webhook: (msg: WebhookMessage) => Promise<void>,
 }) => {
     const state: {
         streams: {
@@ -32,6 +34,20 @@ export const createForwardFunction = (opts: {
             for (const [, client] of opts.clients) {
                 client.send(decoded);
             }
+        }
+
+        // Only for live streams (no file_name)
+        if (decoded.type === 'object_detection' && decoded.file_name === undefined) {
+            // Also forward to webhook
+            opts.forward_to_webhook({
+                type: 'object_detection',
+                data: {
+                    created_at: new Date().toISOString(),
+                    stream_id: decoded.stream_id,
+                    frame_id: decoded.frame_id,
+                    objects: decoded.objects,
+                }
+            });
         }
 
         if (decoded.type === 'frame_file') {

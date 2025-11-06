@@ -118,7 +118,13 @@ export function useAlertsSubTab(props: {
         keys: () => [
             {
                 name: 'alerts.webhook_callback_url',
+                normalize: (val: string) => val.trim(),
                 validate: (val: string) => {
+                    if (val === '') {
+                        return {
+                            type: 'success',
+                        };
+                    }
                     try {
                         const url = new URL(val);
                         if (url.protocol !== 'http:' && url.protocol !== 'https:') {

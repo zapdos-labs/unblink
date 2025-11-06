@@ -12,6 +12,7 @@ import { start_stream_file, start_streams, stop_stream } from "./backend/worker_
 import homepage from "./index.html";
 import type { ClientToServerMessage, EngineToServer, RecordingsResponse, ServerToEngine } from "./shared";
 import { Conn } from "./shared/Conn";
+import type { WebhookMessage } from "./shared/alert";
 
 
 logger.info(`Using runtime directory: ${RUNTIME_DIR}`);
@@ -66,6 +67,17 @@ const engine_conn = new Conn<ServerToEngine, EngineToServer>(`wss://${ENGINE_URL
             for (const [id, client] of clients) {
                 client.send(decoded, false);
             }
+
+            // Also forward to webhook
+            forward_to_webhook({
+                event: 'description',
+                data: {
+                    created_at: new Date().toISOString(),
+                    stream_id: decoded.stream_id,
+                    frame_id: decoded.frame_id,
+                    description: decoded.description,
+                }
+            });
         }
 
         if (decoded.type === 'frame_embedding') {
@@ -84,7 +96,28 @@ const settings_db = await table_settings.query().toArray();
 for (const setting of settings_db) {
     SETTINGS[setting.key] = setting.value;
 }
-logger.info({ SETTINGS }, "Caches loaded");
+logger.info({ SETTINGS }, "Loaded settings from database");
+
+
+const settings = () => SETTINGS;
+const forward_to_webhook = async (msg: WebhookMessage) => {
+    // Updated
+    const webhook_url = settings()['alerts.webhook_callback_url'];
+    if (!webhook_url) return;
+
+    try {
+        await fetch(webhook_url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(msg),
+        });
+    } catch (error) {
+        logger.error({ error }, "Error forwarding alert to webhook");
+    }
+}
+
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 // Create Bun server
@@ -350,8 +383,9 @@ logger.info(`Server running on http://localhost:${PORT}`);
 const forward = createForwardFunction({
     clients,
     worker_object_detection: () => worker_object_detection,
-    settings: () => SETTINGS,
+    settings,
     engine_conn: () => engine_conn,
+    forward_to_webhook,
 })
 
 const worker_stream = spawn_worker('worker_stream.js', forward);

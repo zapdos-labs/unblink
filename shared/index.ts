@@ -95,6 +95,7 @@ export type DetectionObject = {
 export type WorkerObjectDetectionToServerMessage = {
     type: 'object_detection';
     stream_id: string;
+    frame_id: string;
     file_name?: string;
     objects: DetectionObject[];
 }

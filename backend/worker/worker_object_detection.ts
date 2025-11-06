@@ -64,6 +64,7 @@ async function continuousInferenceLoop() {
             const result = {
                 type: 'object_detection' as const,
                 stream_id: message.stream_id,
+                frame_id: message.frame_id,
                 file_name: message.file_name,
                 objects: detectionResults.map(obj => {
                     const x1 = parseFloat(obj.box[0] || '0');

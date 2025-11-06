@@ -1,4 +1,4 @@
-import { FiBell, FiCpu } from "solid-icons/fi";
+import { FiBell, FiCpu, FiUser } from "solid-icons/fi";
 import { createEffect, createSignal, For, untrack, type Accessor, type Setter, type ValidComponent } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import ArkSwitch from "~/src/ark/ArkSwitch";
@@ -11,6 +11,7 @@ export type UseSubTab = {
     comp: ValidComponent,
     keys: () => {
         name: string,
+        normalize?: (value: string) => string,
         validate?: (value: string) => {
             type: 'success' | 'error',
             message?: string
@@ -63,22 +64,29 @@ export default function SettingsContent() {
 
     const subtabs = [
         {
-            id: 'machine_learning',
+            type: 'machine_learning',
             name: 'Machine Learning',
             icon: FiCpu,
             use: useMachineLearningSubTab,
         },
         {
-            id: 'alerts',
+            type: 'alerts',
             name: 'Alerts',
             icon: FiBell,
             use: useAlertsSubTab,
+        },
+        {
+            type: 'authentication',
+            name: 'Authentication',
+            icon: FiUser,
+            use: undefined,
         }
     ];
 
-    const [subtab, setSubtab] = createSignal<{
-        type: 'machine_learning' | 'alerts';
-    }>({
+    type SubTab = {
+        type: 'machine_learning' | 'alerts' | 'authentication';
+    }
+    const [subtab, setSubtab] = createSignal<SubTab>({
         type: 'machine_learning'
     });
 
@@ -86,13 +94,13 @@ export default function SettingsContent() {
 
     createEffect(() => {
         const _subtab = subtab();
-        const s = subtabs.find(t => t.id === _subtab.type);
+        const s = subtabs.find(t => t.type === _subtab.type);
         if (!s) {
             setUseSubTab(undefined);
             return;
         }
 
-        const _use = s.use({ scratchpad, setScratchpad });
+        const _use = s.use?.({ scratchpad, setScratchpad });
         setUseSubTab(_use);
     })
 
@@ -102,8 +110,10 @@ export default function SettingsContent() {
         if (!ust) return;
         const keys = ust.keys();
         for (const key of keys) {
-            const value = scratchpad()[key.name];
+            let value = scratchpad()[key.name];
+            // TODO: This mean deletion
             if (value === undefined) continue;
+            value = key.normalize ? key.normalize(value) : value;
             if (key.validate) {
                 const validation = key.validate(value);
                 if (validation.type === 'error') {
@@ -134,10 +144,10 @@ export default function SettingsContent() {
                     <For each={subtabs}>
                         {_tab => <button
                             onClick={() => setSubtab({
-                                type: _tab.id as 'machine_learning' | 'alerts'
+                                type: _tab.type as SubTab['type']
                             })}
                             data-active={
-                                subtab().type === _tab.id
+                                subtab().type === _tab.type
                             }
                             class="w-full flex items-center space-x-3 px-4 py-2 rounded-lg text-neu-400 hover:bg-violet-400/10 data-[active=true]:bg-violet-400/10 data-[active=true]:text-violet-400 hover:text-violet-400">
                             <_tab.icon class="w-4 h-4" />
