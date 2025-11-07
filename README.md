@@ -2,6 +2,8 @@
 <img width="300" src="assets/logo.svg">
 </p>
 
+
+[![Release Status](https://github.com/tri2820/unblink/workflows/release/badge.svg)](https://github.com/tri2820/unblink/actions)
 [![GitHub Stars](https://img.shields.io/github/stars/tri2820/unblink?style=flat)](https://github.com/tri2820/unblink/stargazers)
 [![Discord](https://img.shields.io/badge/Discord-Join%20Server-5865F2?style=flat&logo=discord&logoColor=white)](https://discord.gg/YMAjT8A6e2)
 
@@ -23,7 +25,7 @@ Live demo: [https://app.zapdoslabs.com](https://app.zapdoslabs.com)
 
 ### Installation
 
-Currently, Unblink runs directly from source (binary distribution coming soon):
+# Method 1: Directly from source
 
 ```bash
 # Clone the repository
@@ -36,6 +38,14 @@ bun install
 # Start the application
 bun dev
 ```
+
+# Method 2: Binary executable
+
+1. Go to Unblink [release page](https://github.com/tri2820/unblink/releases/latest)
+2. Download the file suitable for your operating system
+3. Double click and run
+
+📌 This method is experimetal, if you have any problem please file a bug report
 
 The application will start and be accessible at `http://localhost:3000` (or can be configured via `PORT` env variable).
 
@@ -91,7 +101,7 @@ Currently I have the engine hosted on my GPU server that you can use (the client
 | SmolVLM2 Integration | ✅ Stable | |
 | Semantic Search | 🤔 WIP | Need to rework UI |
 | Video Recording & Playback | 🤔 WIP | Need to implement controls (help needed) |
-| Binary Distribution | 🤔 WIP | Need to implement Github Action that runs build.ts (help needed) |
+| Binary Distribution | 🤔 WIP | Testing... |
 | Motion Detection | 🚧 Coming Soon |  |
 | ONVIF Support | 🚧 Coming Soon |  |
 | Webhook | ✅ Stable |  |
