@@ -1,12 +1,7 @@
 import { createSignal, onMount, For, type Accessor, type Setter } from "solid-js";
 import type { UseSubTab } from "../SettingsContent";
 import ArkSwitch from "~/src/ark/ArkSwitch";
-
-type User = {
-    id: string;
-    username: string;
-    role: string;
-};
+import type { User } from "~/shared";
 
 async function getUsers(): Promise<User[]> {
     try {
@@ -27,23 +22,7 @@ export const useAuthSubTab: UseSubTab = (props) => {
 
     onMount(async () => {
         const fetchedUsers = await getUsers();
-        setUsers([
-            {
-                id: 'placeholder',
-                username: 'example_user',
-                role: 'admin',
-            },
-            {
-                id: 'placeholder2',
-                username: 'viewer_user',
-                role: 'viewer',
-            },
-            {
-                id: 'placeholder3',
-                username: 'editor_user',
-                role: 'editor',
-            }
-        ]);
+        setUsers(fetchedUsers);
     });
 
     return {

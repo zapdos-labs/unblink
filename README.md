@@ -83,6 +83,14 @@ Real-time object detection and tracking powered by D-FINE model.
 
 ![Object Detection](/assets/screenshots/object_detection.png)
 
+### Alerts
+Send detections & description via webhooks and other communication channels
+![Alerts](/assets/screenshots/alerts.png)
+
+### Authentication
+Securely gate your instance with role-based access
+![Alerts](/assets/screenshots/authentication.png)
+
 ## AI Models
 - **D-FINE**: State-of-the-art object detection for identifying and tracking objects in real-time
 - **SmolVLM2**: Vision-language model for understanding context and answering questions about camera feeds

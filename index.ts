@@ -1,125 +1,42 @@
-import { decode, encode } from "cbor-x";
+import { decode } from "cbor-x";
 import { randomUUID } from "crypto";
 import { RECORDINGS_DIR, RUNTIME_DIR } from "./backend/appdir";
-import { searchMediaUnitsByEmbedding, table_media, table_media_units, table_settings, table_users, updateMediaUnit } from "./backend/database";
+import { searchMediaUnitsByEmbedding, table_media, table_sessions, table_settings, table_users } from "./backend/database";
 import { logger } from "./backend/logger";
 
 import type { ServerWebSocket } from "bun";
 import { WsClient } from "./backend/WsClient";
+import { verifyPassword } from "./backend/auth";
 import { createForwardFunction } from "./backend/forward";
+import { check_version } from "./backend/startup/check_version";
+import { connect_to_engine } from "./backend/startup/connect_to_engine";
+import { load_secrets } from "./backend/startup/load_secrets";
+import { load_settings } from "./backend/startup/load_settings";
+import { create_webhook_forward } from "./backend/webhook";
 import { spawn_worker } from "./backend/worker_connect/shared";
 import { start_stream_file, start_streams, stop_stream } from "./backend/worker_connect/worker_stream_connector";
 import homepage from "./index.html";
-import type { ClientToServerMessage, EngineToServer, RecordingsResponse, ServerToEngine } from "./shared";
-import { Conn } from "./shared/Conn";
-import type { WebhookMessage } from "./shared/alert";
+import type { ClientToServerMessage, DbUser, RecordingsResponse } from "./shared";
 
 
 logger.info(`Using runtime directory: ${RUNTIME_DIR}`);
 
-// Check version
-const SUPPORTED_VERSION = "1.0.0";
 const ENGINE_URL = process.env.ENGINE_URL || "api.zapdoslabs.com";
-// Send /version request to engine
-try {
-    const version_response = await fetch(`https://${ENGINE_URL}/version`);
-    if (version_response.ok) {
-        const version_data = await version_response.json();
-        if (version_data.version) {
-            logger.info(`Engine version: ${version_data.version}`);
-            if (version_data.version !== SUPPORTED_VERSION) {
-                logger.warn(`Warning: Newer engine version available: ${version_data.version}. Supported version is ${SUPPORTED_VERSION}. Please consider updating the server.`);
-                logger.warn(`Visit https://github.com/tri2820/unblink for update instructions.`);
-            }
-        }
-    } else {
-        logger.error(`Failed to fetch version from engine: ${version_response.status} ${version_response.statusText}`);
-    }
-} catch (error) {
-    logger.error({ error }, "Error connecting to Zapdos Labs engine");
-}
-
+await check_version({ ENGINE_URL });
 
 const clients = new Map<ServerWebSocket, WsClient>();
 
-const engine_conn = new Conn<ServerToEngine, EngineToServer>(`wss://${ENGINE_URL}/ws`, {
-    onOpen() {
-        const msg: ServerToEngine = {
-            type: "i_am_server",
-        }
-        engine_conn.send(msg);
-    },
-    onClose() {
-        logger.info("Disconnected from Zapdos Labs engine WebSocket");
-    },
-    onError(event) {
-        logger.error(event, "WebSocket to engine error:");
-    },
-    onMessage(decoded) {
-        if (decoded.type === 'frame_description') {
-            // Store in database
-            updateMediaUnit({
-                id: decoded.frame_id,
-                description: decoded.description,
-            })
-
-            // Forward to clients 
-            for (const [id, client] of clients) {
-                client.send(decoded, false);
-            }
-
-            // Also forward to webhook
-            forward_to_webhook({
-                event: 'description',
-                data: {
-                    created_at: new Date().toISOString(),
-                    stream_id: decoded.stream_id,
-                    frame_id: decoded.frame_id,
-                    description: decoded.description,
-                }
-            });
-        }
-
-        if (decoded.type === 'frame_embedding') {
-            // Store in database
-            updateMediaUnit({
-                id: decoded.frame_id,
-                embedding: decoded.embedding,
-            })
-        }
-    }
+const { settings, setSettings } = await load_settings();
+const { secrets } = await load_secrets();
+const forward_to_webhook = create_webhook_forward({ settings });
+const engine_conn = connect_to_engine({
+    ENGINE_URL,
+    clients: () => clients,
+    forward_to_webhook,
 });
 
-// Load settings into memory
-let SETTINGS: Record<string, string> = {};
-const settings_db = await table_settings.query().toArray();
-for (const setting of settings_db) {
-    SETTINGS[setting.key] = setting.value;
-}
-logger.info({ SETTINGS }, "Loaded settings from database");
-
-
-const settings = () => SETTINGS;
-const forward_to_webhook = async (msg: WebhookMessage) => {
-    // Updated
-    const webhook_url = settings()['alerts.webhook_callback_url'];
-    if (!webhook_url) return;
-
-    try {
-        await fetch(webhook_url, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(msg),
-        });
-    } catch (error) {
-        logger.error({ error }, "Error forwarding alert to webhook");
-    }
-}
-
-
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
+const SESSION_DURATION_HOURS = 8;
 // Create Bun server
 const server = Bun.serve({
     port: PORT,
@@ -128,6 +45,99 @@ const server = Bun.serve({
         "/test": async (req) => {
             return new Response("Test endpoint working");
         },
+        "/auth/login": {
+            POST: async (req: Request) => {
+                const body = await req.json();
+                const { username, password } = body;
+                if (!username || !password) {
+                    return new Response("Missing username or password", { status: 400 });
+                }
+
+                const user: DbUser | undefined = await table_users
+                    .query()
+                    .where(`username = "${username}"`)
+                    .limit(1)
+                    .toArray()
+                    .then(users => users.at(0));
+
+                if (!user) return new Response("Invalid username or password", { status: 401 });
+
+                const is_valid = await verifyPassword(password, user.password_hash);
+                if (!is_valid) return new Response("Invalid username or password", { status: 401 });
+
+                const session_id = randomUUID();
+                const created_at = new Date();
+                const expires_at = new Date(created_at.getTime() + SESSION_DURATION_HOURS * 60 * 60 * 1000);
+
+                await table_sessions.add([{ session_id, user_id: user.id, created_at, expires_at }]);
+
+                const res = Response.json({ message: "Login successful" });
+                let cookie = `session_id=${session_id}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${SESSION_DURATION_HOURS * 3600}; Secure`;
+                res.headers.append(
+                    "Set-Cookie",
+                    cookie
+                );
+
+                console.log(`User '${username}' logged in, session created with ID: ${session_id}`);
+                return res;
+            },
+        },
+
+        "/auth/logout": {
+            POST: async (req: Request) => {
+                const cookies = req.headers.get("cookie");
+                const session_id = cookies?.match(/session_id=([^;]+)/)?.[1];
+
+                if (!session_id) return new Response("Missing session_id", { status: 400 });
+
+                await table_sessions.delete(`session_id = '${session_id}'`);
+
+                const res = new Response("Logged out successfully", { status: 200 });
+                let cookie = "session_id=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0; Secure";
+                res.headers.append(
+                    "Set-Cookie",
+                    cookie
+                );
+                return res;
+            },
+        },
+
+        "/auth/me": {
+            GET: async (req: Request) => {
+                const cookies = req.headers.get("cookie");
+                const session_id = cookies?.match(/session_id=([^;]+)/)?.[1];
+                if (!session_id) return new Response("Unauthorized", { status: 401 });
+
+                const session = await table_sessions
+                    .query()
+                    .where(`session_id = "${session_id}"`)
+                    .limit(1)
+                    .toArray()
+                    .then(s => s.at(0));
+
+                if (!session || new Date(session.expires_at) < new Date())
+                    return new Response("Session expired", { status: 401 });
+
+                const user = await table_users
+                    .query()
+                    .where(`id = "${session.user_id}"`)
+                    .limit(1)
+                    .toArray()
+                    .then(u => u.at(0));
+
+                if (!user) return new Response("User not found", { status: 404 });
+
+                // optional: extend session on activity
+                const newExpiresAt = new Date(Date.now() + SESSION_DURATION_HOURS * 3600 * 1000);
+                await table_sessions.update(
+                    { expires_at: newExpiresAt.getTime().toString() },
+                    { where: `session_id = "${session_id}"` }
+                );
+
+                return Response.json({ user });
+            },
+        },
+
         '/media/:id': {
             PUT: async ({ params, body }: { params: { id: string }, body: any }) => {
                 const { id } = params;
@@ -144,7 +154,7 @@ const server = Bun.serve({
             },
             DELETE: async ({ params }: { params: { id: string } }) => {
                 const { id } = params;
-                await table_media.delete(`id = '${id}'`);
+                await table_media.delete(`id = "${id}"`);
                 return Response.json({ success: true });
             }
         },
@@ -152,7 +162,7 @@ const server = Bun.serve({
             GET: async () => {
                 const media = await table_media.query().toArray();
                 // @ts-ignore
-                media.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+                media.sort((a, b) => b.updated_at - a.updated_at);
                 return Response.json(media);
             },
             POST: async (req: Request) => {
@@ -221,7 +231,7 @@ const server = Bun.serve({
                     .whenNotMatchedInsertAll()
                     .execute([{ key, value: value.toString() }]);
 
-                SETTINGS[key] = value.toString();
+                setSettings(key, value.toString());
                 return Response.json({ success: true });
             }
         },

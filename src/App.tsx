@@ -12,12 +12,12 @@ import HistoryContent from './content/HistoryContent';
 import SettingsContent from './content/SettingsContent';
 import SearchContent from './content/SearchContent';
 import SearchResultContent from './content/SearchResultContent';
+import Authed from './Authed';
 
 export default function App() {
     onMount(() => {
         const conn = connectWebSocket();
         setConn(conn);
-        fetchSettings();
         fetchCameras();
     })
 
@@ -32,7 +32,6 @@ export default function App() {
             });
         }
     })
-
 
     createEffect(() => {
         const c = conn();
@@ -56,12 +55,13 @@ export default function App() {
     }
     const component = () => components()[tab().type]
 
-    return <div class="h-screen flex items-start bg-neu-925 text-white space-x-2">
-        <ArkToast />
-        <SideBar />
-        <div class="flex-1">
-            <Dynamic component={component()} />
+    return <Authed>
+        <div class="h-screen flex items-start bg-neu-925 text-white space-x-2">
+            <ArkToast />
+            <SideBar />
+            <div class="flex-1">
+                <Dynamic component={component()} />
+            </div>
         </div>
-
-    </div>;
+    </Authed>
 }

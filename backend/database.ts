@@ -36,7 +36,7 @@ export async function initializeDatabase(opts: {
             new arrow.Field('name', new arrow.Utf8()),
             new arrow.Field('uri', new arrow.Utf8()),
             new arrow.Field('labels', new arrow.List(new arrow.Field('item', new arrow.Utf8())), true),
-            new arrow.Field('updated_at', new arrow.Utf8()),
+            new arrow.Field('updated_at', new arrow.Timestamp(arrow.TimeUnit.MILLISECOND)),
             new arrow.Field('saveToDisk', new arrow.Bool(), true),
             new arrow.Field('saveDir', new arrow.Utf8(), true),
         ]);
@@ -53,6 +53,27 @@ export async function initializeDatabase(opts: {
         await db.createTable({ name: 'settings', data: [], schema, mode: 'overwrite' });
         console.log("Table 'settings' created.");
         await onboardSettings(db);
+    }
+
+    if (!tableNames.includes('secrets')) {
+        const schema = new arrow.Schema([
+            new arrow.Field('key', new arrow.Utf8()),
+            new arrow.Field('value', new arrow.Utf8()),
+        ]);
+        await db.createTable({ name: 'secrets', data: [], schema, mode: 'overwrite' });
+        console.log("Table 'secrets' created.");
+    }
+
+    if (!tableNames.includes('sessions')) {
+        const schema = new arrow.Schema([
+            new arrow.Field('session_id', new arrow.Utf8()),
+            new arrow.Field('user_id', new arrow.Utf8()),
+            new arrow.Field('created_at', new arrow.Timestamp(arrow.TimeUnit.MILLISECOND)),
+            // new arrow.Field('last_activity', new arrow.Timestamp(arrow.TimeUnit.MILLISECOND)),
+            new arrow.Field('expires_at', new arrow.Timestamp(arrow.TimeUnit.MILLISECOND)),
+        ]);
+        await db.createTable({ name: 'sessions', data: [], schema, mode: 'overwrite' });
+        console.log("Table 'sessions' created.");
     }
 
     if (!tableNames.includes('users')) {
@@ -77,7 +98,9 @@ export const connection = await initializeDatabase({
 export const table_media_units = await connection.openTable('media_units');
 export const table_media = await connection.openTable('media');
 export const table_settings = await connection.openTable('settings');
+export const table_secrets = await connection.openTable('secrets');
 export const table_users = await connection.openTable('users');
+export const table_sessions = await connection.openTable('sessions');
 
 let write_queue: {
     type: 'add' | 'update',

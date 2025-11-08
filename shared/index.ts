@@ -128,3 +128,11 @@ export type EngineToServer = {
     stream_id: string;
     embedding: number[];
 }
+
+export type User = Pick<DbUser, 'id' | 'username' | 'role'>;
+export type DbUser = {
+    id: string;
+    username: string;
+    role: string;
+    password_hash: string;
+};

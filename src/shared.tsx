@@ -30,8 +30,8 @@ export const [cameras, setCameras] = createSignal<Camera[]>([]);
 export const [camerasLoading, setCamerasLoading] = createSignal(true);
 export const [subscription, setSubscription] = createSignal<Subscription>();
 export const [conn, setConn] = createSignal<Conn<ClientToServerMessage, ServerToClientMessage>>();
+export const [settingsLoaded, setSettingsLoaded] = createSignal(false);
 export const [settings, setSettings] = createSignal<Record<string, string>>({});
-
 export const fetchSettings = async () => {
     try {
         const response = await fetch("/settings");
@@ -43,6 +43,7 @@ export const fetchSettings = async () => {
 
         console.log("Fetched settings:", settingsMap);
         setSettings(settingsMap);
+        setSettingsLoaded(true);
     } catch (error) {
         console.error("Error fetching settings:", error);
     }
