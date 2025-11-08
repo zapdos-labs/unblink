@@ -26,7 +26,7 @@ By default, the authentication screen is disabled, and any visitor to the applic
 To enable the authentication screen, modify the settings as follows:
 
 ```bash
-bun run admin.ts settings auth_screen_enabled true
+bun run admin.ts settings modify auth_screen_enabled true
 bun run admin.ts users add
 # input username, password, and role (admin)
 ```

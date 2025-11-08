@@ -1,11 +1,11 @@
 
-import { BsGithub } from 'solid-icons/bs';
 import { FaSolidChevronDown } from 'solid-icons/fa';
-import { FiClock, FiFilm, FiGrid, FiMonitor, FiSearch, FiSettings } from 'solid-icons/fi';
+import { FiClock, FiFilm, FiGithub, FiGrid, FiLogOut, FiMonitor, FiSearch, FiSettings } from 'solid-icons/fi';
 import { createMemo, createSignal, For, onMount, Show } from 'solid-js';
 import logoSVG from '~/assets/logo.svg';
 import AddCameraButton from './AddCameraButton';
-import { authorized_as_admin, cameras, camerasLoading, fetchCameras, setTab, tab, type Camera } from './shared';
+import { toaster } from './ark/ArkToast';
+import { authorized_as_admin, cameras, camerasLoading, fetchCameras, setTab, tab, user, type Camera } from './shared';
 
 function MediaGroup(props: { group: { label: string; cameras: Camera[] } }) {
     const [isOpen, setIsOpen] = createSignal(true);
@@ -194,19 +194,55 @@ export default function SideBar() {
                 <div
                     onClick={() => window.open('https://github.com/tri2820/unblink', '_blank')}
                     class="flex items-center transition hover:text-white text-neu-500 hover:cursor-pointer">
-                    <BsGithub class="w-5 h-5" />
+                    <FiGithub class="w-5 h-5" />
                     <div class="ml-2 ">GitHub</div>
                 </div>
-
 
                 <div onClick={() => setTab({
                     type: 'settings'
                 })}
-                    data-disabled={authorized_as_admin()}
+                    data-disabled={!authorized_as_admin()}
                     class="flex items-center transition data-[disabled=false]:hover:text-white text-neu-500 hover:cursor-pointer data-[disabled=true]:opacity-50 data-[disabled=true]:cursor-not-allowed data-[disabled=true]:pointer-events-none">
                     <FiSettings class="w-5 h-5" />
                     <div class="ml-2 ">Settings</div>
                 </div>
+
+                <Show when={user()}>
+                    {/* Logout */}
+                    <div
+                        onClick={async () => {
+                            toaster.promise(async () => {
+                                const resp = await fetch('/auth/logout', {
+                                    method: 'POST',
+                                });
+
+                                if (!resp.ok) {
+                                    throw new Error('Logout failed');
+                                }
+
+                                // reload 
+                                window.location.reload();
+                            }, {
+                                loading: {
+                                    title: 'Logging out...',
+                                    description: 'You are being logged out.',
+                                },
+                                success: {
+                                    title: 'Logged out',
+                                    description: 'You have been logged out successfully.',
+                                },
+                                error: {
+                                    title: 'Logout failed',
+                                    description: 'There was an error logging you out. Please try again.',
+                                },
+                            })
+                        }}
+                        class="flex items-center transition hover:text-white text-neu-500 hover:cursor-pointer "
+                    >
+                        <FiLogOut class="w-5 h-5" />
+                        <div class="ml-2">Logout</div>
+                    </div>
+                </Show>
 
             </div>
 
