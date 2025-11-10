@@ -14,7 +14,7 @@ import { load_secrets } from "./backend/startup/load_secrets";
 import { load_settings } from "./backend/startup/load_settings";
 import { create_webhook_forward } from "./backend/webhook";
 import { spawn_worker } from "./backend/worker_connect/shared";
-import { start_stream_file, start_streams, stop_stream } from "./backend/worker_connect/worker_stream_connector";
+import { start_stream, start_stream_file, start_streams, stop_stream } from "./backend/worker_connect/worker_stream_connector";
 import homepage from "./index.html";
 import type { ClientToServerMessage, DbUser, RecordingsResponse } from "./shared";
 import { admin } from "./admin";
@@ -139,7 +139,7 @@ const server = Bun.serve({
                 if (!name || !uri) {
                     return new Response('Missing name or uri', { status: 400 });
                 }
-                const updated_at = new Date().toISOString();
+                const updated_at = new Date();
                 await table_media.mergeInsert("id")
                     .whenMatchedUpdateAll()
                     .execute([{ id, name, uri, labels: labels ?? [], updated_at, saveToDisk: saveToDisk ?? false, saveDir: saveDir ?? '' }]);
@@ -170,8 +170,19 @@ const server = Bun.serve({
                     return new Response('Missing name or uri', { status: 400 });
                 }
                 const id = randomUUID();
-                const updated_at = new Date().toISOString();
+                const updated_at = new Date();
                 await table_media.add([{ id, name, uri, labels: labels ?? [], updated_at, saveToDisk: saveToDisk ?? false, saveDir: saveDir ?? '' }]);
+
+                logger.info(`New media added via API: ${name} (${id})`);
+                // Start the media stream
+                start_stream({
+                    worker: worker_stream,
+                    stream_id: id,
+                    uri: uri as string,
+                    saveToDisk: saveToDisk as boolean,
+                    saveDir: saveDir as string,
+                });
+
                 return Response.json({ success: true, id });
             },
         },
