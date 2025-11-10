@@ -81,7 +81,8 @@ const server = Bun.serve({
                 await table_sessions.add([{ session_id, user_id: user.id, created_at, expires_at }]);
 
                 const res = Response.json({ message: "Login successful" });
-                let cookie = `session_id=${session_id}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${SESSION_DURATION_HOURS * 3600}; Secure`;
+                const DANGEROUS_DISABLE_SECURE_COOKIE = process.env.DANGEROUS_DISABLE_SECURE_COOKIE === 'true';
+                let cookie = `session_id=${session_id}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${SESSION_DURATION_HOURS * 3600};${DANGEROUS_DISABLE_SECURE_COOKIE ? '' : ' Secure'}`;
                 res.headers.append(
                     "Set-Cookie",
                     cookie
@@ -102,7 +103,9 @@ const server = Bun.serve({
                 await table_sessions.delete(`session_id = '${session_id}'`);
 
                 const res = new Response("Logged out successfully", { status: 200 });
-                let cookie = "session_id=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0; Secure";
+                let cookie = "session_id=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0;";
+                const DANGEROUS_DISABLE_SECURE_COOKIE = process.env.DANGEROUS_DISABLE_SECURE_COOKIE === 'true';
+                cookie += DANGEROUS_DISABLE_SECURE_COOKIE ? '' : ' Secure';
                 res.headers.append(
                     "Set-Cookie",
                     cookie
@@ -221,16 +224,22 @@ const server = Bun.serve({
                 }
 
                 const body = await req.json();
-                const { key, value } = body;
-                if (!key || value === undefined) {
-                    return new Response('Missing key or value', { status: 400 });
+                const { entries } = body;
+                if (!entries || !Array.isArray(entries)) {
+                    return new Response('Missing or invalid entries', { status: 400 });
                 }
+
                 await table_settings.mergeInsert("key")
                     .whenMatchedUpdateAll()
                     .whenNotMatchedInsertAll()
-                    .execute([{ key, value: value.toString() }]);
+                    .execute(entries);
 
-                setSettings(key, value.toString());
+                for (const entry of entries) {
+                    const { key, value } = entry;
+                    setSettings(key, value.toString());
+                    logger.info(`Setting updated: ${key} = ${value}`);
+                }
+
                 return Response.json({ success: true });
             }
         },

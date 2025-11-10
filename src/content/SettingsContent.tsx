@@ -1,7 +1,7 @@
 import { FiBell, FiCpu, FiUser } from "solid-icons/fi";
 import { createEffect, createSignal, For, untrack, type Accessor, type Setter, type ValidComponent } from "solid-js";
 import { Dynamic } from "solid-js/web";
-import { saveSettings, settings } from "~/src/shared";
+import { fetchSettings, settings } from "~/src/shared";
 import { toaster } from "../ark/ArkToast";
 import LayoutContent from "./LayoutContent";
 import { useAlertsSubTab } from "./settings/useAlertsSubTab";
@@ -76,6 +76,8 @@ export default function SettingsContent() {
         const ust = untrack(subTab);
         if (!ust) return;
         const keys = ust.keys();
+        const entries: { key: string, value: string }[] = [];
+
         for (const key of keys) {
             let value = scratchpad()[key.name];
             // TODO: This mean deletion
@@ -91,9 +93,46 @@ export default function SettingsContent() {
                     continue;
                 }
             }
-            await saveSettings(key.name, value);
+            entries.push({ key: key.name, value });
+
         }
+
+        toaster.promise(async () => {
+            console.log("Saving settings:", entries);
+            const resp = await fetch("/settings", {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ entries }),
+            });
+            if (!resp.ok) {
+                throw new Error(`Failed to save settings: ${resp.statusText}`);
+            }
+            const data = await resp.json();
+
+            if (!data.success) {
+                throw new Error('Failed to save settings');
+            }
+
+            await fetchSettings(); // Refresh settings after saving
+        }, {
+            loading: {
+                title: 'Saving...',
+                description: 'Your settings are being saved.',
+            },
+            success: {
+                title: 'Success!',
+                description: 'Settings have been saved successfully.',
+            },
+            error: {
+                title: 'Failed',
+                description: 'There was an error saving your settings. Please try again.',
+            },
+        })
     };
+
+
 
     return <LayoutContent title="Settings"
         head_tail={<div class="flex-1 flex items-center">

@@ -56,34 +56,6 @@ export const fetchSettings = async () => {
         console.error("Error fetching settings:", error);
     }
 };
-
-export const saveSettings = async (key: string, value: string) => {
-    toaster.promise(async () => {
-        await fetch("/settings", {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ key, value }),
-        });
-        await fetchSettings(); // Refresh settings after saving
-    }, {
-        loading: {
-            title: 'Saving...',
-            description: 'Your settings are being saved.',
-        },
-        success: {
-            title: 'Success!',
-            description: 'Settings have been saved successfully.',
-        },
-        error: {
-            title: 'Failed',
-            description: 'There was an error saving your settings. Please try again.',
-        },
-    })
-};
-
-
 export const fetchCameras = async () => {
     setCamerasLoading(true);
     try {
