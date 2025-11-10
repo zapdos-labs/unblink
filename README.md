@@ -54,7 +54,16 @@ bun dev
 
 📌 This method is experimetal, if you have any problem please file a bug report
 
-The application will start and be accessible at `http://localhost:3000` (or can be configured via `PORT` env variable).
+The application will start and be accessible at `http://localhost:3000` 
+
+This can further configured via `PORT` and `HOSTNAME` env variable
+
+For example
+```sh
+PORT=4000 HOSTNAME=127.0.0.1 bun dev
+or 
+HOSTNAME=0.0.0.0 bun dev
+```
 
 ## Screenshots
 

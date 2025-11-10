@@ -43,10 +43,12 @@ const engine_conn = connect_to_engine({
 });
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
+const HOSTNAME = process.env.HOSTNAME || 'localhost';
 const SESSION_DURATION_HOURS = 8;
 // Create Bun server
 const server = Bun.serve({
     port: PORT,
+    hostname: HOSTNAME,
     routes: {
         "/": homepage,
         "/test": async (req) => {
@@ -393,7 +395,7 @@ const server = Bun.serve({
     development: process.env.NODE_ENV === "development",
 });
 
-logger.info(`Server running on http://localhost:${PORT}`);
+logger.info(`Server running on ${HOSTNAME}:${PORT}`);
 
 const forward = createForwardFunction({
     clients,
