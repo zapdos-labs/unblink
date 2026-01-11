@@ -1,6 +1,6 @@
 {
   // Relay server address
-  "relay_addr": "relay.unblink.net",
+  "relay_addr": "relay.unblink.net:443",
 
   // Node identifier (auto-generated, do not edit)
   // "node_id": "",
