@@ -11,13 +11,13 @@ If you are also self-hosting relay or other components, update the env vars acco
 For example, in production we replace this
 
 ```
-VITE_RELAY_API_URL=http://127.0.0.1:8080
+RELAY_API_URL=http://127.0.0.1:8080
 ```
 
 with
 
 ```
-VITE_RELAY_API_URL=https://api.unblink.net
+RELAY_API_URL=https://api.unblink.net
 ```
 
 # Development
