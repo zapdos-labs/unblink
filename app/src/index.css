@@ -1,0 +1,127 @@
+@import 'tailwindcss';
+
+@layer base {
+
+  /* For Webkit-based browsers (Chrome, Safari, Edge) */
+  ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #1a1a1a;
+    /* Dark track background */
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #4a4a4a;
+    /* Darker thumb */
+    border-radius: 100vh;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #6a6a6a;
+    /* Slightly lighter on hover */
+  }
+
+  /* For Firefox */
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: #4a4a4a #1a1a1a;
+  }
+}
+
+body {
+  @apply bg-neutral-950 text-white;
+  font-family: 'Inter', sans-serif;
+}
+
+@theme {
+  --font-montserrat: "Montserrat", sans-serif;
+  --font-nunito: "Nunito", sans-serif;
+}
+
+@theme {
+  --color-violet-50: #f4f1ff;
+  --color-violet-100: #ebe5ff;
+  --color-violet-200: #daceff;
+  --color-violet-300: #bfa7ff;
+  --color-violet-400: #a175ff;
+  --color-violet-500: #873dff;
+  --color-violet-600: #7c16ff;
+  --color-violet-700: #6f04fd;
+  --color-violet-800: #5c03d4;
+  --color-violet-900: #5005b3;
+  --color-violet-950: #2e0076;
+}
+
+@theme {
+  --color-neu-50: #fafafa;
+  --color-neu-100: #f5f5f5;
+  --color-neu-150: #f0f0f0;
+  --color-neu-200: #e5e5e5;
+  --color-neu-250: #dbdbdb;
+  --color-neu-300: #d4d4d4;
+  --color-neu-350: #c7c7c7;
+  --color-neu-400: #a3a3a3;
+  --color-neu-450: #8f8f8f;
+  --color-neu-500: #737373;
+  --color-neu-550: #5f5f5f;
+  --color-neu-600: #525252;
+  --color-neu-650: #464646;
+  --color-neu-700: #404040;
+  --color-neu-750: #343434;
+  --color-neu-800: #262626;
+  --color-neu-850: #1f1f1f;
+  --color-neu-900: #171717;
+  --color-neu-925: #0f0f0f;
+  --color-neu-950: #0a0a0a;
+}
+
+@layer base {
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+.moment-card {
+  @apply bg-neu-800 hover:bg-neu-850 rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-200 cursor-pointer border border-neu-700/50
+}
+
+.btn-primary {
+  @apply drop-shadow-2xl px-4 py-2 rounded-xl border border-neu-750 bg-neu-800 hover:bg-neu-850 flex items-center space-x-2 justify-center
+}
+
+.btn-danger {
+  @apply drop-shadow-2xl px-4 py-2 rounded-xl border border-red-400 bg-red-700 hover:bg-red-800 text-white flex items-center space-x-2 justify-center
+}
+
+.btn-secondary {
+  @apply flex items-center space-x-2 text-neutral-400 hover:text-white transition-all duration-100 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 hover:border-neutral-700 hover:drop-shadow-2xl px-4 py-2 rounded-lg
+}
+
+.btn-small {
+  @apply px-2 py-1.5 text-xs font-medium text-neu-400 hover:text-white bg-neu-800 rounded-lg hover:bg-neu-850 border border-neu-750 focus:outline-none flex items-center space-x-1 transition-all duration-100
+}
+
+.push-down {
+  animation: push-down 0.5s ease-out forwards;
+}
+
+@theme {
+  --animate-push-down: push-down 0.5s ease-out forwards;
+
+  @keyframes push-down {
+    from {
+      opacity: 0;
+      transform: translateY(-50px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}

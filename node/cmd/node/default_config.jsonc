@@ -1,0 +1,35 @@
+{
+  // Relay server address
+  "relay_addr": "localhost:9000",
+
+  // Node identifier (auto-generated, do not edit)
+  // "node_id": "",
+
+  // Authorization token (added after authorization)
+  "token": "",
+
+  // Services to expose through this node
+  "services": [
+    {
+      // "id": "",  // Auto-generated UUID on first run
+      "name": "Building View",
+      "type": "rtsp",
+      "addr": "www.cactus.tv",
+      "port": 1554,
+      "path": "/cam58"
+      // "auth": {
+      //   "type": "username_and_password",
+      //   "username": "****",
+      //   "password": "****"
+      // }
+    },
+    {
+      // "id": "",  // Auto-generated UUID on first run
+      "name": "Parking Lot",
+      "type": "mjpeg",
+      "addr": "83.48.75.113",
+      "port": 8320,
+      "path": "/axis-cgi/mjpg/video.cgi"
+    }
+  ]
+}

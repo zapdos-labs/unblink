@@ -1,0 +1,114 @@
+@keyframes slideDown {
+  from {
+    height: 0;
+    opacity: 0;
+  }
+
+  to {
+    height: var(--height);
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    height: var(--height);
+    opacity: 1;
+  }
+
+  to {
+    height: 0;
+    opacity: 0;
+  }
+}
+
+
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes scaleOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+[data-scope='collapsible'][data-part='content'][data-state='open'] {
+  animation: slideDown 250ms;
+}
+
+[data-scope='collapsible'][data-part='content'][data-state='closed'] {
+  animation: slideUp 200ms;
+}
+
+
+
+[data-scope='dialog'][data-part='backdrop'][data-state='open'] {
+  animation: fadeIn 200ms ease-out forwards;
+}
+
+[data-scope='dialog'][data-part='backdrop'][data-state='closed'] {
+  animation: fadeOut 200ms ease-in forwards;
+}
+
+[data-scope='dialog'][data-part='content'][data-state='open'] {
+  animation: scaleIn 200ms ease-out forwards;
+}
+
+[data-scope='dialog'][data-part='content'][data-state='closed'] {
+  animation: scaleOut 200ms ease-in forwards;
+}
+
+
+[data-scope='tooltip'][data-part='content'][data-state='open'] {
+  animation: fadeIn 150ms ease-out forwards;
+}
+
+[data-scope='tooltip'][data-part='content'][data-state='closed'] {
+  animation: fadeOut 100ms ease-in forwards;
+}
+
+
+[data-scope='tabs'][data-part='indicator'] {
+  bottom: 0 !important;
+  top: auto !important;
+  height: 2px !important;
+  width: var(--width) !important;
+  transition: left 250ms ease-out, width 250ms ease-out !important;
+}

@@ -1,0 +1,23 @@
+relay/allowlist.json
+relay/target
+relay/bin/
+relay/relay
+relay/.env
+node/target
+node/allowlist.json
+node/bin/
+node/.env
+rust-node/
+rust-relay/
+unblink-engine/
+app-old/
+
+# Environment files
+.env
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3

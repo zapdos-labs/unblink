@@ -1,0 +1,6 @@
+- We are using g2rtc
+- go2rtc has their rtsp cient and many other useful clients
+- These clients use .Dial() to create TCP connection internally, there is no way to pass pre-existing connections to them
+- Would be more straight forward if they accept, because then we can pull the bytes directly from the bridge and pass them to this pseudo-connection (unix socket domain, or in-process pseudo connection).
+- Correct course of action is to fork and submit changes to allow these clients accepting existing client
+- However, that would be too much work for now, so we will just proxy via a TCP port for now. This means each bridge takes 1 more port + some more resources + some added security risks but that's ok.
