@@ -1,35 +1,11 @@
-# UNBLINK Protocol v1
+# UNBLINK Node-Relay Protocol v1
 
 ## Overview
 
 UNBLINK v1 defines a minimal, TCP-based bridging protocol with strict separation of concerns:
 
-- **Relay**: Public traffic router and multiplexer
-- **Node**: Private TCP forwarder
-- **Client**: Handles all protocol, path, and authentication logic
-
-The Relay and Node never interpret application data.
-
-- Paths (e.g., /stream1) live inside application protocols
-- Authentication lives inside application protocols
-- Relay and Node are unaware of both
-
-## Client Connection Options
-
-- Client connects via HTTPS (or WSS) to sni.relay_domain.com
-- The relay can use SNI (Server Name Indication) to know which node or service to connect to.
-
-# Client & Bridge
-
-# Bridge Sharing (Not Yet Implemented)
-
-A future enhancement could allow multiple clients to share a single bridge, reducing resource usage:
-
-- **Subscriber tracking**: The bridge maintains a subscriber count
-- **Lifecycle management**:
-  - Bridge created when count goes from 0 → 1 (first client connects)
-  - Bridge destroyed when count goes from 1 → 0 (last client disconnects)
-- **Efficiency**: One TCP connection serves multiple clients for the same service
+- **Relay**: Public traffic router and multiplexer. Also handles all protocol, path, and authentication logic.
+- **Node**: Private, dumb TCP forwarder
 
 ## Roles
 
@@ -46,12 +22,6 @@ A future enhancement could allow multiple clients to share a single bridge, redu
 - Opens TCP connections on demand
 - Forwards raw bytes
 
-### Client
-
-- Connects to Relay
-- Speaks application protocols (RTSP, HTTP, etc.)
-- Handles paths, auth, and sessions
-
 ## Core Concepts
 
 ### Control Connection
@@ -67,7 +37,7 @@ The persistent TLS connection between Node and Relay that serves as the communic
 A logical data channel that represents one TCP connection:
 
 - Uniquely identified by `bridge_id`
-- Maps: Client ↔ Relay ↔ Node ↔ Target Service
+- Maps: Client (browser) ↔ Relay ↔ Node ↔ Target Service
 - Currently supports 1:1 client-to-bridge mapping
 
 ### Service
