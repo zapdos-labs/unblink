@@ -2,6 +2,7 @@
   "name": "unblink-app",
   "compatibility_date": "2026-01-06",
   "assets": {
-    "directory": "./dist"
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
   }
 }
