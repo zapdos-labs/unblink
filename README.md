@@ -62,7 +62,7 @@ Unblink uses a minimal, TCP-based bridging protocol with strict separation of co
 Public Internet                       Private Network
 ────────────────                     ─────────────────
 
-┌─────────┐         HTTPS/WSS           ┌──────────┐
+┌─────────┐         HTTPS/WebRTC        ┌──────────┐
 │ Client  │◄───────────────────────────►│          │
 │  (Web)  │                             │          │
 └─────────┘                             │          │
