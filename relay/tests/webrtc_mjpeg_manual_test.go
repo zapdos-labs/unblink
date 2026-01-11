@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/zapdos-labs/unblink/node"
-	"github.com/zapdos-labs/unblink/relay"
+	"github.com/unblink/unblink/node"
+	"github.com/unblink/unblink/relay"
 )
 
 var (

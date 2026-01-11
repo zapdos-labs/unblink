@@ -6,7 +6,7 @@ import (
 	"net"
 	"sync"
 
-	"github.com/zapdos-labs/unblink/node"
+	"github.com/unblink/unblink/node"
 )
 
 // BridgeTCPProxy creates a local TCP listener that proxies traffic through the relay bridge.

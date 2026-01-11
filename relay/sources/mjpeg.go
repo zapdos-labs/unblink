@@ -8,7 +8,7 @@ import (
 
 	"github.com/AlexxIT/go2rtc/pkg/core"
 	"github.com/AlexxIT/go2rtc/pkg/magic"
-	"github.com/zapdos-labs/unblink/node"
+	"github.com/unblink/unblink/node"
 )
 
 // MJPEGSource handles MJPEG streams by transcoding to H.264 via FFmpeg

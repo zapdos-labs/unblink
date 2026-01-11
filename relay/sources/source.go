@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/AlexxIT/go2rtc/pkg/core"
-	"github.com/zapdos-labs/unblink/node"
+	"github.com/unblink/unblink/node"
 )
 
 // Source represents a media source that can provide a producer and receivers

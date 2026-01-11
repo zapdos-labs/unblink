@@ -7,9 +7,9 @@ import (
 	"sync"
 
 	"github.com/google/uuid"
-	"github.com/zapdos-labs/unblink/node"
-	"github.com/zapdos-labs/unblink/relay/cv"
-	"github.com/zapdos-labs/unblink/relay/realtime"
+	"github.com/unblink/unblink/node"
+	"github.com/unblink/unblink/relay/cv"
+	"github.com/unblink/unblink/relay/realtime"
 )
 
 // Relay manages node connections and the service registry

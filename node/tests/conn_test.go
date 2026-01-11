@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/zapdos-labs/unblink/node"
+	"github.com/unblink/unblink/node"
 )
 
 // pipeConn creates a pair of connected net.Conn for testing

@@ -6,8 +6,8 @@ import (
 	"sync"
 
 	"github.com/AlexxIT/go2rtc/pkg/core"
-	"github.com/zapdos-labs/unblink/node"
-	"github.com/zapdos-labs/unblink/relay/sources"
+	"github.com/unblink/unblink/node"
+	"github.com/unblink/unblink/relay/sources"
 )
 
 // RealtimeStream represents a persistent stream for one camera

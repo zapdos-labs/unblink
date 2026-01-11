@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	"github.com/google/uuid"
-	"github.com/zapdos-labs/unblink/node"
+	"github.com/unblink/unblink/node"
 )
 
 // StreamCreatedCallback is called when a stream is created
@@ -14,11 +14,11 @@ type StreamCreatedCallback func(*RealtimeStream)
 
 // RealtimeStreamManager manages lifecycle of realtime streams
 type RealtimeStreamManager struct {
-	streams           map[string]*RealtimeStream // serviceID → stream
-	mu                sync.RWMutex
-	nodeConnGetter    func(string) NodeConn
+	streams            map[string]*RealtimeStream // serviceID → stream
+	mu                 sync.RWMutex
+	nodeConnGetter     func(string) NodeConn
 	bridgeProxyFactory func(NodeConn, string, node.Service) (BridgeTCPProxy, error)
-	onStreamCreated   StreamCreatedCallback
+	onStreamCreated    StreamCreatedCallback
 }
 
 // NewRealtimeStreamManager creates a new stream manager

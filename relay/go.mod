@@ -1,4 +1,4 @@
-module github.com/zapdos-labs/unblink/relay
+module github.com/unblink/unblink/relay
 
 go 1.24.0
 
@@ -8,11 +8,11 @@ require (
 	github.com/gorilla/websocket v1.5.3
 	github.com/pion/webrtc/v4 v4.2.1
 	github.com/tursodatabase/turso-go v0.2.2
-	github.com/zapdos-labs/unblink/node v0.0.0
+	github.com/unblink/unblink/node v0.0.0
 	golang.org/x/crypto v0.46.0
 )
 
-replace github.com/zapdos-labs/unblink/node => ../node
+replace github.com/unblink/unblink/node => ../node
 
 require (
 	github.com/ebitengine/purego v0.10.0-alpha.2 // indirect

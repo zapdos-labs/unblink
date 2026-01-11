@@ -9,7 +9,7 @@ import (
 	"syscall"
 
 	"github.com/joho/godotenv"
-	"github.com/zapdos-labs/unblink/relay"
+	"github.com/unblink/unblink/relay"
 )
 
 func main() {

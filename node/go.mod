@@ -1,4 +1,4 @@
-module github.com/zapdos-labs/unblink/node
+module github.com/unblink/unblink/node
 
 go 1.24.0
 

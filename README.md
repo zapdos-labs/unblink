@@ -2,7 +2,7 @@
 <img width="300" src="assets/logo.svg">
 </p>
 
-[![GitHub Stars](https://img.shields.io/github/stars/zapdos-labs/unblink?style=flat)](https://github.com/zapdos-labs/unblink/stargazers)
+[![GitHub Stars](https://img.shields.io/github/stars/unblink/unblink?style=flat)](https://github.com/unblink/unblink/stargazers)
 [![Discord](https://img.shields.io/badge/Discord-Join%20Server-5865F2?style=flat&logo=discord&logoColor=white)](https://discord.gg/YMAjT8A6e2)
 
 # Unblink
@@ -19,7 +19,7 @@ The node runs in your private network and forwards traffic from the relay to you
 
 ```bash
 # Install
-go install github.com/zapdos-labs/unblink/node/cmd/unblink@latest
+go install github.com/unblink/unblink/node/cmd/unblink@latest
 
 # Run (make sure ~/go/bin is in your PATH)
 ~/go/bin/unblink

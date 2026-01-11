@@ -172,7 +172,7 @@ export default function SideBar() {
           <div
             onClick={() =>
               window.open(
-                "https://github.com/zapdos-labs/unblink/issues",
+                "https://github.com/unblink/unblink/issues",
                 "_blank"
               )
             }

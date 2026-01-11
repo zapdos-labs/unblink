@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/zapdos-labs/unblink/relay/cv"
+	"github.com/unblink/unblink/relay/cv"
 )
 
 // StartWorkerAPIServer starts the worker API server on a separate port

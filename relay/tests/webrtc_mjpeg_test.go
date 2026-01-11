@@ -15,8 +15,8 @@ import (
 	"github.com/AlexxIT/go2rtc/pkg/webrtc"
 	"github.com/google/uuid"
 	pionwebrtc "github.com/pion/webrtc/v4"
-	"github.com/zapdos-labs/unblink/node"
-	"github.com/zapdos-labs/unblink/relay"
+	"github.com/unblink/unblink/node"
+	"github.com/unblink/unblink/relay"
 )
 
 // startHTTPAPIListener starts the HTTP API on a random port and returns the listener

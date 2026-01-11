@@ -9,8 +9,8 @@ import (
 	go2webrtc "github.com/AlexxIT/go2rtc/pkg/webrtc"
 	"github.com/google/uuid"
 	"github.com/pion/webrtc/v4"
-	"github.com/zapdos-labs/unblink/node"
-	"github.com/zapdos-labs/unblink/relay/sources"
+	"github.com/unblink/unblink/node"
+	"github.com/unblink/unblink/relay/sources"
 )
 
 // WebRTCSession manages a single WebRTC streaming session

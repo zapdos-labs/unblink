@@ -9,8 +9,8 @@ import (
 	"github.com/AlexxIT/go2rtc/pkg/core"
 	"github.com/AlexxIT/go2rtc/pkg/rtsp"
 	"github.com/google/uuid"
-	"github.com/zapdos-labs/unblink/node"
-	"github.com/zapdos-labs/unblink/relay"
+	"github.com/unblink/unblink/node"
+	"github.com/unblink/unblink/relay"
 )
 
 // TestGo2RTCIntegration tests RTSP streaming through the relay bridge using go2rtc library

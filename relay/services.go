@@ -3,7 +3,7 @@ package relay
 import (
 	"sync"
 
-	"github.com/zapdos-labs/unblink/node"
+	"github.com/unblink/unblink/node"
 )
 
 // RegisteredService represents a service registered by a node

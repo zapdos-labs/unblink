@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	"github.com/google/uuid"
-	"github.com/zapdos-labs/unblink/node"
+	"github.com/unblink/unblink/node"
 )
 
 // Bridge represents an active data bridge
@@ -22,7 +22,7 @@ type NodeConn struct {
 	conn        *node.Conn
 	relay       *Relay
 	nodeID      string
-	authToken   string   // Authorization token for this node
+	authToken   string // Authorization token for this node
 	bridges     map[string]*Bridge
 	bridgeMu    sync.RWMutex
 	bridgeChans map[string]chan []byte // bridgeID → data channel
