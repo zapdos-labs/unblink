@@ -73,10 +73,10 @@ Public Internet                       Private Network
                                         │  Relay   │
 ┌─────────┐         WebSocket           │ (Public) │
 │ Worker  │◄───────────────────────────►│          │
-└─────────┘   (frame events, etc.)      └────┬─────┘
+└─────────┘                             └────┬─────┘
                                              │
                                              │ WebSocket/WSS
-                                             │ (persistent, CBOR)
+                                             │
                                         ┌────▼────┐
                                         │  Node   │
                                         │ (Proxy) │
@@ -89,6 +89,11 @@ Public Internet                       Private Network
                             │  Camera  │           │  Camera  │
                             └──────────┘           └──────────┘
 ```
+
+**Relay Ports:**
+
+- **9020**: WebSocket server for nodes (`/node/connect`) and workers (`/worker/connect`)
+- **8020**: HTTP API for browser clients
 
 ### Relay
 
@@ -112,9 +117,10 @@ Private proxy that runs in your private network. The node:
 
 AI vision processors that integrate with the relay's CV system:
 
-- Connect via WebSocket to receive events
+- Connect via WebSocket to receive events (FrameEvent, FrameBatchEvent)
 - Run custom AI models (e.g., Qwen3-VL)
-- Emit events back (summaries, metrics, alerts)
+- Emit results back via WebSocket (bidirectional)
+- Download frame binaries via HTTP GET (`/worker/frames/{uuid}`)
 
 See [UNBLINK_PROTOCOL.md](UNBLINK_PROTOCOL.md) and [docs/FEDERATED_WORKERS.md](docs/FEDERATED_WORKERS.md) for detailed specifications.
 

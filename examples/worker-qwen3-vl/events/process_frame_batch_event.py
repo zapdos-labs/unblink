@@ -10,7 +10,7 @@ async def download_frame(http_url: str, worker_key: str, frame_uuid: str) -> byt
     """Download a frame from the relay, return JPEG bytes"""
     try:
         response = requests.get(
-            f"{http_url}/frames/{frame_uuid}",
+            f"{http_url}/worker/frames/{frame_uuid}",
             headers={"X-Worker-Key": worker_key},
             timeout=10
         )

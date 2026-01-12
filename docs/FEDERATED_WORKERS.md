@@ -16,9 +16,9 @@ You can self-host your AI workers, use public ones, or use dedicated workers pro
                     ┌──────────────────┼──────────────────┐
                     │                  │                  │
                ┌────▼────┐        ┌────▼────┐       ┌────▼────┐
-               │ Worker 1│        │ Worker 2 │       │ Worker 3│
-               │(self-   │        │ (public) │       │ (unblink│
-               │  hosted)│        │          │       │  hosted)│
+               │ Worker 1│        │ Worker 2 │      │ Worker 3│
+               │(self-   │        │ (public) │      │ (unblink│
+               │  hosted)│        │          │      │  hosted)│
                └────┬────┘        └────┬────┘       └────┬────┘
                     │                  │                  │
                     │              Process frames        │
@@ -26,7 +26,7 @@ You can self-host your AI workers, use public ones, or use dedicated workers pro
                     └──────────────────┼──────────────────┘
                                        │
                     ┌──────────────────▼──────────────────┐
-                    │     Worker Events (stored/searchable)│
+                    │    Worker Events (stored/searchable)│
                     │  - summaries  - metrics  - alerts   │
                     └─────────────────────────────────────┘
 ```
@@ -35,11 +35,13 @@ You can self-host your AI workers, use public ones, or use dedicated workers pro
 
 ### Connection
 
-Workers connect via WebSocket to receive events:
+Workers connect via WebSocket to the main relay server:
 
 ```
-ws://relay:7020/connect
+ws://relay:9020/worker/connect
 ```
+
+**Note:** Workers now use the same WebSocket server as nodes (port 9020), with endpoint namespacing (`/worker/connect` vs `/node/connect`).
 
 ### Registration
 
@@ -64,11 +66,11 @@ ws://relay:7020/connect
 }
 ```
 
-The `key` is a 256-bit cryptographic token used for subsequent API calls.
+The `key` is a 256-bit cryptographic token used for HTTP requests (frame downloads).
 
 ### Heartbeat
 
-**Worker → Relay:**
+**Worker → Relay (via WebSocket):**
 
 ```json
 {
@@ -111,40 +113,50 @@ The `key` is a 256-bit cryptographic token used for subsequent API calls.
 
 ## Worker APIs
 
-### Download Frame
+### Download Frame (HTTP GET)
+
+Frame downloads use HTTP GET with the worker key for authentication.
 
 **Request:**
 
 ```bash
-GET /frames/{frameUUID}
+GET /worker/frames/{frameUUID}
 Header: X-Worker-Key: {worker_key}
 ```
 
 **Example:**
 
 ```bash
-curl http://localhost:7020/frames/{frame_uuid} \
+curl http://localhost:9020/worker/frames/{frame_uuid} \
   -H "X-Worker-Key: {your_key}" \
   -o frame.jpg
 ```
 
-### Emit Event
+### Emit Event (WebSocket)
 
-**Request:**
+Workers emit events back to the relay via the existing WebSocket connection using an `event` message type.
 
-```bash
-POST /events
-Header: X-Worker-Key: {worker_key}
-Body: {event_data}
+**Message:**
+
+```json
+{
+  "type": "event",
+  "data": {
+    // your event data
+  }
+}
 ```
 
-**Example:**
+**Example (Python):**
 
-```bash
-curl -X POST http://localhost:7020/events \
-  -H "Content-Type: application/json" \
-  -H "X-Worker-Key: {your_key}" \
-  -d '{"summary": "Processed 10 frames successfully"}'
+```python
+event_msg = {
+    "type": "event",
+    "data": {
+        "summary": "Processed 10 frames successfully"
+    }
+}
+await ws.send(json.dumps(event_msg))
 ```
 
 ## Outgoing Events (Worker → Relay)
@@ -193,10 +205,10 @@ Workers can emit any JSON-serializable data. Common patterns:
 
 ## Worker Lifecycle
 
-1. **Connect** via WebSocket
+1. **Connect** via WebSocket to `/worker/connect`
 2. **Register** and receive authentication key
-3. **Listen** for `frame` and `frame_batch` events
-4. **Download** frames using the key
+3. **Listen** for `frame` and `frame_batch` events via WebSocket
+4. **Download** frames using HTTP GET with the key
 5. **Process** frames with AI models
-6. **Emit** events back to relay
+6. **Emit** events back via WebSocket (not HTTP POST)
 7. **Disconnect** - key is invalidated

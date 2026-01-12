@@ -8,17 +8,23 @@ import (
 	"github.com/unblink/unblink/node"
 )
 
-// StartWebSocketServerAsync starts the WebSocket server for node connections and returns the server
+// StartWebSocketServerAsync starts the WebSocket server for node and worker connections and returns the server
 func StartWebSocketServerAsync(r *Relay, addr string) (*http.Server, error) {
 	mux := http.NewServeMux()
+
+	// Node connections
 	mux.HandleFunc("/node/connect", r.handleNodeWebSocket)
+
+	// Worker connections
+	mux.HandleFunc("/worker/connect", r.cvWorkerRegistry.HandleWebSocket)
+	mux.HandleFunc("/worker/frames/", r.storageManager.HandleFrameDownload)
 
 	server := &http.Server{
 		Addr:    addr,
 		Handler: mux,
 	}
 
-	log.Printf("[Relay] WebSocket server listening on %s", addr)
+	log.Printf("[Relay] WebSocket server listening on %s (nodes + workers)", addr)
 	go func() {
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Printf("[Relay] WebSocket server error: %v", err)

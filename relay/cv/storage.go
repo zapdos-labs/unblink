@@ -83,16 +83,16 @@ func (s *StorageManager) ValidateWorkerKey(workerKey string) (string, error) {
 }
 
 // HandleFrameDownload handles HTTP requests for frame downloads
-// URL format: /frames/{frameUUID}
+// URL format: /worker/frames/{frameUUID}
 func (s *StorageManager) HandleFrameDownload(w http.ResponseWriter, r *http.Request) {
-	// Parse path: /frames/{frameUUID}
+	// Parse path: /worker/frames/{frameUUID}
 	parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
-	if len(parts) != 2 || parts[0] != "frames" {
-		http.Error(w, "Invalid path format. Expected: /frames/{frameUUID}", http.StatusBadRequest)
+	if len(parts) != 3 || parts[0] != "worker" || parts[1] != "frames" {
+		http.Error(w, "Invalid path format. Expected: /worker/frames/{frameUUID}", http.StatusBadRequest)
 		return
 	}
 
-	frameUUID := parts[1]
+	frameUUID := parts[2]
 
 	// Get worker key from header
 	workerKey := r.Header.Get("X-Worker-Key")

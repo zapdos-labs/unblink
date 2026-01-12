@@ -220,6 +220,25 @@ func (r *CVWorkerRegistry) receiveLoop(worker *CVWorker) {
 			worker.LastSeen = time.Now()
 			r.mu.Unlock()
 
+		case "event":
+			// Parse event data
+			var eventData map[string]interface{}
+			if err := json.Unmarshal(msg.Data, &eventData); err != nil {
+				log.Printf("[CVWorkerRegistry] Failed to parse event from worker %s: %v", worker.ID, err)
+				continue
+			}
+
+			// Create worker event
+			workerEvent := &WorkerEvent{
+				EventID:   fmt.Sprintf("%s-%d", worker.ID, time.Now().UnixNano()),
+				WorkerID:  worker.ID,
+				CreatedAt: time.Now(),
+				Data:      eventData,
+			}
+
+			// Publish to event bus
+			r.eventBus.PublishWorkerEvent(workerEvent)
+
 		default:
 			log.Printf("[CVWorkerRegistry] Unknown message type from worker %s: %s", worker.ID, msg.Type)
 		}
@@ -322,47 +341,4 @@ func (r *CVWorkerRegistry) BroadcastFrameBatchEvent(event *FrameBatchEvent, time
 			log.Printf("[CVWorkerRegistry] Worker %s send channel full, skipping frame batch event", worker.ID)
 		}
 	}
-}
-
-// HandleEventAPI handles HTTP API requests for worker events
-func (r *CVWorkerRegistry) HandleEventAPI(w http.ResponseWriter, req *http.Request) {
-	// Only POST is allowed for publishing events
-	if req.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	// Authenticate worker
-	workerKey := req.Header.Get("X-Worker-Key")
-	if workerKey == "" {
-		http.Error(w, "Missing X-Worker-Key header", http.StatusUnauthorized)
-		return
-	}
-
-	workerID, exists := r.GetWorkerIDByKey(workerKey)
-	if !exists {
-		http.Error(w, "Invalid worker key", http.StatusForbidden)
-		return
-	}
-
-	// Parse event data
-	var eventData map[string]interface{}
-	if err := json.NewDecoder(req.Body).Decode(&eventData); err != nil {
-		http.Error(w, "Invalid JSON", http.StatusBadRequest)
-		return
-	}
-
-	// Create worker event
-	workerEvent := &WorkerEvent{
-		EventID:   fmt.Sprintf("%s-%d", workerID, time.Now().UnixNano()),
-		WorkerID:  workerID,
-		CreatedAt: time.Now(),
-		Data:      eventData,
-	}
-
-	// Publish to event bus
-	r.eventBus.PublishWorkerEvent(workerEvent)
-
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 }
