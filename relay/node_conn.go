@@ -19,7 +19,7 @@ type Bridge struct {
 
 // NodeConn handles a single node connection
 type NodeConn struct {
-	conn        *node.Conn
+	conn        node.MessageTransport // Supports both TCP (Conn) and WebSocket (WebSocketConn)
 	relay       *Relay
 	nodeID      string
 	authToken   string // Authorization token for this node

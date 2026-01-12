@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/unblink/unblink/relay"
@@ -38,31 +40,48 @@ func main() {
 	}
 
 	// Run relay server
-	relayAddr := ":" + config.RelayPort
-	apiAddr := ":" + config.APIPort
+	relayAddr := ":" + config.RelayPort // WebSocket server for node connections (port 9020)
+	apiAddr := ":" + config.APIPort     // HTTP API for browser clients (port 8020)
 
 	r := relay.NewRelay()
 
-	if err := r.Listen(relayAddr); err != nil {
-		log.Fatalf("Failed to listen: %v", err)
+	// Start HTTP API server
+	apiServer, err := relay.StartHTTPAPIServer(r, apiAddr, config)
+	if err != nil {
+		log.Fatalf("Failed to start HTTP API: %v", err)
 	}
 
-	// Start HTTP API
-	go relay.StartHTTPAPI(r, apiAddr, config)
+	// Start WebSocket server
+	wsServer, err := relay.StartWebSocketServerAsync(r, relayAddr)
+	if err != nil {
+		log.Fatalf("Failed to start WebSocket server: %v", err)
+	}
 
 	// Handle shutdown signals
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
-	go func() {
-		<-sigChan
-		log.Println("[Main] Shutting down...")
-		r.Shutdown()
-	}()
+	<-sigChan
+	log.Println("[Main] Shutting down...")
 
-	if err := r.Serve(); err != nil {
-		log.Fatalf("Relay error: %v", err)
+	// Create shutdown context with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Shutdown HTTP API server
+	if err := apiServer.Shutdown(ctx); err != nil {
+		log.Printf("[Main] HTTP API shutdown error: %v", err)
 	}
+
+	// Shutdown WebSocket server
+	if err := wsServer.Shutdown(ctx); err != nil {
+		log.Printf("[Main] WebSocket server shutdown error: %v", err)
+	}
+
+	// Shutdown relay (close node connections)
+	r.Shutdown()
+
+	log.Println("[Main] Shutdown complete")
 }
 
 func handleDatabaseCommand() {

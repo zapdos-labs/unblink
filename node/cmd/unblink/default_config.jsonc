@@ -1,6 +1,8 @@
 {
-  // Relay server address
-  "relay_addr": "relay.unblink.net:443",
+  // Relay server WebSocket URL
+  // Development: "ws://localhost:9020/node/connect"
+  // Production: "wss://relay.unblink.net/node/connect"
+  "relay_addr": "wss://relay.unblink.net/node/connect",
 
   // Node identifier (auto-generated, do not edit)
   // "node_id": "",

@@ -2,35 +2,48 @@
 
 ## Overview
 
-UNBLINK v1 defines a minimal, TCP-based bridging protocol with strict separation of concerns:
+UNBLINK v1 defines a minimal, WebSocket-based bridging protocol with strict separation of concerns:
 
 - **Relay**: Public traffic router and multiplexer. Also handles all protocol, path, and authentication logic.
-- **Node**: Private, dumb TCP forwarder
+- **Node**: Private proxy that forwards traffic between relay and local services
+
+## Transport Layer
+
+- **Protocol**: WebSocket (RFC 6455)
+- **Encoding**: CBOR (RFC 8949) in binary WebSocket frames
+- **Security**: WSS (WebSocket Secure) for production deployments
+- **Endpoint**: `/node/connect` on relay port 9020
+
+### Connection URL Format
+
+- **Development**: `ws://localhost:9020/node/connect`
+- **Production**: `wss://relay.example.com/node/connect`
 
 ## Roles
 
 ### Relay
 
-- Publicly reachable
+- Publicly reachable WebSocket server
 - Manages Nodes and Clients
 - Creates and multiplexes bridges
+- Provides `/node/connect` endpoint for node connections
 
 ### Node
 
 - Runs in private network
-- Maintains one persistent TLS connection to Relay
-- Opens TCP connections on demand
-- Forwards raw bytes
+- Maintains one persistent WebSocket connection (WSS) to Relay
+- Opens TCP connections to local services on demand
+- Forwards raw bytes without inspection
 
 ## Core Concepts
 
 ### Control Connection
 
-The persistent TLS connection between Node and Relay that serves as the communication channel for:
+The persistent WebSocket connection between Node and Relay that serves as the communication channel for:
 
 - Control messages (bridge management, registration)
 - Multiplexed data streams
-- Keep-alive signals
+- Keep-alive signals (WebSocket ping/pong)
 
 ### Bridge
 

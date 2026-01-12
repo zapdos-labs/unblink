@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func StartHTTPAPI(relay *Relay, addr string, cfg *Config) error {
+func StartHTTPAPIServer(relay *Relay, addr string, cfg *Config) (*http.Server, error) {
 	mux := http.NewServeMux()
 
 	// Wrap with CORS middleware
@@ -90,8 +90,19 @@ func StartHTTPAPI(relay *Relay, addr string, cfg *Config) error {
 		handleMe(w, r, authStore, cfg)
 	})
 
+	server := &http.Server{
+		Addr:    addr,
+		Handler: handler,
+	}
+
 	log.Printf("[HTTP] Starting HTTP API on %s", addr)
-	return http.ListenAndServe(addr, handler)
+	go func() {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Printf("[HTTP] Server error: %v", err)
+		}
+	}()
+
+	return server, nil
 }
 
 // corsMiddleware adds CORS headers to all responses
@@ -104,6 +115,7 @@ func corsMiddleware(next http.Handler) http.Handler {
 		}
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		w.Header().Set("Access-Control-Allow-Credentials", "true") // Required for credentials mode
 
 		// Handle preflight requests
 		if r.Method == "OPTIONS" {

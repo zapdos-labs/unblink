@@ -1,6 +1,6 @@
 import { createEffect, createSignal, onCleanup, onMount, Show, untrack, type Component } from 'solid-js';
 import { FaSolidSpinner } from 'solid-icons/fa';
-import { relay } from '../shared';
+import { relayFetch } from '../shared';
 
 interface Props {
   nodeId: string;
@@ -49,9 +49,11 @@ const VideoTile: Component<Props> = (props) => {
       const offer = await newPc.createOffer();
       await newPc.setLocalDescription(offer);
 
-      const response = await fetch(relay(`/node/${props.nodeId}/offer`), {
+      const response = await relayFetch(`/node/${props.nodeId}/offer`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           sdp: newPc.localDescription?.sdp,
           serviceId: props.serviceId || '',

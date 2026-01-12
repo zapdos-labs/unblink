@@ -1,7 +1,7 @@
 import { createSignal, onMount, type Component } from 'solid-js';
 import { Dynamic } from 'solid-js/web';
 import { FaSolidCircleCheck } from 'solid-icons/fa';
-import { authState, relay } from '../shared';
+import { authState, relayFetch } from '../shared';
 
 const LoadingView: Component = () => (
   <div class="flex justify-center items-center h-screen bg-neu-950">
@@ -95,12 +95,11 @@ const Authorize: Component = () => {
     setLoading(true);
 
     try {
-      const response = await fetch(relay('/api/authorize'), {
+      const response = await relayFetch('/api/authorize', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
         body: JSON.stringify({
           node_id: nodeId(),
         }),

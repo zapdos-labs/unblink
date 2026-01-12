@@ -4,8 +4,10 @@ go 1.24.0
 
 require (
 	github.com/AlexxIT/go2rtc v1.9.13
+	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.3
+	github.com/joho/godotenv v1.5.1
 	github.com/pion/webrtc/v4 v4.2.1
 	github.com/tursodatabase/turso-go v0.2.2
 	github.com/unblink/unblink/node v0.0.0
@@ -17,8 +19,6 @@ replace github.com/unblink/unblink/node => ../node
 require (
 	github.com/ebitengine/purego v0.10.0-alpha.2 // indirect
 	github.com/fxamacker/cbor/v2 v2.5.0 // indirect
-	github.com/golang-jwt/jwt/v5 v5.3.0 // indirect
-	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/pion/datachannel v1.5.10 // indirect
 	github.com/pion/dtls/v3 v3.0.9 // indirect
 	github.com/pion/ice/v4 v4.1.0 // indirect

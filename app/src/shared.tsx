@@ -15,7 +15,8 @@ export const getToken = () => localStorage.getItem(TOKEN_KEY);
 export const clearToken = () => localStorage.removeItem(TOKEN_KEY);
 
 // Helper function to make authenticated API requests
-const apiFetch = async (path: string, options?: RequestInit): Promise<Response> => {
+// Automatically adds JWT token and relay base URL
+export const relayFetch = async (path: string, options?: RequestInit): Promise<Response> => {
   const token = getToken();
   return fetch(relay(path), {
     ...options,
@@ -51,7 +52,7 @@ export const [authState, setAuthState] = createSignal<AuthState>({
 // Login function
 export const login = async (email: string, password: string): Promise<{ success: boolean; message?: string; user?: User }> => {
   try {
-    const response = await apiFetch('/auth/login', {
+    const response = await relayFetch('/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
@@ -111,7 +112,7 @@ export const logout = async () => {
   posthog.capture('user_logged_out');
   posthog.reset();
   try {
-    await apiFetch('/auth/logout', { method: 'POST' });
+    await relayFetch('/auth/logout', { method: 'POST' });
   } catch (error) {
     console.error('Logout error:', error);
   }
@@ -121,7 +122,7 @@ export const logout = async () => {
 export const initAuth = async () => {
   console.log('[initAuth] Starting auth check...');
   try {
-    const response = await apiFetch('/auth/me');
+    const response = await relayFetch('/auth/me');
 
     console.log('[initAuth] Response status:', response.status, response.ok);
 
@@ -202,7 +203,7 @@ export const [nodesLoading, setNodesLoading] = createSignal(true);
 export const fetchNodes = async () => {
   setNodesLoading(true);
   try {
-    const response = await apiFetch('/nodes');
+    const response = await relayFetch('/nodes');
 
     if (response.ok) {
       const data = await response.json(); // Array of {id, status, name, last_connected_at}
@@ -215,7 +216,7 @@ export const fetchNodes = async () => {
           // Only fetch services if node is online
           if (nodeData.status === 'online') {
             try {
-              const servicesResp = await apiFetch(`/node/${nodeData.id}/services`);
+              const servicesResp = await relayFetch(`/node/${nodeData.id}/services`);
               if (servicesResp.ok) {
                 services = await servicesResp.json();
               }

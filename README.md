@@ -34,13 +34,15 @@ The node creates a config file at `~/.unblink_config.jsonc` on first run. Edit i
 
 ```json
 {
-  "relay_addr": "your-relay.com:9020",
+  "relay_addr": "wss://your-relay.com/node/connect",
   "services": [
     { "addr": "192.168.1.100", "port": 554 },
     { "addr": "192.168.1.101", "port": 80 }
   ]
 }
 ```
+
+For development, use `ws://localhost:9020/node/connect`.
 
 ### Commands
 
@@ -58,7 +60,7 @@ On first run, the node will print an authorization URL. Open it in your browser 
 
 ## Architecture
 
-Unblink uses a minimal, TCP-based bridging protocol with strict separation of concerns:
+Unblink uses a minimal, WebSocket-based bridging protocol with strict separation of concerns:
 
 ```
 Public Internet                       Private Network
@@ -73,8 +75,8 @@ Public Internet                       Private Network
 │ Worker  │◄───────────────────────────►│          │
 └─────────┘   (frame events, etc.)      └────┬─────┘
                                              │
-                                             │ TLS (persistent)
-                                             │
+                                             │ WebSocket/WSS
+                                             │ (persistent, CBOR)
                                         ┌────▼────┐
                                         │  Node   │
                                         │ (Proxy) │
@@ -99,11 +101,12 @@ Public traffic router and multiplexer. The relay:
 
 ### Node
 
-Private TCP forwarder that runs in your private network. The node:
+Private proxy that runs in your private network. The node:
 
-- Maintains one persistent TLS connection to the relay
+- Maintains one persistent WebSocket connection (WSS) to the relay
 - Opens TCP connections to local services on demand (cameras, RTSP, etc.)
 - Forwards raw bytes without inspection
+- Uses CBOR encoding for protocol messages
 
 ### Worker
 

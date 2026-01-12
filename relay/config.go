@@ -22,8 +22,8 @@ type Config struct {
 	BatchSize     int // Number of frames per batch
 
 	// Ports
-	RelayPort string // Port for node connections (e.g., "9020")
-	APIPort   string // Port for HTTP API (e.g., "8020")
+	RelayPort string // Port for WebSocket node connections (e.g., "9020")
+	APIPort   string // Port for HTTP API for browsers (e.g., "8020")
 
 	// Dashboard
 	DashboardURL string

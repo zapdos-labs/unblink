@@ -11,6 +11,16 @@ import (
 // MaxMessageSize is the maximum allowed message size (16 MB)
 const MaxMessageSize = 16 * 1024 * 1024
 
+// MessageTransport defines the interface for reading/writing messages.
+// Implemented by both Conn (TCP with length prefix) and WebSocketConn (WebSocket binary frames).
+type MessageTransport interface {
+	ReadMessage() (*Message, error)
+	WriteMessage(*Message) error
+	ReadRawMessage() ([]byte, error)
+	WriteRawMessage([]byte) error
+	Close() error
+}
+
 // Conn wraps a net.Conn with length-prefixed message framing.
 // Message format: [4-byte big-endian length][CBOR payload]
 type Conn struct {

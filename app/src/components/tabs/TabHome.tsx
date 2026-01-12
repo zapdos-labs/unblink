@@ -1,6 +1,6 @@
 import { For, Show, onMount, createSignal } from 'solid-js';
 import { FiVideo, FiInfo, FiServer, FiEdit2, FiTrash2 } from 'solid-icons/fi';
-import { nodes, nodesLoading, fetchNodes, setTab, relay, type NodeService, type NodeInfo } from '../../shared';
+import { nodes, nodesLoading, fetchNodes, setTab, relayFetch, type NodeService, type NodeInfo } from '../../shared';
 import { ArkDialog } from '../../ark/ArkDialog';
 import { ArkTabs } from '../../ark/ArkTabs';
 import { Dialog } from '@ark-ui/solid/dialog';
@@ -78,10 +78,11 @@ function NodeEditDialog(props: { node: NodeInfo }) {
     }
 
     toaster.promise(async () => {
-      const response = await fetch(relay(`/node/${props.node.id}/name`), {
+      const response = await relayFetch(`/node/${props.node.id}/name`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ name: newName }),
       });
 
@@ -154,9 +155,8 @@ function NodeEditDialog(props: { node: NodeInfo }) {
 function NodeDeleteDialog(props: { node: NodeInfo }) {
   const handleDelete = async () => {
     toaster.promise(async () => {
-      const response = await fetch(relay(`/node/${props.node.id}/delete`), {
+      const response = await relayFetch(`/node/${props.node.id}/delete`, {
         method: 'DELETE',
-        credentials: 'include',
       });
 
       if (response.ok) {
