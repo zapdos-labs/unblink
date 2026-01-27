@@ -57,6 +57,16 @@ func main() {
 		log.Fatalf("Failed to create schema: %v", err)
 	}
 
+	// Build model configs for shared registry (chat, fast, vlm)
+	modelConfigs := []models.ModelConfig{
+		{ModelID: config.ChatOpenAIModel, BaseURL: config.ChatOpenAIBaseURL, APIKey: config.ChatOpenAIAPIKey},
+		{ModelID: config.FastOpenAIModel, BaseURL: config.FastOpenAIBaseURL, APIKey: config.FastOpenAIAPIKey},
+		{ModelID: config.VLMOpenAIModel, BaseURL: config.VLMOpenAIBaseURL, APIKey: config.VLMOpenAIAPIKey},
+	}
+
+	// Create shared model registry (fetches all model info and probes dimensions in parallel)
+	modelRegistry := models.NewRegistry(modelConfigs)
+
 	// Initialize chat service
 	chatCfg := &chat.Config{
 		ChatOpenAIModel:         config.ChatOpenAIModel,
@@ -83,7 +93,7 @@ func main() {
 	if chatCfg.ContentTrimSafetyMargin == 0 {
 		chatCfg.ContentTrimSafetyMargin = 10
 	}
-	chatService := chat.NewService(dbClient, chatCfg)
+	chatService := chat.NewService(dbClient, chatCfg, modelRegistry)
 
 	// Initialize JWT manager and auth interceptor
 	jwtManager := server.NewJWTManager(config.JWTSecret)
@@ -92,44 +102,23 @@ func main() {
 
 	// Create VLM frame client and batch manager
 	var batchManager *webrtc.BatchManager
-	vlmBaseURL := config.VLMOpenAIBaseURL
-	if vlmBaseURL == "" {
-		vlmBaseURL = config.FastOpenAIBaseURL
-	}
-	if vlmBaseURL != "" {
+	if config.VLMOpenAIBaseURL != "" {
 		vlmTimeout := 30 * time.Second
 		if config.VLMTimeoutSec > 0 {
 			vlmTimeout = time.Duration(config.VLMTimeoutSec) * time.Second
 		}
 
-		vlmModel := config.VLMOpenAIModel
-		if vlmModel == "" {
-			vlmModel = config.FastOpenAIModel
-		}
-
-		vlmAPIKey := config.VLMOpenAIAPIKey
-		if vlmAPIKey == "" {
-			vlmAPIKey = config.FastOpenAIAPIKey
-		}
-
-		// Create model cache for VLM
-		vlmModelClient := models.NewClient(models.Config{
-			BaseURL: vlmBaseURL,
-			APIKey:  vlmAPIKey,
-		})
-		vlmModelCache := models.NewCache(vlmModelClient)
-
-		frameClient := webrtc.NewFrameClient(vlmBaseURL, vlmModel, vlmAPIKey, vlmTimeout, "Summarize the video", vlmModelCache)
+		frameClient := webrtc.NewFrameClient(config.VLMOpenAIBaseURL, config.VLMOpenAIModel, config.VLMOpenAIAPIKey, vlmTimeout, "Summarize the video", modelRegistry)
 
 		frameBatchSize := 2
 		if config.FrameBatchSize > 0 {
 			frameBatchSize = config.FrameBatchSize
 		}
 
-		batchManager = webrtc.NewBatchManager(frameClient, frameBatchSize)
-		log.Printf("[Main] Initialized VLM frame client: url=%s, model=%s, batchSize=%d", vlmBaseURL, vlmModel, frameBatchSize)
+		batchManager = webrtc.NewBatchManager(frameClient, frameBatchSize, config.FramesBaseDir())
+		log.Printf("[Main] Initialized VLM frame client: url=%s, model=%s, batchSize=%d", config.VLMOpenAIBaseURL, config.VLMOpenAIModel, frameBatchSize)
 	} else {
-		log.Printf("[Main] VLM not configured (vlm_openai_base_url or fast_openai_base_url not set), frame summaries disabled")
+		log.Printf("[Main] VLM not configured, frame summaries disabled")
 	}
 
 	// Create service registry for frame extraction

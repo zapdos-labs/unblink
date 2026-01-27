@@ -9,7 +9,7 @@ import (
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/option"
 
-	"unb/server/chat/models"
+	"unb/server/models"
 	chatv1 "unb/server/gen/chat/v1"
 	"unb/server/gen/chat/v1/chatv1connect"
 )
@@ -86,31 +86,10 @@ type Database interface {
 	GetMessagesBody(conversationID, userID string) ([]string, error)
 }
 
-func NewService(db Database, cfg *Config) *Service {
+func NewService(db Database, cfg *Config, modelRegistry *models.Registry) *Service {
 	if cfg.ChatOpenAIModel == "" {
 		cfg.ChatOpenAIModel = "gpt-4o-mini"
 	}
-
-	// Build model configs for parallel fetching
-	modelConfigs := []models.ModelConfig{
-		{
-			ModelID: cfg.ChatOpenAIModel,
-			BaseURL: cfg.ChatOpenAIBaseURL,
-			APIKey:  cfg.ChatOpenAIAPIKey,
-		},
-	}
-
-	// Add fast model if configured
-	if cfg.FastOpenAIAPIKey != "" && cfg.FastOpenAIAPIKey != "your-fast-openai-api-key" {
-		modelConfigs = append(modelConfigs, models.ModelConfig{
-			ModelID: cfg.FastOpenAIModel,
-			BaseURL: cfg.FastOpenAIBaseURL,
-			APIKey:  cfg.FastOpenAIAPIKey,
-		})
-	}
-
-	// Create registry (fetches all model info in parallel)
-	modelRegistry := models.NewRegistry(modelConfigs)
 
 	service := &Service{
 		db:            db,

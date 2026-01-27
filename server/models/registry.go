@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"log"
 	"sync"
-
-	"unb/server/models"
 )
 
 // ModelConfig defines a model's configuration
@@ -18,7 +16,7 @@ type ModelConfig struct {
 // ModelEntry holds config and fetched info for a model
 type ModelEntry struct {
 	Config ModelConfig
-	Info   *models.ModelInfo
+	Info   *ModelInfo
 }
 
 // Registry holds model configurations and fetched info
@@ -42,7 +40,7 @@ func NewRegistry(configs []ModelConfig) *Registry {
 		go func(mc ModelConfig) {
 			defer wg.Done()
 
-			client := models.NewClient(models.Config{
+			client := NewClient(Config{
 				BaseURL: mc.BaseURL,
 				APIKey:  mc.APIKey,
 			})
@@ -82,7 +80,7 @@ func NewRegistry(configs []ModelConfig) *Registry {
 }
 
 // GetModelInfo returns cached model info
-func (r *Registry) GetModelInfo(modelID string) (*models.ModelInfo, error) {
+func (r *Registry) GetModelInfo(modelID string) (*ModelInfo, error) {
 	r.mu.RLock()
 	entry, exists := r.models[modelID]
 	r.mu.RUnlock()

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/invopop/jsonschema"
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/option"
 )
@@ -26,6 +27,12 @@ type modelsResponse struct {
 		ID         string `json:"id"`
 		MaxModelLen int    `json:"max_model_len"`
 	} `json:"data"`
+}
+
+// DimensionProbeResponse represents the structured output for dimension probing
+type DimensionProbeResponse struct {
+	Width  int `json:"width" jsonschema_description:"Image width in pixels"`
+	Height int `json:"height" jsonschema_description:"Image height in pixels"`
 }
 
 // NewClient creates a new ModelInfo client
@@ -97,8 +104,19 @@ func (c *Client) GetModelInfo(modelID string) (*ModelInfo, error) {
 	return nil, fmt.Errorf("model %q not found", modelID)
 }
 
+// GenerateDimensionProbeSchema generates the JSON schema for dimension probing
+func GenerateDimensionProbeSchema() interface{} {
+	reflector := jsonschema.Reflector{
+		AllowAdditionalProperties: false,
+		DoNotReference:            true,
+	}
+	var v DimensionProbeResponse
+	schema := reflector.Reflect(v)
+	return schema
+}
+
 // ProbeImageDimensions sends a test image to the model to determine the effective
-// dimensions it sees after internal scaling.
+// dimensions it sees after internal scaling. Uses structured output.
 func (c *Client) ProbeImageDimensions(modelID string) (width, height int, err error) {
 	log.Printf("[models.Client] Starting dimension probe for %s (baseURL=%s)", modelID, c.baseURL)
 
@@ -112,18 +130,32 @@ func (c *Client) ProbeImageDimensions(modelID string) (width, height int, err er
 	}
 	client := openai.NewClient(opts...)
 
-	// Build request - ask for JSON response
+	// Build JSON schema for structured output
+	schema := GenerateDimensionProbeSchema()
+	schemaParam := openai.ResponseFormatJSONSchemaJSONSchemaParam{
+		Name:        "dimension_probe",
+		Description: openai.String("Image dimensions in pixels"),
+		Schema:      schema,
+		Strict:      openai.Bool(true),
+	}
+
+	// Build request with structured output
 	content := []openai.ChatCompletionContentPartUnionParam{
 		openai.ImageContentPart(openai.ChatCompletionContentPartImageImageURLParam{
 			URL: imageURL,
 		}),
-		openai.TextContentPart("What are the dimensions of this image? Respond with JSON only: {\"width\": int, \"height\": int}"),
+		openai.TextContentPart("What are the dimensions of this image in pixels?"),
 	}
 
 	params := openai.ChatCompletionNewParams{
-		Model:    openai.ChatModel(modelID),
-		Messages: []openai.ChatCompletionMessageParamUnion{openai.UserMessage(content)},
+		Model: openai.ChatModel(modelID),
+		Messages: []openai.ChatCompletionMessageParamUnion{
+			openai.UserMessage(content),
+		},
 		MaxTokens: openai.Int(int64(100)),
+		ResponseFormat: openai.ChatCompletionNewParamsResponseFormatUnion{
+			OfJSONSchema: &openai.ResponseFormatJSONSchemaParam{JSONSchema: schemaParam},
+		},
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -139,10 +171,7 @@ func (c *Client) ProbeImageDimensions(modelID string) (width, height int, err er
 	}
 
 	// Parse JSON response
-	var result struct {
-		Width  int `json:"width"`
-		Height int `json:"height"`
-	}
+	var result DimensionProbeResponse
 	if err := json.Unmarshal([]byte(resp.Choices[0].Message.Content), &result); err != nil {
 		return 0, 0, fmt.Errorf("failed to parse response: %w", err)
 	}

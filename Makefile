@@ -10,10 +10,6 @@ vendor:
 	go mod tidy
 	go mod vendor
 
-# Apply patches to vendored dependencies
-patch: vendor
-	patch -p1 -d vendor/github.com/AlexxIT/go2rtc < patches/go2rtc-setconn.patch
-
 # Generate code from proto files
 generate: generate-go generate-ts
 

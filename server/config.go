@@ -25,12 +25,12 @@ type Config struct {
 
 	// Main chat model settings
 	ChatOpenAIModel  string `json:"chat_openai_model"`
-	ChatOpenAIBaseURL string `json:"chat_openai_base_url,omitempty"`
-	ChatOpenAIAPIKey  string `json:"chat_openai_api_key"`
+	ChatOpenAIBaseURL string `json:"chat_openai_base_url"`
+	ChatOpenAIAPIKey  string `json:"chat_openai_api_key,omitempty"`
 
-	// Fast model for follow-ups (optional - uses main model if not set)
-	FastOpenAIModel  string `json:"fast_openai_model,omitempty"`
-	FastOpenAIBaseURL string `json:"fast_openai_base_url,omitempty"`
+	// Fast model for follow-ups
+	FastOpenAIModel  string `json:"fast_openai_model"`
+	FastOpenAIBaseURL string `json:"fast_openai_base_url"`
 	FastOpenAIAPIKey  string `json:"fast_openai_api_key,omitempty"`
 
 	// Content trimming safety margin (percentage, default 10 if not set)
@@ -41,13 +41,13 @@ type Config struct {
 	FrameBatchSize       int     `json:"frame_batch_size,omitempty"`        // Frames to batch before sending (default 2)
 
 	// VLM OpenAI settings for frame processing
-	VLMOpenAIModel  string `json:"vlm_openai_model,omitempty"`  // Model to use for frame processing (uses fast_openai_model if not set)
-	VLMOpenAIBaseURL string `json:"vlm_openai_base_url,omitempty"` // VLM endpoint (uses fast_openai_base_url if not set)
-	VLMOpenAIAPIKey  string `json:"vlm_openai_api_key,omitempty"`  // API key for VLM endpoint (uses fast_openai_api_key if not set)
-	VLMTimeoutSec    int    `json:"vlm_timeout_sec,omitempty"`     // Request timeout in seconds (default 30)
+	VLMOpenAIModel  string `json:"vlm_openai_model"`
+	VLMOpenAIBaseURL string `json:"vlm_openai_base_url"`
+	VLMOpenAIAPIKey  string `json:"vlm_openai_api_key,omitempty"`
+	VLMTimeoutSec    int    `json:"vlm_timeout_sec,omitempty"` // Request timeout in seconds (default 30)
 
 	// App directory for storage (frames, logs, etc.)
-	AppDir string `json:"app_dir,omitempty"` // Path to application storage directory
+	AppDir string `json:"app_dir"` // Path to application storage directory
 }
 
 // ConfigPath returns the default config file path
@@ -108,14 +108,29 @@ func (c *Config) Validate() error {
 	if c.DatabaseURL == "" {
 		missing = append(missing, "database_url")
 	}
-	if c.ChatOpenAIAPIKey == "" {
-		missing = append(missing, "chat_openai_api_key")
+	if c.JWTSecret == "" {
+		missing = append(missing, "jwt_secret")
 	}
 	if c.ChatOpenAIModel == "" {
 		missing = append(missing, "chat_openai_model")
 	}
-	if c.JWTSecret == "" {
-		missing = append(missing, "jwt_secret")
+	if c.ChatOpenAIBaseURL == "" {
+		missing = append(missing, "chat_openai_base_url")
+	}
+	if c.FastOpenAIModel == "" {
+		missing = append(missing, "fast_openai_model")
+	}
+	if c.FastOpenAIBaseURL == "" {
+		missing = append(missing, "fast_openai_base_url")
+	}
+	if c.VLMOpenAIModel == "" {
+		missing = append(missing, "vlm_openai_model")
+	}
+	if c.VLMOpenAIBaseURL == "" {
+		missing = append(missing, "vlm_openai_base_url")
+	}
+	if c.AppDir == "" {
+		missing = append(missing, "app_dir")
 	}
 
 	if len(missing) > 0 {

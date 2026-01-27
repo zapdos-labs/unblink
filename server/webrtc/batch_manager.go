@@ -10,7 +10,9 @@ import (
 // rollingContext holds the rolling state for a service
 type rollingContext struct {
 	lastFrame        *Frame // Last frame from previous batch
-	previousResponse string  // Last VLM response
+	previousResponse string  // Last VLM raw response (JSON)
+	effectiveWidth   int     // Model's effective image width (from models.Cache)
+	effectiveHeight  int     // Model's effective image height
 }
 
 // BatchManager accumulates frames and sends them in batches to vLLM
@@ -18,20 +20,22 @@ type rollingContext struct {
 type BatchManager struct {
 	client          *FrameClient
 	batchSize       int
-	frameBatches    map[string][]*Frame  // serviceID -> pending frames
+	frameBatches    map[string][]*Frame     // serviceID -> pending frames
 	rollingContexts map[string]*rollingContext // serviceID -> rolling state
-	baseInstruction string                // Base instruction
+	baseInstruction string                   // Base instruction
+	storageBaseDir  string                   // Base directory for storing annotated frames
 	mu              sync.Mutex
 }
 
 // NewBatchManager creates a new batch manager
-func NewBatchManager(client *FrameClient, batchSize int) *BatchManager {
+func NewBatchManager(client *FrameClient, batchSize int, storageBaseDir string) *BatchManager {
 	return &BatchManager{
 		client:           client,
 		batchSize:        batchSize,
 		frameBatches:     make(map[string][]*Frame),
 		rollingContexts:  make(map[string]*rollingContext),
-		baseInstruction:  "Describe what is visible in these video frames.",
+		baseInstruction:  "Analyze these video frames for motion, action, emotion, facial expressions, and subtle details. Describe what you observe and judge the significance of changes.",
+		storageBaseDir:   storageBaseDir,
 	}
 }
 
@@ -80,22 +84,22 @@ func (m *BatchManager) AddFrame(frame *Frame) {
 
 // sendBatch sends a batch of frames to vLLM with rolling context
 func (m *BatchManager) sendBatch(serviceID string, frames []*Frame, rollCtx *rollingContext) {
-	// Build instruction: ask for only what's new if we have previous context
+	// Build instruction based on whether we have previous context
+	// Note: JSON schema is handled by response_format in FrameClient
 	instruction := m.baseInstruction
-	if rollCtx.previousResponse != "" && rollCtx.lastFrame != nil {
+
+	if rollCtx.previousResponse != "" {
 		instruction = strings.Join([]string{
 			m.baseInstruction,
 			"",
-			"PREVIOUS SUMMARY (what was already described):",
+			"PREVIOUS ANALYSIS (use for object tracking):",
 			rollCtx.previousResponse,
 			"",
-			"IMPORTANT: Only describe what is NEW or has CHANGED since the previous summary.",
-			"Do not repeat things that were already mentioned.",
-			"Focus on actions, movements, or scene changes.",
-			"",
-			"Note: The first frame shown is the LAST frame from the previous batch,",
-			"provided for visual continuity. Focus your description on what's different",
-			"in the subsequent frames compared to that first frame.",
+			"Detect ALL objects in the current frame. For objects that match previous objects (same type, similar location), use their existing ID.",
+			"For new objects, assign new IDs (continue numbering from previous).",
+			"Provide complete descriptions with accurate positions.",
+			"Focus on motion, action, emotion, facial expressions, and subtle details.",
+			"In the description, reference objects by their IDs in brackets, e.g., 'The person [3] is driving a red car [4]'.",
 		}, "\n")
 	}
 
@@ -118,15 +122,44 @@ func (m *BatchManager) sendBatch(serviceID string, frames []*Frame, rollCtx *rol
 	if len(response.Choices) > 0 {
 		newResponse := response.Choices[0].Message.Content
 
-		// Update context
+		// Get effective dimensions from model cache
+		effectiveWidth, effectiveHeight := 1280, 720 // fallback defaults
+		if m.client.ModelCache != nil {
+			if info, err := m.client.ModelCache.GetModelInfo(m.client.Model); err == nil {
+				if info.EffectiveWidth != nil && info.EffectiveHeight != nil {
+					effectiveWidth, effectiveHeight = *info.EffectiveWidth, *info.EffectiveHeight
+				}
+			}
+		}
+
+		// Annotate the last frame with bounding boxes
+		lastFrame := framesToSend[len(framesToSend)-1]
+		annotatedData, err := AnnotateFrame(lastFrame.Data, newResponse, effectiveWidth, effectiveHeight)
+		if err != nil {
+			log.Printf("[BatchManager] Failed to annotate frame: %v", err)
+			annotatedData = lastFrame.Data // fall back to original
+		}
+
+		// Save annotated frame to disk for debugging
+		go SaveAnnotatedFrame(annotatedData, serviceID, lastFrame.Sequence, m.storageBaseDir)
+
+		// Update context with annotated frame for next batch's continuity
 		m.mu.Lock()
 		if existingCtx := m.rollingContexts[serviceID]; existingCtx != nil {
 			existingCtx.previousResponse = newResponse
+			existingCtx.lastFrame = &Frame{
+				Data:      annotatedData,
+				Timestamp: lastFrame.Timestamp,
+				ServiceID: serviceID,
+				Sequence:  lastFrame.Sequence,
+			}
+			existingCtx.effectiveWidth = effectiveWidth
+			existingCtx.effectiveHeight = effectiveHeight
 		}
 		m.mu.Unlock()
 
-		log.Printf("[BatchManager] Service %s rolling summary updated:\n%s", serviceID, newResponse)
-		// TODO: Store the summary somewhere (database, broadcast to clients, etc.)
+		log.Printf("[BatchManager] Service %s: annotated frame (effective: %dx%d)",
+			serviceID, effectiveWidth, effectiveHeight)
 	}
 }
 
