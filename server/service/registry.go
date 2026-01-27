@@ -27,6 +27,12 @@ type ServiceState struct {
 	SuccessfulSince time.Time // Last time data flowed successfully
 }
 
+// reconnectRequest represents a pending reconnection attempt
+type reconnectRequest struct {
+	serviceID string
+	backoff   time.Duration
+}
+
 // ServiceRegistry manages all services and their handlers
 type ServiceRegistry struct {
 	db            *database.Client
@@ -45,6 +51,9 @@ type ServiceRegistry struct {
 	maxRetries     int           // Maximum reconnection attempts
 	monitorStop    chan struct{}
 	monitorStopped chan struct{}
+
+	// Reconnection queue
+	reconnectQueue chan reconnectRequest // Async reconnection requests
 }
 
 // NewServiceRegistry creates a new service registry
@@ -72,10 +81,14 @@ func NewServiceRegistry(db *database.Client, frameInterval time.Duration, frames
 		maxRetries:     maxRetries,
 		monitorStop:    make(chan struct{}),
 		monitorStopped: make(chan struct{}),
+		reconnectQueue: make(chan reconnectRequest, 100), // Buffered channel
 	}
 
 	// Start idle monitoring goroutine
 	go r.monitorIdleConnections()
+
+	// Start reconnection worker
+	go r.reconnectionWorker()
 
 	return r
 }
@@ -130,13 +143,8 @@ func (r *ServiceRegistry) RemoveService(serviceID string) {
 		return
 	}
 
-	// Stop handler
+	// Stop handler (this also calls batchManager.RemoveService)
 	r.stopHandlerLocked(state)
-
-	// Clean up batch manager context for this service
-	if r.batchManager != nil {
-		r.batchManager.RemoveService(serviceID)
-	}
 
 	// Remove from node's service set
 	if r.nodes[state.NodeID] != nil {
@@ -428,33 +436,58 @@ func (r *ServiceRegistry) reconnectServiceLocked(state *ServiceState) {
 	state.RetryCount++
 	state.LastRetryTime = time.Now()
 
-	// Wait a bit before reconnecting (exponential backoff)
+	// Calculate backoff
 	backoff := time.Duration(state.RetryCount) * 2 * time.Second
-	log.Printf("[ServiceRegistry] Waiting %v before reconnecting service %s", backoff, state.ID)
 
-	// Release lock during sleep
-	r.mu.Unlock()
-	time.Sleep(backoff)
-	r.mu.Lock()
-
-	// Check if service still exists and node is online
-	if _, exists := r.services[state.ID]; !exists {
-		log.Printf("[ServiceRegistry] Service %s no longer exists, skipping reconnection", state.ID)
-		return
+	// Queue for async reconnection (DON'T RELEASE LOCK!)
+	select {
+	case r.reconnectQueue <- reconnectRequest{
+		serviceID: state.ID,
+		backoff:   backoff,
+	}:
+		log.Printf("[ServiceRegistry] Queued reconnection for %s (backoff=%v)", state.ID, backoff)
+	default:
+		log.Printf("[ServiceRegistry] Reconnect queue full, dropping request for %s", state.ID)
 	}
+}
 
-	if !r.onlineNodes[state.NodeID] {
-		log.Printf("[ServiceRegistry] Node %s offline, skipping reconnection for service %s", state.NodeID, state.ID)
-		return
-	}
+// reconnectionWorker processes queued reconnection requests asynchronously
+func (r *ServiceRegistry) reconnectionWorker() {
+	for {
+		select {
+		case <-r.monitorStop:
+			log.Printf("[ServiceRegistry] Stopping reconnection worker")
+			return
 
-	// Attempt to start handler again
-	log.Printf("[ServiceRegistry] Reconnecting service %s to node %s", state.ID, state.NodeID)
-	r.startHandlerLocked(state)
+		case req := <-r.reconnectQueue:
+			// Sleep with backoff (outside lock!)
+			log.Printf("[ServiceRegistry] Waiting %v before reconnecting service %s", req.backoff, req.serviceID)
+			time.Sleep(req.backoff)
 
-	// Mark successful start time
-	if state.Online && state.Handler != nil && state.Handler.IsRunning() {
-		state.SuccessfulSince = time.Now()
-		log.Printf("[ServiceRegistry] Successfully reconnected service %s", state.ID)
+			// Now acquire lock and attempt reconnection
+			r.mu.Lock()
+			state, exists := r.services[req.serviceID]
+			if !exists {
+				r.mu.Unlock()
+				log.Printf("[ServiceRegistry] Service %s no longer exists, skipping reconnection", req.serviceID)
+				continue
+			}
+
+			if !r.onlineNodes[state.NodeID] {
+				r.mu.Unlock()
+				log.Printf("[ServiceRegistry] Node %s offline, skipping reconnection for service %s", state.NodeID, req.serviceID)
+				continue
+			}
+
+			// Attempt reconnection
+			log.Printf("[ServiceRegistry] Reconnecting service %s to node %s", req.serviceID, state.NodeID)
+			r.startHandlerLocked(state)
+
+			if state.Handler != nil && state.Handler.IsRunning() {
+				state.SuccessfulSince = time.Now()
+				log.Printf("[ServiceRegistry] Successfully reconnected service %s", req.serviceID)
+			}
+			r.mu.Unlock()
+		}
 	}
 }

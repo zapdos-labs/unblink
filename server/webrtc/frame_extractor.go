@@ -27,6 +27,7 @@ type FrameExtractor struct {
 	onFrame   func(*Frame) // Callback when frame is ready
 	closeChan chan struct{}
 	closeOnce sync.Once
+	wg        sync.WaitGroup // Track goroutine completion
 
 	// FFmpeg pipeline
 	ffmpegCmd    *exec.Cmd
@@ -60,6 +61,7 @@ func (e *FrameExtractor) Start(mediaSource MediaSource) error {
 	}
 
 	// Start H.264 packet consumer that pipes to FFmpeg
+	e.wg.Add(2) // Track both goroutines
 	go e.consumeH264ToFFmpeg(producer)
 
 	// Start JPEG frame reader from FFmpeg
@@ -111,6 +113,7 @@ func (e *FrameExtractor) startFFmpeg() error {
 
 // consumeH264ToFFmpeg reads H.264 packets and pipes them directly to FFmpeg
 func (e *FrameExtractor) consumeH264ToFFmpeg(producer core.Producer) {
+	defer e.wg.Done() // Signal completion
 	defer log.Printf("[FrameExtractor] Stopped H.264 consumer for service %s", e.serviceID)
 
 	// Create H.264 consumer
@@ -168,6 +171,7 @@ func (e *FrameExtractor) consumeH264ToFFmpeg(producer core.Producer) {
 
 // readFramesFromFFmpeg reads JPEG frames from FFmpeg stdout
 func (e *FrameExtractor) readFramesFromFFmpeg() {
+	defer e.wg.Done() // Signal completion
 	defer log.Printf("[FrameExtractor] Stopped JPEG reader for service %s", e.serviceID)
 
 	// JPEG SOI (Start of Image) marker
@@ -248,15 +252,37 @@ func (e *FrameExtractor) readFramesFromFFmpeg() {
 func (e *FrameExtractor) Close() {
 	e.closeOnce.Do(func() {
 		log.Printf("[FrameExtractor] Closing frame extractor for service %s", e.serviceID)
+
+		// 1. Signal goroutines to exit
 		close(e.closeChan)
 
-		// Wait a bit for goroutines to finish
-		time.Sleep(100 * time.Millisecond)
+		// 2. Close pipes to unblock reads/writes
+		if e.ffmpegStdin != nil {
+			e.ffmpegStdin.Close()
+		}
+		if e.ffmpegStdout != nil {
+			e.ffmpegStdout.Close()
+		}
 
-		// Kill FFmpeg if still running
+		// 3. Wait for goroutines with timeout
+		done := make(chan struct{})
+		go func() {
+			e.wg.Wait()
+			close(done)
+		}()
+
+		select {
+		case <-done:
+			log.Printf("[FrameExtractor] Goroutines exited cleanly for service %s", e.serviceID)
+		case <-time.After(2 * time.Second):
+			log.Printf("[FrameExtractor] Timeout waiting for goroutines, forcing cleanup for service %s", e.serviceID)
+		}
+
+		// 4. NOW kill FFmpeg (goroutines have stopped)
 		if e.ffmpegCmd != nil && e.ffmpegCmd.Process != nil {
 			e.ffmpegCmd.Process.Kill()
 			e.ffmpegCmd.Wait()
+			log.Printf("[FrameExtractor] FFmpeg process terminated for service %s", e.serviceID)
 		}
 	})
 }

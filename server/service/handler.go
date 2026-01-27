@@ -6,6 +6,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/AlexxIT/go2rtc/pkg/core"
+
 	"unb/server"
 	"unb/server/webrtc"
 )
@@ -18,9 +20,11 @@ type ServiceHandler struct {
 	nodeID    string
 
 	// Service components
-	bridgeConn  *server.BridgeConn
-	mediaSource webrtc.MediaSource
-	extractor   *webrtc.FrameExtractor
+	bridgeConn   *server.BridgeConn
+	mediaSource  webrtc.MediaSource
+	extractor    *webrtc.FrameExtractor
+	producer     core.Producer  // Track producer for cleanup
+	producerDone chan struct{}  // Signal when producer goroutine exits
 
 	// Shared infrastructure (injected)
 	storage      *webrtc.Storage
@@ -90,10 +94,15 @@ func (h *ServiceHandler) Start() error {
 		return fmt.Errorf("failed to create media source: %w", err)
 	}
 
+	// Get producer reference for cleanup
+	h.producer = h.mediaSource.GetProducer()
+
 	// Start producer receive loop (required to pump RTP data from bridge)
+	h.producerDone = make(chan struct{})
 	go func() {
+		defer close(h.producerDone)
 		log.Printf("[ServiceHandler] Starting producer receive loop for service %s", h.serviceID)
-		if err := h.mediaSource.GetProducer().Start(); err != nil {
+		if err := h.producer.Start(); err != nil {
 			log.Printf("[ServiceHandler] Producer receive loop ended for service %s: %v", h.serviceID, err)
 		}
 	}()
@@ -129,6 +138,17 @@ func (h *ServiceHandler) Stop() {
 	if h.extractor != nil {
 		h.extractor.Close()
 		h.extractor = nil
+	}
+
+	// Stop producer and wait for goroutine to exit (BEFORE closing media source)
+	if h.producer != nil {
+		log.Printf("[ServiceHandler] Stopping producer for service %s", h.serviceID)
+		h.producer.Stop() // Signal producer to exit
+		if h.producerDone != nil {
+			<-h.producerDone // Wait for goroutine to actually exit
+		}
+		h.producer = nil
+		log.Printf("[ServiceHandler] Producer stopped for service %s", h.serviceID)
 	}
 
 	// Close media source

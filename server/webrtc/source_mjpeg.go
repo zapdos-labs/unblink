@@ -8,6 +8,8 @@ import (
 	"net/url"
 	"os/exec"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/AlexxIT/go2rtc/pkg/core"
 	"github.com/AlexxIT/go2rtc/pkg/magic"
@@ -19,6 +21,8 @@ type MJPEGSource struct {
 	cmd        *exec.Cmd
 	receivers  []*core.Receiver
 	bridgeConn net.Conn
+	stderrWg   sync.WaitGroup // Track stderr goroutine
+	closeOnce  sync.Once      // Ensure Close is called only once
 }
 
 // NewMJPEGSourceWithBridge creates a new MJPEG source using a direct bridge connection
@@ -94,8 +98,16 @@ func NewMJPEGSourceWithBridge(serviceURL, bridgeID string, bridgeConn net.Conn) 
 		return nil, fmt.Errorf("FFmpeg start: %w", err)
 	}
 
-	// Log stderr in background
+	// Create source object first
+	source := &MJPEGSource{
+		cmd:        cmd,
+		bridgeConn: bridgeConn,
+	}
+
+	// Log stderr in background (track with WaitGroup)
+	source.stderrWg.Add(1)
 	go func() {
+		defer source.stderrWg.Done()
 		scanner := bufio.NewScanner(stderr)
 		for scanner.Scan() {
 			log.Printf("[FFmpeg] %s", scanner.Text())
@@ -161,12 +173,9 @@ func NewMJPEGSourceWithBridge(serviceURL, bridgeID string, bridgeConn net.Conn) 
 
 	log.Printf("[MJPEG] Connected successfully, %d track(s)", len(receivers))
 
-	return &MJPEGSource{
-		producer:   prod,
-		cmd:        cmd,
-		receivers:  receivers,
-		bridgeConn: bridgeConn,
-	}, nil
+	source.producer = prod
+	source.receivers = receivers
+	return source, nil
 }
 
 // GetProducer returns the H.264 producer from FFmpeg transcoding
@@ -181,14 +190,40 @@ func (s *MJPEGSource) GetReceivers() []*core.Receiver {
 
 // Close stops the FFmpeg process and producer
 func (s *MJPEGSource) Close() {
-	if s.producer != nil {
-		_ = s.producer.Stop()
-	}
-	if s.cmd != nil && s.cmd.Process != nil {
-		s.cmd.Process.Kill()
-		s.cmd.Wait() // Clean up zombie process
-	}
-	log.Printf("[MJPEG] Closed FFmpeg transcoding")
+	s.closeOnce.Do(func() {
+		log.Printf("[MJPEG] Closing FFmpeg transcoding")
+
+		// 1. Stop producer (signals it to exit)
+		if s.producer != nil {
+			_ = s.producer.Stop()
+		}
+
+		// 2. Close bridge connection to unblock reads
+		if s.bridgeConn != nil {
+			s.bridgeConn.Close()
+		}
+
+		// 3. Wait for stderr goroutine with timeout
+		done := make(chan struct{})
+		go func() {
+			s.stderrWg.Wait()
+			close(done)
+		}()
+
+		select {
+		case <-done:
+			log.Printf("[MJPEG] Stderr goroutine exited cleanly")
+		case <-time.After(2 * time.Second):
+			log.Printf("[MJPEG] Timeout waiting for stderr goroutine, forcing cleanup")
+		}
+
+		// 4. NOW kill FFmpeg process (goroutines have stopped)
+		if s.cmd != nil && s.cmd.Process != nil {
+			s.cmd.Process.Kill()
+			s.cmd.Wait() // Clean up zombie process
+			log.Printf("[MJPEG] FFmpeg process terminated")
+		}
+	})
 }
 
 // parseServiceURL extracts the protocol and address from a service URL
