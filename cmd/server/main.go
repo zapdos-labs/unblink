@@ -103,6 +103,11 @@ func main() {
 
 	serviceService := service.NewService(dbClient, serviceRegistry)
 
+	// Create storage service
+	storageService := service.NewStorageService(dbClient, &service.StorageConfig{
+		FramesBaseDir: config.FramesBaseDir(),
+	})
+
 	// Create HTTP handler with Connect RPC
 	mux := http.NewServeMux()
 
@@ -131,6 +136,14 @@ func main() {
 	)
 	mux.Handle(servicePath, serviceHandler)
 	log.Printf("Mounted ServiceService at %s (with auth)", servicePath)
+
+	// Mount StorageService with auth interceptor
+	framesPath, framesHandler := servicev1connect.NewStorageServiceHandler(
+		storageService,
+		connect.WithInterceptors(authInterceptor),
+	)
+	mux.Handle(framesPath, framesHandler)
+	log.Printf("Mounted StorageService at %s (with auth)", framesPath)
 
 	// Initialize node server for WebSocket connections
 	nodeServer := server.NewServer(config)
@@ -166,13 +179,18 @@ func main() {
 	mux.Handle("/node/", nodeHandler)
 	mux.Handle("/health", nodeHandler)
 
+	// Register HTTP handlers for serving JPEG frames
+	storageService.RegisterHTTPHandlers(mux)
+
 	// Start server
 	log.Printf("Server starting on %s", config.ListenAddr)
 	log.Printf("  - Auth RPC: /auth.v1.AuthService/*")
 	log.Printf("  - Chat RPC: /chat.v1.ChatService/*")
 	log.Printf("  - Service RPC: /service.v1.ServiceService/*")
+	log.Printf("  - Storage RPC: /service.v1.StorageService/*")
 	log.Printf("  - WebRTC RPC: /webrtc.v1.WebRTCService/*")
 	log.Printf("  - Node WebSocket: /node/connect")
+	log.Printf("  - Frames HTTP: /frames/{serviceID}/{frameID}.jpg")
 
 	// Use h2c for HTTP/2 without TLS
 	h2s := &http2.Server{}

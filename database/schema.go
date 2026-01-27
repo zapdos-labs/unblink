@@ -20,6 +20,9 @@ func (c *Client) CreateSchema() error {
 	if _, err := c.db.Exec(createUserNodeTablesSQL); err != nil {
 		return fmt.Errorf("failed to create user_node tables: %w", err)
 	}
+	if _, err := c.db.Exec(createStorageTablesSQL); err != nil {
+		return fmt.Errorf("failed to create storage tables: %w", err)
+	}
 	return nil
 }
 
@@ -27,6 +30,9 @@ func (c *Client) CreateSchema() error {
 func (c *Client) DropSchema() error {
 	if _, err := c.db.Exec(dropUserNodeTablesSQL); err != nil {
 		return fmt.Errorf("failed to drop user_node tables: %w", err)
+	}
+	if _, err := c.db.Exec(dropStorageTablesSQL); err != nil {
+		return fmt.Errorf("failed to drop storage tables: %w", err)
 	}
 	if _, err := c.db.Exec(dropServiceTablesSQL); err != nil {
 		return fmt.Errorf("failed to drop service tables: %w", err)

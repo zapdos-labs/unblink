@@ -51,3 +51,4 @@ Thumbs.db
 # app/gen/
 server/webrtc/rtsp_client.go
 main
+unb-server

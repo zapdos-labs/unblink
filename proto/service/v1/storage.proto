@@ -1,0 +1,79 @@
+syntax = "proto3";
+
+package service.v1;
+
+option go_package = "unb/server/gen/service/v1;servicev1";
+
+import "google/protobuf/timestamp.proto";
+import "service/v1/service.proto";
+
+// StorageService provides access to stored video frames
+service StorageService {
+  // List frames for a service
+  rpc ListFrames(ListFramesRequest) returns (ListFramesResponse);
+
+  // Get frame metadata
+  rpc GetFrame(GetFrameRequest) returns (GetFrameResponse);
+
+  // List services with frames for a node
+  rpc ListServicesWithFrames(ListServicesWithFramesRequest) returns (ListServicesWithFramesResponse);
+
+  // Delete old frames (by time)
+  rpc DeleteOldFrames(DeleteOldFramesRequest) returns (DeleteOldFramesResponse);
+}
+
+// Frame metadata
+message Frame {
+  string id = 1;
+  string service_id = 2;
+  int64 sequence = 3;
+  int64 size = 4;
+  google.protobuf.Timestamp timestamp = 5;
+  string path = 6;  // Relative path for HTTP access
+}
+
+// List frames for a service
+message ListFramesRequest {
+  string service_id = 1;
+  int64 limit = 2;    // Max frames to return (default 100)
+  int64 offset = 3;   // For pagination
+}
+
+message ListFramesResponse {
+  repeated Frame frames = 1;
+  int64 total = 2;
+}
+
+// Get frame metadata
+message GetFrameRequest {
+  string frame_id = 1;
+}
+
+message GetFrameResponse {
+  Frame frame = 1;
+}
+
+// List services with frames for a node
+message ListServicesWithFramesRequest {
+  string node_id = 1;
+}
+
+message ListServicesWithFramesResponse {
+  repeated ServiceFrames services = 1;
+}
+
+message ServiceFrames {
+  Service service = 1;
+  repeated Frame frames = 2;
+  int64 total_frames = 3;
+}
+
+// Delete old frames
+message DeleteOldFramesRequest {
+  string service_id = 1;
+  int64 older_than_seconds = 2;  // Delete frames older than this many seconds
+}
+
+message DeleteOldFramesResponse {
+  int64 deleted_count = 1;
+}

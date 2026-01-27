@@ -27,7 +27,7 @@ type ServiceState struct {
 // ServiceRegistry manages all services and their frame extractors
 type ServiceRegistry struct {
 	db            *database.Client
-	frameStorage  *webrtc.FrameStorage
+	storage  *webrtc.Storage
 	frameInterval time.Duration
 	srv           *server.Server
 
@@ -39,9 +39,21 @@ type ServiceRegistry struct {
 
 // NewServiceRegistry creates a new service registry
 func NewServiceRegistry(db *database.Client, frameInterval time.Duration, framesDir string, srv *server.Server) *ServiceRegistry {
+	storage := webrtc.NewStorage(framesDir)
+
+	// Wire up callback to save frame metadata to database when frames are saved to disk
+	storage.SetOnSaved(func(serviceID, frameID, framePath string, timestamp time.Time, fileSize int64, sequence int64) {
+		metadata := &database.FrameMetadata{
+			Sequence: sequence,
+		}
+		if err := db.SaveFrame(serviceID, framePath, timestamp, fileSize, metadata); err != nil {
+			log.Printf("[ServiceRegistry] Failed to save frame metadata: %v", err)
+		}
+	})
+
 	return &ServiceRegistry{
 		db:            db,
-		frameStorage:  webrtc.NewFrameStorage(framesDir),
+		storage:       storage,
 		frameInterval: frameInterval,
 		srv:           srv,
 		services:      make(map[string]*ServiceState),
@@ -254,7 +266,7 @@ func (r *ServiceRegistry) startExtractorLocked(state *ServiceState) {
 
 	// Create and start extractor
 	extractor := webrtc.NewFrameExtractor(state.ID, r.frameInterval, func(frame *webrtc.Frame) {
-		r.frameStorage.Save(state.ID, frame)
+		r.storage.Save(state.ID, frame)
 	})
 
 	if err := extractor.Start(source); err != nil {

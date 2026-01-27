@@ -35,6 +35,29 @@ const (
 	`
 
 	dropUserNodeTablesSQL = `DROP TABLE IF EXISTS user_node CASCADE`
+
+	createStorageTablesSQL = `
+		CREATE TABLE IF NOT EXISTS storage (
+			id TEXT PRIMARY KEY,
+			service_id TEXT NOT NULL,
+			type TEXT NOT NULL,
+			storage_path TEXT NOT NULL,
+			timestamp TIMESTAMP NOT NULL,
+			file_size BIGINT,
+			content_type TEXT NOT NULL,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			metadata TEXT,
+			FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE CASCADE
+		);
+
+		CREATE INDEX IF NOT EXISTS idx_storage_service_id ON storage(service_id);
+		CREATE INDEX IF NOT EXISTS idx_storage_type ON storage(type);
+		CREATE INDEX IF NOT EXISTS idx_storage_timestamp ON storage(timestamp);
+		CREATE INDEX IF NOT EXISTS idx_storage_service_type ON storage(service_id, type);
+		CREATE INDEX IF NOT EXISTS idx_storage_service_timestamp ON storage(service_id, timestamp DESC);
+	`
+
+	dropStorageTablesSQL = `DROP TABLE IF EXISTS storage CASCADE`
 )
 
 // CreateService creates a new service
