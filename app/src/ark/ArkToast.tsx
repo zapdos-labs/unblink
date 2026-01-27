@@ -21,7 +21,7 @@ export default function ArkToast() {
     return <Toaster toaster={toaster}>
         {(toast) => (
             <Toast.Root >
-                <div class="flex items-start space-x-3 p-4 bg-neu-800 border border-neu-700 rounded shadow min-w-sm max-w-sm">
+                <div class="flex items-start space-x-3 p-4 bg-neu-800 rounded-lg shadow min-w-sm max-w-sm">
                     {getIcon(toast().type)}
                     <div class="flex-1">
                         <Toast.Title>{toast().title}</Toast.Title>

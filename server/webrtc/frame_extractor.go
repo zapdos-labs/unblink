@@ -82,11 +82,11 @@ func (e *FrameExtractor) startFFmpeg() error {
 	fps := 1.0 / e.interval.Seconds()
 
 	// FFmpeg command: H.264 stdin → JPEG frames at specified fps
-	// Simplified command matching working unbLink implementation
+	// Using raw H.264 Annex-B format from H264Consumer
 	e.ffmpegCmd = exec.Command(
 		"ffmpeg",
 		"-loglevel", "error", // Only log errors
-		"-f", "mpegts", // Input format (MPEG-TS from go2rtc)
+		"-f", "h264", // Input format (raw H.264 Annex-B)
 		"-i", "pipe:0", // Read from stdin
 		"-vf", fmt.Sprintf("fps=%.3f", fps), // Extract frames at interval
 		"-f", "image2pipe", // Output image stream
@@ -117,78 +117,61 @@ func (e *FrameExtractor) startFFmpeg() error {
 	return nil
 }
 
-// consumeH264ToFFmpeg reads H.264 packets and pipes them to FFmpeg using MPEG-TS
+// consumeH264ToFFmpeg reads H.264 packets and pipes them directly to FFmpeg
 func (e *FrameExtractor) consumeH264ToFFmpeg(producer core.Producer) {
 	defer log.Printf("[FrameExtractor] Stopped H.264 consumer for service %s", e.serviceID)
 
-	// Create MPEG-TS consumer using shared helper
-	tsConsumer, err := NewMPEGTSConsumer(producer, e.serviceID)
-	if err != nil {
-		log.Printf("[FrameExtractor] Failed to create MPEG-TS consumer: %v", err)
+	// Create H.264 consumer
+	h264Consumer := NewH264Consumer()
+	defer h264Consumer.Stop()
+
+	// Find H.264 video track
+	var videoMedia *core.Media
+	for _, media := range producer.GetMedias() {
+		if media.Kind == core.KindVideo {
+			videoMedia = media
+			break
+		}
+	}
+	if videoMedia == nil {
+		log.Printf("[FrameExtractor] No video media found for service %s", e.serviceID)
 		return
 	}
-	defer tsConsumer.Stop()
 
-	log.Printf("[FrameExtractor] Starting to write MPEG-TS to FFmpeg for service %s", e.serviceID)
-
-	// Start a goroutine to monitor write progress
-	writtenCh := make(chan int64, 1)
-	go func() {
-		var lastWritten int64
-		ticker := time.NewTicker(5 * time.Second)
-		defer ticker.Stop()
-		for {
-			select {
-			case <-e.closeChan:
-				return
-			case w := <-writtenCh:
-				lastWritten = w
-				log.Printf("[FrameExtractor] Total MPEG-TS written: %d bytes", w)
-			case <-ticker.C:
-				if lastWritten > 0 {
-					log.Printf("[FrameExtractor] Still writing, total so far: %d bytes", lastWritten)
-				} else {
-					log.Printf("[FrameExtractor] WARNING: No MPEG-TS data written yet for service %s", e.serviceID)
-				}
-			}
+	var h264Codec *core.Codec
+	for _, codec := range videoMedia.Codecs {
+		if codec.Name == core.CodecH264 {
+			h264Codec = codec
+			break
 		}
-	}()
-
-	// Wrap ffmpegStdin to monitor writes
-	watchedWriter := &watchWriter{
-		w:         e.ffmpegStdin,
-		writtenCh: writtenCh,
+	}
+	if h264Codec == nil {
+		log.Printf("[FrameExtractor] No H.264 codec found for service %s", e.serviceID)
+		return
 	}
 
-	// consumer.WriteTo blocks until error
-	written, err := tsConsumer.WriteTo(watchedWriter)
+	// Get track from producer
+	receiver, err := producer.GetTrack(videoMedia, h264Codec)
 	if err != nil {
-		log.Printf("[FrameExtractor] MPEG-TS writer finished: written=%d err=%v", written, err)
+		log.Printf("[FrameExtractor] Failed to get H.264 track: %v", err)
+		return
+	}
+
+	// Add track to consumer
+	if err := h264Consumer.AddTrack(videoMedia, h264Codec, receiver); err != nil {
+		log.Printf("[FrameExtractor] Failed to add track: %v", err)
+		return
+	}
+
+	log.Printf("[FrameExtractor] Starting to write H.264 to FFmpeg for service %s", e.serviceID)
+
+	// WriteTo blocks until error
+	written, err := h264Consumer.WriteTo(e.ffmpegStdin)
+	if err != nil {
+		log.Printf("[FrameExtractor] H.264 writer finished: written=%d err=%v", written, err)
 	} else {
-		log.Printf("[FrameExtractor] MPEG-TS writer finished: written=%d", written)
+		log.Printf("[FrameExtractor] H.264 writer finished: written=%d", written)
 	}
-}
-
-// watchWriter wraps io.Writer to report write progress
-type watchWriter struct {
-	w         io.Writer
-	writtenCh chan<- int64
-	total     int64
-}
-
-func (w *watchWriter) Write(p []byte) (int, error) {
-	n, err := w.w.Write(p)
-	if n > 0 {
-		w.total += int64(n)
-		// Send update every ~100KB
-		if w.total%100000 < int64(n) {
-			select {
-			case w.writtenCh <- w.total:
-			default:
-			}
-		}
-	}
-	return n, err
 }
 
 // readFramesFromFFmpeg reads JPEG frames from FFmpeg stdout
@@ -203,14 +186,13 @@ func (e *FrameExtractor) readFramesFromFFmpeg() {
 	var frameBuffer bytes.Buffer
 	buf := make([]byte, 4096)
 	inFrame := false
-	totalRead := 0
 
 	log.Printf("[FrameExtractor] Starting to read JPEG frames from FFmpeg for service %s", e.serviceID)
 
 	for {
 		select {
 		case <-e.closeChan:
-			log.Printf("[FrameExtractor] JPEG reader closing (total read: %d bytes)", totalRead)
+			log.Printf("[FrameExtractor] JPEG reader closing")
 			return
 		default:
 		}
@@ -220,14 +202,9 @@ func (e *FrameExtractor) readFramesFromFFmpeg() {
 			if err != io.EOF {
 				log.Printf("[FrameExtractor] Error reading from FFmpeg output pipe: %v", err)
 			} else {
-				log.Printf("[FrameExtractor] FFmpeg stdout closed (total read: %d bytes)", totalRead)
+				log.Printf("[FrameExtractor] FFmpeg stdout closed")
 			}
 			return
-		}
-
-		totalRead += n
-		if totalRead%100000 < n { // Log every ~100KB
-			log.Printf("[FrameExtractor] Read %d bytes from FFmpeg (service %s)", totalRead, e.serviceID)
 		}
 
 		for i := 0; i < n; i++ {

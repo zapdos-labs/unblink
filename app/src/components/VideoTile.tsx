@@ -48,28 +48,32 @@ export default function VideoTile(props: Props) {
 
       setPc(newPc)
 
-      // Handle incoming tracks
+      // Handle incoming tracks (both video and audio)
       newPc.ontrack = (event) => {
         console.log(`[VideoTile] Got ${event.track.kind} track:`, event.track.label || event.track.id)
 
-        if (event.track.kind !== 'video') {
+        if (!videoRef) {
           return
         }
 
-        if (videoRef) {
-          if (event.streams && event.streams[0]) {
-            console.log('[VideoTile] Using existing stream', event.streams[0].id)
-            if (videoRef.srcObject !== event.streams[0]) {
-              videoRef.srcObject = event.streams[0]
-            }
-          } else {
-            console.log('[VideoTile] No stream in event, creating new MediaStream')
-            const stream = new MediaStream()
-            stream.addTrack(event.track)
-            if (videoRef.srcObject !== stream) {
-              videoRef.srcObject = stream
-            }
+        // Add track to the video element's MediaStream
+        if (event.streams && event.streams[0]) {
+          console.log('[VideoTile] Using existing stream', event.streams[0].id)
+          if (videoRef.srcObject !== event.streams[0]) {
+            videoRef.srcObject = event.streams[0]
           }
+        } else {
+          console.log('[VideoTile] No stream in event, adding track to existing or new stream')
+          let stream = videoRef.srcObject as MediaStream | null
+          if (!stream) {
+            stream = new MediaStream()
+            videoRef.srcObject = stream
+          }
+          stream.addTrack(event.track)
+        }
+
+        // Only trigger play and hide loading on video track
+        if (event.track.kind === 'video') {
           // Explicitly play to ensure autoplay works even if policy is strict
           videoRef.play().catch(e => {
             if (e.name !== 'AbortError') {
@@ -155,7 +159,6 @@ export default function VideoTile(props: Props) {
         class="w-full h-full object-contain"
         autoplay
         playsinline
-        muted
       />
 
       {/* Loading spinner */}

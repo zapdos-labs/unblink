@@ -52,6 +52,7 @@ func NewMJPEGSourceWithBridge(serviceURL, bridgeID string, bridgeConn net.Conn) 
 	log.Printf("[MJPEG] HTTP request sent, starting FFmpeg transcoding")
 
 	// Create FFmpeg command to read MJPEG from stdin and transcode to H.264
+	// Output raw H.264 Annex-B format instead of MPEG-TS for better performance
 	cmd := exec.Command("ffmpeg",
 		"-fflags", "nobuffer",
 		"-flags", "low_delay",
@@ -67,7 +68,7 @@ func NewMJPEGSourceWithBridge(serviceURL, bridgeID string, bridgeConn net.Conn) 
 		"-profile:v", "high",
 		"-level:v", "4.1",
 		"-pix_fmt:v", "yuv420p",
-		"-f", "mpegts",
+		"-f", "h264", // Output raw H.264 Annex-B format
 		"pipe:1", // Write to stdout
 	)
 
