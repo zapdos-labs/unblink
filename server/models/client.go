@@ -7,23 +7,11 @@ import (
 	"time"
 )
 
-// Config holds the configuration for the ModelInfo client
-type Config struct {
-	BaseURL string
-	APIKey  string
-}
-
 // Client fetches model information from OpenAI-compatible /v1/models endpoint
 type Client struct {
 	httpClient *http.Client
 	baseURL    string
 	apiKey     string
-}
-
-// ModelInfo holds information about a model
-type ModelInfo struct {
-	ID          string
-	MaxModelLen int
 }
 
 // modelsResponse represents the JSON response from /v1/models

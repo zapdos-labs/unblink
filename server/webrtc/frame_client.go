@@ -9,6 +9,8 @@ import (
 
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/option"
+
+	"unb/server/models"
 )
 
 // FrameClient handles communication with vLLM endpoints (OpenAI-compatible)
@@ -18,10 +20,11 @@ type FrameClient struct {
 	timeout     time.Duration
 	baseURL     string
 	instruction string // Static instruction for all requests
+	modelCache  *models.Cache
 }
 
 // NewFrameClient creates a new frame client for vLLM communication
-func NewFrameClient(baseURL, model, apiKey string, timeout time.Duration, instruction string) *FrameClient {
+func NewFrameClient(baseURL, model, apiKey string, timeout time.Duration, instruction string, modelCache *models.Cache) *FrameClient {
 	opts := []option.RequestOption{
 		option.WithAPIKey(apiKey),
 	}
@@ -38,11 +41,17 @@ func NewFrameClient(baseURL, model, apiKey string, timeout time.Duration, instru
 		timeout:     timeout,
 		baseURL:     baseURL,
 		instruction: instruction,
+		modelCache:  modelCache,
 	}
 }
 
-// SendFrameBatch sends a batch of frames to the vLLM endpoint
+// SendFrameBatch sends a batch of frames to the vLLM endpoint using the static instruction
 func (c *FrameClient) SendFrameBatch(ctx context.Context, frames []*Frame) (*openai.ChatCompletion, error) {
+	return c.SendFrameBatchWithInstruction(ctx, frames, c.instruction)
+}
+
+// SendFrameBatchWithInstruction sends a batch of frames to the vLLM endpoint with a custom instruction
+func (c *FrameClient) SendFrameBatchWithInstruction(ctx context.Context, frames []*Frame, instruction string) (*openai.ChatCompletion, error) {
 	if len(frames) == 0 {
 		return nil, fmt.Errorf("no frames to send")
 	}
@@ -50,9 +59,9 @@ func (c *FrameClient) SendFrameBatch(ctx context.Context, frames []*Frame) (*ope
 	// Build message content with images and text
 	content := []openai.ChatCompletionContentPartUnionParam{}
 
-	// Add static instruction
-	if c.instruction != "" {
-		content = append(content, openai.TextContentPart(c.instruction))
+	// Add instruction
+	if instruction != "" {
+		content = append(content, openai.TextContentPart(instruction))
 	}
 
 	// Add images
@@ -66,13 +75,22 @@ func (c *FrameClient) SendFrameBatch(ctx context.Context, frames []*Frame) (*ope
 		}))
 	}
 
+	// Determine max tokens from cache
+	maxTokens := 2000
+	if c.modelCache != nil {
+		if cachedTokens, err := c.modelCache.GetMaxTokens(c.model); err == nil {
+			// Use 25% of max context for response
+			maxTokens = min(cachedTokens/4, 2000)
+		}
+	}
+
 	// Build request
 	params := openai.ChatCompletionNewParams{
 		Model: openai.ChatModel(c.model),
 		Messages: []openai.ChatCompletionMessageParamUnion{
 			openai.UserMessage(content),
 		},
-		MaxTokens: openai.Int(500),
+		MaxTokens: openai.Int(int64(maxTokens)),
 	}
 
 	// Send request with timeout

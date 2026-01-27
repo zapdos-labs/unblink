@@ -14,6 +14,7 @@ import (
 	"unb/server/auth"
 	"unb/server/chat"
 	"unb/server/gen/chat/v1/auth/authv1connect"
+	"unb/server/models"
 	"unb/server/gen/chat/v1/chatv1connect"
 	"unb/server/gen/service/v1/servicev1connect"
 	"unb/server/gen/webrtc/v1/webrtcv1connect"
@@ -111,7 +112,14 @@ func main() {
 			vlmAPIKey = config.FastOpenAIAPIKey
 		}
 
-		frameClient := webrtc.NewFrameClient(vlmBaseURL, vlmModel, vlmAPIKey, vlmTimeout, "Summarize the video")
+		// Create model cache for VLM
+		vlmModelClient := models.NewClient(models.Config{
+			BaseURL: vlmBaseURL,
+			APIKey:  vlmAPIKey,
+		})
+		vlmModelCache := models.NewCache(vlmModelClient)
+
+		frameClient := webrtc.NewFrameClient(vlmBaseURL, vlmModel, vlmAPIKey, vlmTimeout, "Summarize the video", vlmModelCache)
 
 		frameBatchSize := 2
 		if config.FrameBatchSize > 0 {
