@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/AlexxIT/go2rtc/pkg/core"
-	"github.com/AlexxIT/go2rtc/pkg/rtsp"
+	"unb/server/internal/rtsp"
 )
 
 // RTSPSource handles RTSP stream sources

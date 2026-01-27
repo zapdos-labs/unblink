@@ -9,9 +9,6 @@
 ## Quick Start
 
 ```bash
-# Set GOPRIVATE first (required for custom go2rtc fork)
-go env -w GOPRIVATE=github.com/unblink
-
 # Clone
 git clone https://github.com/unblink/unb.git
 cd unb
@@ -36,7 +33,7 @@ Edit `server.config.json`:
 {
   "database_url": "postgresql://user:password@localhost:5432/unb?sslmode=disable",
   "port": 8080,
-  "openai_api_key": "sk-..."  // optional, for models
+  "openai_api_key": "sk-..." // optional, for models
 }
 ```
 
