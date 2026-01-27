@@ -20,19 +20,24 @@ type BridgeConn struct {
 	closeMu   sync.Mutex
 
 	// Read buffer for partial reads
-	readBuf    []byte
-	readBufMu  sync.Mutex
+	readBuf       []byte
+	readBufMu     sync.Mutex
 	readDeadline  time.Time
 	writeDeadline time.Time
 	deadlineMu    sync.RWMutex
+
+	// Idle detection
+	lastDataTime time.Time
+	idleMu       sync.RWMutex
 }
 
 // NewBridgeConn creates a new BridgeConn
 func NewBridgeConn(nodeConn *NodeConn, bridgeID string, dataChan chan []byte) *BridgeConn {
 	return &BridgeConn{
-		nodeConn: nodeConn,
-		bridgeID: bridgeID,
-		dataChan: dataChan,
+		nodeConn:     nodeConn,
+		bridgeID:     bridgeID,
+		dataChan:     dataChan,
+		lastDataTime: time.Now(), // Initialize with current time
 	}
 }
 
@@ -78,6 +83,11 @@ func (bc *BridgeConn) Read(p []byte) (int, error) {
 		if !ok {
 			return 0, io.EOF
 		}
+
+		// Update last data time
+		bc.idleMu.Lock()
+		bc.lastDataTime = time.Now()
+		bc.idleMu.Unlock()
 
 		// Copy what we can into p
 		n := copy(p, data)
@@ -166,6 +176,20 @@ func (bc *BridgeConn) SetWriteDeadline(t time.Time) error {
 	defer bc.deadlineMu.Unlock()
 	bc.writeDeadline = t
 	return nil
+}
+
+// LastDataTime returns the last time data was received
+func (bc *BridgeConn) LastDataTime() time.Time {
+	bc.idleMu.RLock()
+	defer bc.idleMu.RUnlock()
+	return bc.lastDataTime
+}
+
+// IdleDuration returns how long the connection has been idle
+func (bc *BridgeConn) IdleDuration() time.Duration {
+	bc.idleMu.RLock()
+	defer bc.idleMu.RUnlock()
+	return time.Since(bc.lastDataTime)
 }
 
 // bridgeAddr implements net.Addr for bridge connections

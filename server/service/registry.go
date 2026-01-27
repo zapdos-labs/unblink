@@ -1,7 +1,6 @@
 package service
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"sync"
@@ -15,16 +14,20 @@ import (
 
 // ServiceState tracks the state of a service
 type ServiceState struct {
-	ID        string
-	Name      string
-	URL       string
-	NodeID    string
-	Online    bool
-	Extractor *webrtc.FrameExtractor
-	Cancel    context.CancelFunc
+	ID      string
+	Name    string
+	URL     string
+	NodeID  string
+	Online  bool
+	Handler *ServiceHandler // Handles all service operations
+
+	// Reconnection state
+	RetryCount      int
+	LastRetryTime   time.Time
+	SuccessfulSince time.Time // Last time data flowed successfully
 }
 
-// ServiceRegistry manages all services and their frame extractors
+// ServiceRegistry manages all services and their handlers
 type ServiceRegistry struct {
 	db            *database.Client
 	storage       *webrtc.Storage
@@ -36,10 +39,16 @@ type ServiceRegistry struct {
 	services    map[string]*ServiceState   // serviceID -> ServiceState
 	nodes       map[string]map[string]bool // nodeID -> set of serviceIDs
 	onlineNodes map[string]bool            // nodeID -> online status
+
+	// Idle monitoring
+	idleTimeout    time.Duration // How long before considering a bridge idle
+	maxRetries     int           // Maximum reconnection attempts
+	monitorStop    chan struct{}
+	monitorStopped chan struct{}
 }
 
 // NewServiceRegistry creates a new service registry
-func NewServiceRegistry(db *database.Client, frameInterval time.Duration, framesDir string, srv *server.Server, batchMgr *webrtc.BatchManager) *ServiceRegistry {
+func NewServiceRegistry(db *database.Client, frameInterval time.Duration, framesDir string, srv *server.Server, batchMgr *webrtc.BatchManager, idleTimeout time.Duration, maxRetries int) *ServiceRegistry {
 	storage := webrtc.NewStorage(framesDir)
 
 	// Wire up callback to save frame metadata to database when frames are saved to disk
@@ -50,16 +59,25 @@ func NewServiceRegistry(db *database.Client, frameInterval time.Duration, frames
 		}
 	})
 
-	return &ServiceRegistry{
-		db:            db,
-		storage:       storage,
-		batchManager:  batchMgr,
-		frameInterval: frameInterval,
-		srv:           srv,
-		services:      make(map[string]*ServiceState),
-		nodes:         make(map[string]map[string]bool),
-		onlineNodes:   make(map[string]bool),
+	r := &ServiceRegistry{
+		db:             db,
+		storage:        storage,
+		batchManager:   batchMgr,
+		frameInterval:  frameInterval,
+		srv:            srv,
+		services:       make(map[string]*ServiceState),
+		nodes:          make(map[string]map[string]bool),
+		onlineNodes:    make(map[string]bool),
+		idleTimeout:    idleTimeout,
+		maxRetries:     maxRetries,
+		monitorStop:    make(chan struct{}),
+		monitorStopped: make(chan struct{}),
 	}
+
+	// Start idle monitoring goroutine
+	go r.monitorIdleConnections()
+
+	return r
 }
 
 // SetServer sets the server reference (needed after server is created)
@@ -69,7 +87,7 @@ func (r *ServiceRegistry) SetServer(srv *server.Server) {
 	r.srv = srv
 }
 
-// AddService adds a service to the registry and starts extractor if node is online
+// AddService adds a service to the registry and starts handler if node is online
 func (r *ServiceRegistry) AddService(service *servicev1.Service) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -93,16 +111,16 @@ func (r *ServiceRegistry) AddService(service *servicev1.Service) error {
 	}
 	r.nodes[service.NodeId][service.Id] = true
 
-	// Start extractor if node is online
+	// Start handler if node is online
 	if nodeOnline {
-		r.startExtractorLocked(state)
+		r.startHandlerLocked(state)
 	}
 
 	log.Printf("[ServiceRegistry] Added service %s (node=%s, online=%v)", service.Id, service.NodeId, nodeOnline)
 	return nil
 }
 
-// RemoveService removes a service from the registry and stops its extractor
+// RemoveService removes a service from the registry and stops its handler
 func (r *ServiceRegistry) RemoveService(serviceID string) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -112,8 +130,13 @@ func (r *ServiceRegistry) RemoveService(serviceID string) {
 		return
 	}
 
-	// Stop extractor
-	r.stopExtractorLocked(state)
+	// Stop handler
+	r.stopHandlerLocked(state)
+
+	// Clean up batch manager context for this service
+	if r.batchManager != nil {
+		r.batchManager.RemoveService(serviceID)
+	}
 
 	// Remove from node's service set
 	if r.nodes[state.NodeID] != nil {
@@ -139,8 +162,8 @@ func (r *ServiceRegistry) UpdateService(service *servicev1.Service) {
 		return
 	}
 
-	// Stop old extractor
-	r.stopExtractorLocked(state)
+	// Stop old handler
+	r.stopHandlerLocked(state)
 
 	// Update state
 	state.Name = service.Name
@@ -164,16 +187,16 @@ func (r *ServiceRegistry) UpdateService(service *servicev1.Service) {
 		r.nodes[service.NodeId][service.Id] = true
 	}
 
-	// Restart extractor if node is online
+	// Restart handler if node is online
 	state.Online = r.onlineNodes[state.NodeID]
 	if state.Online {
-		r.startExtractorLocked(state)
+		r.startHandlerLocked(state)
 	}
 
 	log.Printf("[ServiceRegistry] Updated service %s", service.Id)
 }
 
-// SetNodeOnline sets a node as online and starts extractors for all its services
+// SetNodeOnline sets a node as online and starts handlers for all its services
 func (r *ServiceRegistry) SetNodeOnline(nodeID string) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -185,18 +208,18 @@ func (r *ServiceRegistry) SetNodeOnline(nodeID string) {
 		return
 	}
 
-	log.Printf("[ServiceRegistry] Node %s online, starting %d extractors", nodeID, len(serviceIDs))
+	log.Printf("[ServiceRegistry] Node %s online, starting %d handlers", nodeID, len(serviceIDs))
 
 	for serviceID := range serviceIDs {
 		state := r.services[serviceID]
 		if state != nil && !state.Online {
 			state.Online = true
-			r.startExtractorLocked(state)
+			r.startHandlerLocked(state)
 		}
 	}
 }
 
-// SetNodeOffline sets a node as offline and stops extractors for all its services
+// SetNodeOffline sets a node as offline and stops handlers for all its services
 func (r *ServiceRegistry) SetNodeOffline(nodeID string) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -208,93 +231,46 @@ func (r *ServiceRegistry) SetNodeOffline(nodeID string) {
 		return
 	}
 
-	log.Printf("[ServiceRegistry] Node %s offline, stopping %d extractors", nodeID, len(serviceIDs))
+	log.Printf("[ServiceRegistry] Node %s offline, stopping %d handlers", nodeID, len(serviceIDs))
 
 	for serviceID := range serviceIDs {
 		state := r.services[serviceID]
 		if state != nil && state.Online {
 			state.Online = false
-			r.stopExtractorLocked(state)
+			r.stopHandlerLocked(state)
 		}
 	}
 }
 
-// startExtractorLocked starts the frame extractor for a service (caller must hold lock)
-func (r *ServiceRegistry) startExtractorLocked(state *ServiceState) {
-	ctx, cancel := context.WithCancel(context.Background())
-	state.Cancel = cancel
-
-	// Get node connection
-	nodeConn, exists := r.srv.GetNodeConnection(state.NodeID)
-	if !exists {
-		log.Printf("[ServiceRegistry] Node %s not connected, cannot start extractor for %s", state.NodeID, state.ID)
-		return
-	}
-
-	// Open bridge to the service
-	bridgeID, dataChan, err := nodeConn.OpenBridge(ctx, state.ID, state.URL)
-	if err != nil {
-		log.Printf("[ServiceRegistry] Failed to open bridge for %s: %v", state.ID, err)
-		return
-	}
-
-	log.Printf("[ServiceRegistry] Bridge %s opened for service %s", bridgeID, state.ID)
-
-	// Create BridgeConn
-	bridgeConn := server.NewBridgeConn(nodeConn, bridgeID, dataChan)
-
-	// Create media source
-	source, err := webrtc.NewMediaSource(state.URL, state.ID, bridgeConn)
-	if err != nil {
-		log.Printf("[ServiceRegistry] Failed to create media source for %s: %v", state.ID, err)
-		bridgeConn.Close()
-		ctx := context.Background()
-		nodeConn.CloseBridge(ctx, bridgeID)
-		return
-	}
-
-	// Start producer receive loop (required to pump RTP data from bridge)
-	// This must be called after media source creation and before extractor starts
-	go func() {
-		log.Printf("[ServiceRegistry] Starting producer receive loop for service %s", state.ID)
-		if err := source.GetProducer().Start(); err != nil {
-			log.Printf("[ServiceRegistry] Producer receive loop ended for service %s: %v", state.ID, err)
-		}
-	}()
-
-	// Create and start extractor
-	extractor := webrtc.NewFrameExtractor(state.ID, r.frameInterval, func(frame *webrtc.Frame) {
-		// Save frame to disk
-		r.storage.Save(state.ID, frame)
-
-		// Add frame to batch manager for vLLM processing
-		if r.batchManager != nil {
-			r.batchManager.AddFrame(frame)
-		}
+// startHandlerLocked starts the service handler for a service (caller must hold lock)
+func (r *ServiceRegistry) startHandlerLocked(state *ServiceState) {
+	// Create handler with configuration
+	handler := NewServiceHandler(ServiceHandlerConfig{
+		ServiceID:     state.ID,
+		URL:           state.URL,
+		NodeID:        state.NodeID,
+		FrameInterval: r.frameInterval,
+		Storage:       r.storage,
+		BatchManager:  r.batchManager,
+		Server:        r.srv,
 	})
 
-	if err := extractor.Start(source); err != nil {
-		log.Printf("[ServiceRegistry] Failed to start extractor for %s: %v", state.ID, err)
-		source.Close()
-		bridgeConn.Close()
-		ctx := context.Background()
-		nodeConn.CloseBridge(ctx, bridgeID)
+	// Start the handler
+	if err := handler.Start(); err != nil {
+		log.Printf("[ServiceRegistry] Failed to start handler for %s: %v", state.ID, err)
 		return
 	}
 
-	state.Extractor = extractor
-	log.Printf("[ServiceRegistry] Started extractor for service %s", state.ID)
+	state.Handler = handler
+	state.SuccessfulSince = time.Now() // Mark as successful
+	log.Printf("[ServiceRegistry] Started handler for service %s", state.ID)
 }
 
-// stopExtractorLocked stops the frame extractor for a service (caller must hold lock)
-func (r *ServiceRegistry) stopExtractorLocked(state *ServiceState) {
-	if state.Extractor != nil {
-		state.Extractor.Close()
-		state.Extractor = nil
-	}
-	if state.Cancel != nil {
-		state.Cancel()
-		state.Cancel = nil
+// stopHandlerLocked stops the service handler for a service (caller must hold lock)
+func (r *ServiceRegistry) stopHandlerLocked(state *ServiceState) {
+	if state.Handler != nil {
+		state.Handler.Stop()
+		state.Handler = nil
 	}
 	state.Online = false
 }
@@ -351,23 +327,134 @@ func (r *ServiceRegistry) addServiceLocked(service *servicev1.Service) error {
 	}
 	r.nodes[service.NodeId][service.Id] = true
 
-	// Start extractor if node is online
+	// Start handler if node is online
 	if nodeOnline {
-		r.startExtractorLocked(state)
+		r.startHandlerLocked(state)
 	}
 
 	log.Printf("[ServiceRegistry] Added service %s (node=%s, online=%v)", service.Id, service.NodeId, nodeOnline)
 	return nil
 }
 
-// Close stops all extractors and cleans up resources
+// Close stops all handlers and cleans up resources
 func (r *ServiceRegistry) Close() {
+	// Stop idle monitoring first
+	close(r.monitorStop)
+	<-r.monitorStopped // Wait for monitor to finish
+
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	log.Printf("[ServiceRegistry] Closing all extractors")
+	log.Printf("[ServiceRegistry] Closing all handlers")
 
 	for _, state := range r.services {
-		r.stopExtractorLocked(state)
+		r.stopHandlerLocked(state)
+	}
+}
+
+// monitorIdleConnections periodically checks for idle bridges and attempts reconnection
+func (r *ServiceRegistry) monitorIdleConnections() {
+	defer close(r.monitorStopped)
+
+	ticker := time.NewTicker(10 * time.Second) // Check every 10 seconds
+	defer ticker.Stop()
+
+	log.Printf("[ServiceRegistry] Started idle connection monitor (timeout=%v, maxRetries=%d)", r.idleTimeout, r.maxRetries)
+
+	for {
+		select {
+		case <-r.monitorStop:
+			log.Printf("[ServiceRegistry] Stopping idle connection monitor")
+			return
+
+		case <-ticker.C:
+			r.checkIdleConnections()
+		}
+	}
+}
+
+// checkIdleConnections checks all services for idle bridges
+func (r *ServiceRegistry) checkIdleConnections() {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	for _, state := range r.services {
+		if !state.Online || state.Handler == nil {
+			continue
+		}
+
+		bridgeConn := state.Handler.GetBridgeConn()
+		if bridgeConn == nil {
+			continue
+		}
+
+		idleDuration := bridgeConn.IdleDuration()
+
+		// Check if bridge is idle
+		if idleDuration > r.idleTimeout {
+			log.Printf("[ServiceRegistry] Service %s idle for %v (threshold=%v)", state.ID, idleDuration, r.idleTimeout)
+
+			// Check retry limit
+			if state.RetryCount >= r.maxRetries {
+				log.Printf("[ServiceRegistry] Service %s exceeded max retries (%d/%d), giving up", state.ID, state.RetryCount, r.maxRetries)
+				r.stopHandlerLocked(state)
+				continue
+			}
+
+			// Attempt reconnection
+			log.Printf("[ServiceRegistry] Attempting reconnection for service %s (attempt %d/%d)", state.ID, state.RetryCount+1, r.maxRetries)
+			r.reconnectServiceLocked(state)
+		} else {
+			// Connection is active - check if we should reset retry counter
+			if state.RetryCount > 0 && !state.SuccessfulSince.IsZero() {
+				// If connection has been successful for longer than idle timeout, reset counter
+				successDuration := time.Since(state.SuccessfulSince)
+				if successDuration > r.idleTimeout {
+					log.Printf("[ServiceRegistry] Service %s stable for %v, resetting retry counter", state.ID, successDuration)
+					state.RetryCount = 0
+					state.SuccessfulSince = time.Time{} // Clear
+				}
+			}
+		}
+	}
+}
+
+// reconnectServiceLocked attempts to reconnect a service (caller must hold lock)
+func (r *ServiceRegistry) reconnectServiceLocked(state *ServiceState) {
+	// Stop current handler
+	r.stopHandlerLocked(state)
+
+	// Increment retry count
+	state.RetryCount++
+	state.LastRetryTime = time.Now()
+
+	// Wait a bit before reconnecting (exponential backoff)
+	backoff := time.Duration(state.RetryCount) * 2 * time.Second
+	log.Printf("[ServiceRegistry] Waiting %v before reconnecting service %s", backoff, state.ID)
+
+	// Release lock during sleep
+	r.mu.Unlock()
+	time.Sleep(backoff)
+	r.mu.Lock()
+
+	// Check if service still exists and node is online
+	if _, exists := r.services[state.ID]; !exists {
+		log.Printf("[ServiceRegistry] Service %s no longer exists, skipping reconnection", state.ID)
+		return
+	}
+
+	if !r.onlineNodes[state.NodeID] {
+		log.Printf("[ServiceRegistry] Node %s offline, skipping reconnection for service %s", state.NodeID, state.ID)
+		return
+	}
+
+	// Attempt to start handler again
+	log.Printf("[ServiceRegistry] Reconnecting service %s to node %s", state.ID, state.NodeID)
+	r.startHandlerLocked(state)
+
+	// Mark successful start time
+	if state.Online && state.Handler != nil && state.Handler.IsRunning() {
+		state.SuccessfulSince = time.Now()
+		log.Printf("[ServiceRegistry] Successfully reconnected service %s", state.ID)
 	}
 }

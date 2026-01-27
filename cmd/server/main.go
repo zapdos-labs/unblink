@@ -111,14 +111,17 @@ func main() {
 		log.Printf("[Main] VLM not configured, frame summaries disabled")
 	}
 
-	// Create service registry for frame extraction
+	// Create service registry for managing services
 	frameInterval := time.Duration(config.FrameIntervalSeconds * float64(time.Second))
+	idleTimeout := time.Duration(config.BridgeIdleTimeoutSec) * time.Second
 	serviceRegistry := service.NewServiceRegistry(
 		dbClient,
 		frameInterval,
 		config.FramesBaseDir(),
 		nil, // will be set after nodeServer is created
 		batchManager,
+		idleTimeout,
+		config.BridgeMaxRetries,
 	)
 
 	serviceService := service.NewService(dbClient, serviceRegistry)

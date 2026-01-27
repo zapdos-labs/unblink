@@ -16,5 +16,7 @@
   "frame_interval_seconds": 5.0,
   "frame_batch_size": 3,
   "vlm_timeout_sec": 120,
+  "bridge_idle_timeout_sec": 300,
+  "bridge_max_retries": 3,
   "app_dir": "/path/to/data/directory"
 }

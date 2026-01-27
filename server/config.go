@@ -46,6 +46,10 @@ type Config struct {
 	VLMOpenAIAPIKey  string `json:"vlm_openai_api_key,omitempty"`
 	VLMTimeoutSec    int    `json:"vlm_timeout_sec"` // Request timeout in seconds
 
+	// Bridge idle detection and reconnection
+	BridgeIdleTimeoutSec int `json:"bridge_idle_timeout_sec"` // How long before bridge is considered idle (seconds)
+	BridgeMaxRetries     int `json:"bridge_max_retries"`      // Maximum reconnection attempts before giving up
+
 	// App directory for storage (frames, logs, etc.)
 	AppDir string `json:"app_dir"` // Path to application storage directory
 }
@@ -143,6 +147,12 @@ func (c *Config) Validate() error {
 	}
 	if c.VLMTimeoutSec <= 0 {
 		missing = append(missing, "vlm_timeout_sec")
+	}
+	if c.BridgeIdleTimeoutSec <= 0 {
+		missing = append(missing, "bridge_idle_timeout_sec")
+	}
+	if c.BridgeMaxRetries <= 0 {
+		missing = append(missing, "bridge_max_retries")
 	}
 
 	if len(missing) > 0 {
