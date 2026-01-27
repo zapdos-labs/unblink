@@ -80,6 +80,44 @@ func (c *Client) CreateService(id, name, url, nodeID string) error {
 	return nil
 }
 
+// UpdateService updates an existing service
+func (c *Client) UpdateService(id, name, url, userID string) error {
+	updateSQL := `
+		UPDATE services
+		SET name = $1, url = $2, updated_at = CURRENT_TIMESTAMP
+		WHERE id = $3
+		AND (
+			-- Node is public (no users associated)
+			NOT EXISTS (
+				SELECT 1 FROM user_node
+				WHERE user_node.node_id = services.node_id
+			)
+			OR
+			-- OR user has access to this private node
+			EXISTS (
+				SELECT 1 FROM user_node
+				WHERE user_node.node_id = services.node_id
+				AND user_node.user_id = $4
+			)
+		)
+	`
+
+	result, err := c.db.Exec(updateSQL, name, url, id, userID)
+	if err != nil {
+		return fmt.Errorf("failed to update service: %w", err)
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to check rows affected: %w", err)
+	}
+	if rows == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
+}
+
 // GetService retrieves a service by ID (no authorization check - use with DeleteService)
 func (c *Client) GetService(id string) (*servicev1.Service, error) {
 	querySQL := `

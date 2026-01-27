@@ -10,6 +10,7 @@ service ServiceService {
   // Service management
   rpc CreateService(CreateServiceRequest) returns (CreateServiceResponse);
   rpc ListServicesByNodeId(ListServicesByNodeIdRequest) returns (ListServicesByNodeIdResponse);
+  rpc UpdateService(UpdateServiceRequest) returns (UpdateServiceResponse);
   rpc DeleteService(DeleteServiceRequest) returns (DeleteServiceResponse);
 }
 
@@ -42,6 +43,16 @@ message ListServicesByNodeIdRequest {
 
 message ListServicesByNodeIdResponse {
   repeated Service services = 1;
+}
+
+message UpdateServiceRequest {
+  string id = 1;
+  string name = 2;
+  string url = 3;
+}
+
+message UpdateServiceResponse {
+  Service service = 1;
 }
 
 message DeleteServiceRequest {

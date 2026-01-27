@@ -40,6 +40,12 @@ type Config struct {
 	FrameIntervalSeconds float64 `json:"frame_interval_seconds,omitempty"` // Extraction interval in seconds (default 5)
 	FrameBatchSize       int     `json:"frame_batch_size,omitempty"`        // Frames to batch before sending (default 2)
 
+	// VLM OpenAI settings for frame processing
+	VLMOpenAIModel  string `json:"vlm_openai_model,omitempty"`  // Model to use for frame processing (uses fast_openai_model if not set)
+	VLMOpenAIBaseURL string `json:"vlm_openai_base_url,omitempty"` // VLM endpoint (uses fast_openai_base_url if not set)
+	VLMOpenAIAPIKey  string `json:"vlm_openai_api_key,omitempty"`  // API key for VLM endpoint (uses fast_openai_api_key if not set)
+	VLMTimeoutSec    int    `json:"vlm_timeout_sec,omitempty"`     // Request timeout in seconds (default 30)
+
 	// App directory for storage (frames, logs, etc.)
 	AppDir string `json:"app_dir,omitempty"` // Path to application storage directory
 }

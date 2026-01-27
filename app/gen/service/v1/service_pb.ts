@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file service/v1/service.proto.
  */
 export const file_service_v1_service: GenFile = /*@__PURE__*/
-  fileDesc("ChhzZXJ2aWNlL3YxL3NlcnZpY2UucHJvdG8SCnNlcnZpY2UudjEioQEKB1NlcnZpY2USCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRILCgN1cmwYAyABKAkSDwoHbm9kZV9pZBgEIAEoCRIuCgpjcmVhdGVkX2F0GAUgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIuCgp1cGRhdGVkX2F0GAYgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCJCChRDcmVhdGVTZXJ2aWNlUmVxdWVzdBIMCgRuYW1lGAEgASgJEgsKA3VybBgCIAEoCRIPCgdub2RlX2lkGAMgASgJIj0KFUNyZWF0ZVNlcnZpY2VSZXNwb25zZRIkCgdzZXJ2aWNlGAEgASgLMhMuc2VydmljZS52MS5TZXJ2aWNlIi4KG0xpc3RTZXJ2aWNlc0J5Tm9kZUlkUmVxdWVzdBIPCgdub2RlX2lkGAEgASgJIkUKHExpc3RTZXJ2aWNlc0J5Tm9kZUlkUmVzcG9uc2USJQoIc2VydmljZXMYASADKAsyEy5zZXJ2aWNlLnYxLlNlcnZpY2UiKgoURGVsZXRlU2VydmljZVJlcXVlc3QSEgoKc2VydmljZV9pZBgBIAEoCSIoChVEZWxldGVTZXJ2aWNlUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCDKnAgoOU2VydmljZVNlcnZpY2USVAoNQ3JlYXRlU2VydmljZRIgLnNlcnZpY2UudjEuQ3JlYXRlU2VydmljZVJlcXVlc3QaIS5zZXJ2aWNlLnYxLkNyZWF0ZVNlcnZpY2VSZXNwb25zZRJpChRMaXN0U2VydmljZXNCeU5vZGVJZBInLnNlcnZpY2UudjEuTGlzdFNlcnZpY2VzQnlOb2RlSWRSZXF1ZXN0Giguc2VydmljZS52MS5MaXN0U2VydmljZXNCeU5vZGVJZFJlc3BvbnNlElQKDURlbGV0ZVNlcnZpY2USIC5zZXJ2aWNlLnYxLkRlbGV0ZVNlcnZpY2VSZXF1ZXN0GiEuc2VydmljZS52MS5EZWxldGVTZXJ2aWNlUmVzcG9uc2VCJVojdW5iL3NlcnZlci9nZW4vc2VydmljZS92MTtzZXJ2aWNldjFiBnByb3RvMw", [file_google_protobuf_timestamp]);
+  fileDesc("ChhzZXJ2aWNlL3YxL3NlcnZpY2UucHJvdG8SCnNlcnZpY2UudjEioQEKB1NlcnZpY2USCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRILCgN1cmwYAyABKAkSDwoHbm9kZV9pZBgEIAEoCRIuCgpjcmVhdGVkX2F0GAUgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIuCgp1cGRhdGVkX2F0GAYgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCJCChRDcmVhdGVTZXJ2aWNlUmVxdWVzdBIMCgRuYW1lGAEgASgJEgsKA3VybBgCIAEoCRIPCgdub2RlX2lkGAMgASgJIj0KFUNyZWF0ZVNlcnZpY2VSZXNwb25zZRIkCgdzZXJ2aWNlGAEgASgLMhMuc2VydmljZS52MS5TZXJ2aWNlIi4KG0xpc3RTZXJ2aWNlc0J5Tm9kZUlkUmVxdWVzdBIPCgdub2RlX2lkGAEgASgJIkUKHExpc3RTZXJ2aWNlc0J5Tm9kZUlkUmVzcG9uc2USJQoIc2VydmljZXMYASADKAsyEy5zZXJ2aWNlLnYxLlNlcnZpY2UiPQoUVXBkYXRlU2VydmljZVJlcXVlc3QSCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRILCgN1cmwYAyABKAkiPQoVVXBkYXRlU2VydmljZVJlc3BvbnNlEiQKB3NlcnZpY2UYASABKAsyEy5zZXJ2aWNlLnYxLlNlcnZpY2UiKgoURGVsZXRlU2VydmljZVJlcXVlc3QSEgoKc2VydmljZV9pZBgBIAEoCSIoChVEZWxldGVTZXJ2aWNlUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCDL9AgoOU2VydmljZVNlcnZpY2USVAoNQ3JlYXRlU2VydmljZRIgLnNlcnZpY2UudjEuQ3JlYXRlU2VydmljZVJlcXVlc3QaIS5zZXJ2aWNlLnYxLkNyZWF0ZVNlcnZpY2VSZXNwb25zZRJpChRMaXN0U2VydmljZXNCeU5vZGVJZBInLnNlcnZpY2UudjEuTGlzdFNlcnZpY2VzQnlOb2RlSWRSZXF1ZXN0Giguc2VydmljZS52MS5MaXN0U2VydmljZXNCeU5vZGVJZFJlc3BvbnNlElQKDVVwZGF0ZVNlcnZpY2USIC5zZXJ2aWNlLnYxLlVwZGF0ZVNlcnZpY2VSZXF1ZXN0GiEuc2VydmljZS52MS5VcGRhdGVTZXJ2aWNlUmVzcG9uc2USVAoNRGVsZXRlU2VydmljZRIgLnNlcnZpY2UudjEuRGVsZXRlU2VydmljZVJlcXVlc3QaIS5zZXJ2aWNlLnYxLkRlbGV0ZVNlcnZpY2VSZXNwb25zZUIlWiN1bmIvc2VydmVyL2dlbi9zZXJ2aWNlL3YxO3NlcnZpY2V2MWIGcHJvdG8z", [file_google_protobuf_timestamp]);
 
 /**
  * @generated from message service.v1.Service
@@ -135,6 +135,50 @@ export const ListServicesByNodeIdResponseSchema: GenMessage<ListServicesByNodeId
   messageDesc(file_service_v1_service, 4);
 
 /**
+ * @generated from message service.v1.UpdateServiceRequest
+ */
+export type UpdateServiceRequest = Message<"service.v1.UpdateServiceRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: string name = 2;
+   */
+  name: string;
+
+  /**
+   * @generated from field: string url = 3;
+   */
+  url: string;
+};
+
+/**
+ * Describes the message service.v1.UpdateServiceRequest.
+ * Use `create(UpdateServiceRequestSchema)` to create a new message.
+ */
+export const UpdateServiceRequestSchema: GenMessage<UpdateServiceRequest> = /*@__PURE__*/
+  messageDesc(file_service_v1_service, 5);
+
+/**
+ * @generated from message service.v1.UpdateServiceResponse
+ */
+export type UpdateServiceResponse = Message<"service.v1.UpdateServiceResponse"> & {
+  /**
+   * @generated from field: service.v1.Service service = 1;
+   */
+  service?: Service;
+};
+
+/**
+ * Describes the message service.v1.UpdateServiceResponse.
+ * Use `create(UpdateServiceResponseSchema)` to create a new message.
+ */
+export const UpdateServiceResponseSchema: GenMessage<UpdateServiceResponse> = /*@__PURE__*/
+  messageDesc(file_service_v1_service, 6);
+
+/**
  * @generated from message service.v1.DeleteServiceRequest
  */
 export type DeleteServiceRequest = Message<"service.v1.DeleteServiceRequest"> & {
@@ -149,7 +193,7 @@ export type DeleteServiceRequest = Message<"service.v1.DeleteServiceRequest"> & 
  * Use `create(DeleteServiceRequestSchema)` to create a new message.
  */
 export const DeleteServiceRequestSchema: GenMessage<DeleteServiceRequest> = /*@__PURE__*/
-  messageDesc(file_service_v1_service, 5);
+  messageDesc(file_service_v1_service, 7);
 
 /**
  * @generated from message service.v1.DeleteServiceResponse
@@ -166,7 +210,7 @@ export type DeleteServiceResponse = Message<"service.v1.DeleteServiceResponse"> 
  * Use `create(DeleteServiceResponseSchema)` to create a new message.
  */
 export const DeleteServiceResponseSchema: GenMessage<DeleteServiceResponse> = /*@__PURE__*/
-  messageDesc(file_service_v1_service, 6);
+  messageDesc(file_service_v1_service, 8);
 
 /**
  * @generated from service service.v1.ServiceService
@@ -189,6 +233,14 @@ export const ServiceService: GenService<{
     methodKind: "unary";
     input: typeof ListServicesByNodeIdRequestSchema;
     output: typeof ListServicesByNodeIdResponseSchema;
+  },
+  /**
+   * @generated from rpc service.v1.ServiceService.UpdateService
+   */
+  updateService: {
+    methodKind: "unary";
+    input: typeof UpdateServiceRequestSchema;
+    output: typeof UpdateServiceResponseSchema;
   },
   /**
    * @generated from rpc service.v1.ServiceService.DeleteService

@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
-	servicev1 "unb/server/gen/service/v1"
-	"unb/server"
 	"unb/database"
+	"unb/server"
+	servicev1 "unb/server/gen/service/v1"
 	"unb/server/webrtc"
 )
 
@@ -27,18 +27,19 @@ type ServiceState struct {
 // ServiceRegistry manages all services and their frame extractors
 type ServiceRegistry struct {
 	db            *database.Client
-	storage  *webrtc.Storage
+	storage       *webrtc.Storage
+	batchManager  *webrtc.BatchManager
 	frameInterval time.Duration
 	srv           *server.Server
 
-	mu       sync.RWMutex
-	services map[string]*ServiceState      // serviceID -> ServiceState
-	nodes    map[string]map[string]bool    // nodeID -> set of serviceIDs
-	onlineNodes map[string]bool             // nodeID -> online status
+	mu          sync.RWMutex
+	services    map[string]*ServiceState   // serviceID -> ServiceState
+	nodes       map[string]map[string]bool // nodeID -> set of serviceIDs
+	onlineNodes map[string]bool            // nodeID -> online status
 }
 
 // NewServiceRegistry creates a new service registry
-func NewServiceRegistry(db *database.Client, frameInterval time.Duration, framesDir string, srv *server.Server) *ServiceRegistry {
+func NewServiceRegistry(db *database.Client, frameInterval time.Duration, framesDir string, srv *server.Server, batchMgr *webrtc.BatchManager) *ServiceRegistry {
 	storage := webrtc.NewStorage(framesDir)
 
 	// Wire up callback to save frame metadata to database when frames are saved to disk
@@ -54,6 +55,7 @@ func NewServiceRegistry(db *database.Client, frameInterval time.Duration, frames
 	return &ServiceRegistry{
 		db:            db,
 		storage:       storage,
+		batchManager:  batchMgr,
 		frameInterval: frameInterval,
 		srv:           srv,
 		services:      make(map[string]*ServiceState),
@@ -135,9 +137,7 @@ func (r *ServiceRegistry) UpdateService(service *servicev1.Service) {
 	state, exists := r.services[service.Id]
 	if !exists {
 		// Service doesn't exist, add it
-		r.mu.Unlock()
-		r.AddService(service)
-		r.mu.Lock()
+		r.addServiceLocked(service)
 		return
 	}
 
@@ -266,7 +266,13 @@ func (r *ServiceRegistry) startExtractorLocked(state *ServiceState) {
 
 	// Create and start extractor
 	extractor := webrtc.NewFrameExtractor(state.ID, r.frameInterval, func(frame *webrtc.Frame) {
+		// Save frame to disk
 		r.storage.Save(state.ID, frame)
+
+		// Add frame to batch manager for vLLM processing
+		if r.batchManager != nil {
+			r.batchManager.AddFrame(frame)
+		}
 	})
 
 	if err := extractor.Start(source); err != nil {

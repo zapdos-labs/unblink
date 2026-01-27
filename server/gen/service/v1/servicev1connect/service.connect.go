@@ -39,6 +39,9 @@ const (
 	// ServiceServiceListServicesByNodeIdProcedure is the fully-qualified name of the ServiceService's
 	// ListServicesByNodeId RPC.
 	ServiceServiceListServicesByNodeIdProcedure = "/service.v1.ServiceService/ListServicesByNodeId"
+	// ServiceServiceUpdateServiceProcedure is the fully-qualified name of the ServiceService's
+	// UpdateService RPC.
+	ServiceServiceUpdateServiceProcedure = "/service.v1.ServiceService/UpdateService"
 	// ServiceServiceDeleteServiceProcedure is the fully-qualified name of the ServiceService's
 	// DeleteService RPC.
 	ServiceServiceDeleteServiceProcedure = "/service.v1.ServiceService/DeleteService"
@@ -49,6 +52,7 @@ type ServiceServiceClient interface {
 	// Service management
 	CreateService(context.Context, *connect.Request[v1.CreateServiceRequest]) (*connect.Response[v1.CreateServiceResponse], error)
 	ListServicesByNodeId(context.Context, *connect.Request[v1.ListServicesByNodeIdRequest]) (*connect.Response[v1.ListServicesByNodeIdResponse], error)
+	UpdateService(context.Context, *connect.Request[v1.UpdateServiceRequest]) (*connect.Response[v1.UpdateServiceResponse], error)
 	DeleteService(context.Context, *connect.Request[v1.DeleteServiceRequest]) (*connect.Response[v1.DeleteServiceResponse], error)
 }
 
@@ -75,6 +79,12 @@ func NewServiceServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(serviceServiceMethods.ByName("ListServicesByNodeId")),
 			connect.WithClientOptions(opts...),
 		),
+		updateService: connect.NewClient[v1.UpdateServiceRequest, v1.UpdateServiceResponse](
+			httpClient,
+			baseURL+ServiceServiceUpdateServiceProcedure,
+			connect.WithSchema(serviceServiceMethods.ByName("UpdateService")),
+			connect.WithClientOptions(opts...),
+		),
 		deleteService: connect.NewClient[v1.DeleteServiceRequest, v1.DeleteServiceResponse](
 			httpClient,
 			baseURL+ServiceServiceDeleteServiceProcedure,
@@ -88,6 +98,7 @@ func NewServiceServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 type serviceServiceClient struct {
 	createService        *connect.Client[v1.CreateServiceRequest, v1.CreateServiceResponse]
 	listServicesByNodeId *connect.Client[v1.ListServicesByNodeIdRequest, v1.ListServicesByNodeIdResponse]
+	updateService        *connect.Client[v1.UpdateServiceRequest, v1.UpdateServiceResponse]
 	deleteService        *connect.Client[v1.DeleteServiceRequest, v1.DeleteServiceResponse]
 }
 
@@ -101,6 +112,11 @@ func (c *serviceServiceClient) ListServicesByNodeId(ctx context.Context, req *co
 	return c.listServicesByNodeId.CallUnary(ctx, req)
 }
 
+// UpdateService calls service.v1.ServiceService.UpdateService.
+func (c *serviceServiceClient) UpdateService(ctx context.Context, req *connect.Request[v1.UpdateServiceRequest]) (*connect.Response[v1.UpdateServiceResponse], error) {
+	return c.updateService.CallUnary(ctx, req)
+}
+
 // DeleteService calls service.v1.ServiceService.DeleteService.
 func (c *serviceServiceClient) DeleteService(ctx context.Context, req *connect.Request[v1.DeleteServiceRequest]) (*connect.Response[v1.DeleteServiceResponse], error) {
 	return c.deleteService.CallUnary(ctx, req)
@@ -111,6 +127,7 @@ type ServiceServiceHandler interface {
 	// Service management
 	CreateService(context.Context, *connect.Request[v1.CreateServiceRequest]) (*connect.Response[v1.CreateServiceResponse], error)
 	ListServicesByNodeId(context.Context, *connect.Request[v1.ListServicesByNodeIdRequest]) (*connect.Response[v1.ListServicesByNodeIdResponse], error)
+	UpdateService(context.Context, *connect.Request[v1.UpdateServiceRequest]) (*connect.Response[v1.UpdateServiceResponse], error)
 	DeleteService(context.Context, *connect.Request[v1.DeleteServiceRequest]) (*connect.Response[v1.DeleteServiceResponse], error)
 }
 
@@ -133,6 +150,12 @@ func NewServiceServiceHandler(svc ServiceServiceHandler, opts ...connect.Handler
 		connect.WithSchema(serviceServiceMethods.ByName("ListServicesByNodeId")),
 		connect.WithHandlerOptions(opts...),
 	)
+	serviceServiceUpdateServiceHandler := connect.NewUnaryHandler(
+		ServiceServiceUpdateServiceProcedure,
+		svc.UpdateService,
+		connect.WithSchema(serviceServiceMethods.ByName("UpdateService")),
+		connect.WithHandlerOptions(opts...),
+	)
 	serviceServiceDeleteServiceHandler := connect.NewUnaryHandler(
 		ServiceServiceDeleteServiceProcedure,
 		svc.DeleteService,
@@ -145,6 +168,8 @@ func NewServiceServiceHandler(svc ServiceServiceHandler, opts ...connect.Handler
 			serviceServiceCreateServiceHandler.ServeHTTP(w, r)
 		case ServiceServiceListServicesByNodeIdProcedure:
 			serviceServiceListServicesByNodeIdHandler.ServeHTTP(w, r)
+		case ServiceServiceUpdateServiceProcedure:
+			serviceServiceUpdateServiceHandler.ServeHTTP(w, r)
 		case ServiceServiceDeleteServiceProcedure:
 			serviceServiceDeleteServiceHandler.ServeHTTP(w, r)
 		default:
@@ -162,6 +187,10 @@ func (UnimplementedServiceServiceHandler) CreateService(context.Context, *connec
 
 func (UnimplementedServiceServiceHandler) ListServicesByNodeId(context.Context, *connect.Request[v1.ListServicesByNodeIdRequest]) (*connect.Response[v1.ListServicesByNodeIdResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("service.v1.ServiceService.ListServicesByNodeId is not implemented"))
+}
+
+func (UnimplementedServiceServiceHandler) UpdateService(context.Context, *connect.Request[v1.UpdateServiceRequest]) (*connect.Response[v1.UpdateServiceResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("service.v1.ServiceService.UpdateService is not implemented"))
 }
 
 func (UnimplementedServiceServiceHandler) DeleteService(context.Context, *connect.Request[v1.DeleteServiceRequest]) (*connect.Response[v1.DeleteServiceResponse], error) {

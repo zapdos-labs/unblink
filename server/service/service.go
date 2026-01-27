@@ -35,6 +35,7 @@ type Database interface {
 	CreateService(id, name, url, nodeID string) error
 	GetService(id string) (*servicev1.Service, error)
 	ListServicesByNodeId(nodeID, userID string) ([]*servicev1.Service, error)
+	UpdateService(id, name, url, userID string) error
 	DeleteService(id, userID string) error
 }
 
@@ -114,6 +115,60 @@ func (s *Service) ListServicesByNodeId(ctx context.Context, req *connect.Request
 
 	return connect.NewResponse(&servicev1.ListServicesByNodeIdResponse{
 		Services: services,
+	}), nil
+}
+
+// UpdateService updates an existing service
+func (s *Service) UpdateService(ctx context.Context, req *connect.Request[servicev1.UpdateServiceRequest]) (*connect.Response[servicev1.UpdateServiceResponse], error) {
+	userID, _ := GetUserIDFromContext(ctx)
+
+	if req.Msg.Id == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("id is required"))
+	}
+
+	name := req.Msg.Name
+	if name == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("name is required"))
+	}
+
+	url := req.Msg.Url
+	if url == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("url is required"))
+	}
+
+	// Get the existing service to get node_id
+	existingService, err := s.db.GetService(req.Msg.Id)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("service not found: %w", err))
+	}
+
+	// Update the service
+	err = s.db.UpdateService(req.Msg.Id, name, url, userID)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to update service: %w", err))
+	}
+
+	// Notify registry
+	if s.registry != nil {
+		s.registry.UpdateService(&servicev1.Service{
+			Id:     req.Msg.Id,
+			Name:   name,
+			Url:    url,
+			NodeId: existingService.NodeId,
+		})
+	}
+
+	log.Printf("[Service] Updated service: id=%s, name=%s, url=%s", req.Msg.Id, name, url)
+
+	return connect.NewResponse(&servicev1.UpdateServiceResponse{
+		Service: &servicev1.Service{
+			Id:        req.Msg.Id,
+			Name:      name,
+			Url:       url,
+			NodeId:    existingService.NodeId,
+			CreatedAt: existingService.CreatedAt,
+			UpdatedAt: timestamppb.New(time.Now()),
+		},
 	}), nil
 }
 

@@ -89,6 +89,41 @@ func main() {
 	authInterceptor := server.NewAuthInterceptor(jwtManager)
 	log.Printf("Initialized auth interceptor")
 
+	// Create VLM frame client and batch manager
+	var batchManager *webrtc.BatchManager
+	vlmBaseURL := config.VLMOpenAIBaseURL
+	if vlmBaseURL == "" {
+		vlmBaseURL = config.FastOpenAIBaseURL
+	}
+	if vlmBaseURL != "" {
+		vlmTimeout := 30 * time.Second
+		if config.VLMTimeoutSec > 0 {
+			vlmTimeout = time.Duration(config.VLMTimeoutSec) * time.Second
+		}
+
+		vlmModel := config.VLMOpenAIModel
+		if vlmModel == "" {
+			vlmModel = config.FastOpenAIModel
+		}
+
+		vlmAPIKey := config.VLMOpenAIAPIKey
+		if vlmAPIKey == "" {
+			vlmAPIKey = config.FastOpenAIAPIKey
+		}
+
+		frameClient := webrtc.NewFrameClient(vlmBaseURL, vlmModel, vlmAPIKey, vlmTimeout, "Summarize the video")
+
+		frameBatchSize := 2
+		if config.FrameBatchSize > 0 {
+			frameBatchSize = config.FrameBatchSize
+		}
+
+		batchManager = webrtc.NewBatchManager(frameClient, frameBatchSize)
+		log.Printf("[Main] Initialized VLM frame client: url=%s, model=%s, batchSize=%d", vlmBaseURL, vlmModel, frameBatchSize)
+	} else {
+		log.Printf("[Main] VLM not configured (vlm_openai_base_url or fast_openai_base_url not set), frame summaries disabled")
+	}
+
 	// Create service registry for frame extraction
 	frameInterval := 5.0 * time.Second
 	if config.FrameIntervalSeconds > 0 {
@@ -99,6 +134,7 @@ func main() {
 		frameInterval,
 		config.FramesBaseDir(),
 		nil, // will be set after nodeServer is created
+		batchManager,
 	)
 
 	serviceService := service.NewService(dbClient, serviceRegistry)

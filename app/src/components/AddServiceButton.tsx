@@ -68,7 +68,7 @@ export default function AddServiceButton(props: AddServiceButtonProps) {
                     class="w-full drop-shadow-2xl px-4 py-2 rounded-xl border border-neu-750 bg-neu-800 hover:bg-neu-850 flex items-center space-x-2 justify-center"
                 >
                     <img src={ServicePlusSVG} class="w-5 h-5" style="filter: brightness(0) invert(1)" />
-                    <span>Add Service</span>
+                    <span class="line-clamp-1 break-all">Add Service</span>
                 </button>
             )}
             title="Add a new service"
