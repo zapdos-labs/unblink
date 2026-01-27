@@ -8,6 +8,8 @@ type Config struct {
 
 // ModelInfo holds information about a model
 type ModelInfo struct {
-	ID          string
-	MaxModelLen int
+	ID              string
+	MaxModelLen     int
+	EffectiveWidth  *int // Width after VLM scaling (nil if not probed)
+	EffectiveHeight *int // Height after VLM scaling (nil if not probed)
 }

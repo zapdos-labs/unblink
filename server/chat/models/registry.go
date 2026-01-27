@@ -53,11 +53,27 @@ func NewRegistry(configs []ModelConfig) *Registry {
 				return
 			}
 
+			// Probe image dimensions for vision models
+			log.Printf("[models.Registry] Probing dimensions for %s...", mc.ModelID)
+			width, height, probeErr := client.ProbeImageDimensions(mc.ModelID)
+			if probeErr != nil {
+				log.Printf("[models.Registry] Probe failed for %s: %v", mc.ModelID, probeErr)
+			} else {
+				log.Printf("[models.Registry] Probe success for %s: %dx%d", mc.ModelID, width, height)
+				info.EffectiveWidth = &width
+				info.EffectiveHeight = &height
+			}
+
 			r.mu.Lock()
 			r.models[mc.ModelID].Info = info
 			r.mu.Unlock()
 
-			log.Printf("[models.Registry] Cached %s: max_tokens=%d", mc.ModelID, info.MaxModelLen)
+			// Build log message with dimensions if available
+			dimStr := ""
+			if info.EffectiveWidth != nil && info.EffectiveHeight != nil {
+				dimStr = fmt.Sprintf(", effective_image=%dx%d", *info.EffectiveWidth, *info.EffectiveHeight)
+			}
+			log.Printf("[models.Registry] Cached %s: max_tokens=%d%s", mc.ModelID, info.MaxModelLen, dimStr)
 		}(cfg)
 	}
 	wg.Wait()

@@ -52,9 +52,30 @@ func (c *Cache) fetchAndCache(modelID string) (*ModelInfo, error) {
 
 	c.models[modelID] = info
 
+	// Probe image dimensions asynchronously (fire-and-forget)
+	go c.probeDimensionsAsync(modelID)
+
 	log.Printf("[models.Cache] Cached model info for %s: max_tokens=%d", modelID, info.MaxModelLen)
 
 	return info, nil
+}
+
+// probeDimensionsAsync probes the model for image dimensions and updates the cache
+func (c *Cache) probeDimensionsAsync(modelID string) {
+	width, height, err := c.client.ProbeImageDimensions(modelID)
+	if err != nil {
+		log.Printf("[models.Cache] Failed to probe dimensions for %s: %v", modelID, err)
+		return
+	}
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if info, exists := c.models[modelID]; exists {
+		info.EffectiveWidth = &width
+		info.EffectiveHeight = &height
+		log.Printf("[models.Cache] Updated %s: effective_image=%dx%d", modelID, width, height)
+	}
 }
 
 // GetMaxTokens returns the maximum context length for a model

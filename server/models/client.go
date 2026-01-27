@@ -1,10 +1,15 @@
 package models
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
+
+	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v3/option"
 )
 
 // Client fetches model information from OpenAI-compatible /v1/models endpoint
@@ -90,4 +95,58 @@ func (c *Client) GetModelInfo(modelID string) (*ModelInfo, error) {
 	}
 
 	return nil, fmt.Errorf("model %q not found", modelID)
+}
+
+// ProbeImageDimensions sends a test image to the model to determine the effective
+// dimensions it sees after internal scaling.
+func (c *Client) ProbeImageDimensions(modelID string) (width, height int, err error) {
+	log.Printf("[models.Client] Starting dimension probe for %s (baseURL=%s)", modelID, c.baseURL)
+
+	// Use COCO test image via URL
+	imageURL := "http://images.cocodataset.org/val2017/000000039769.jpg"
+
+	// Create OpenAI client
+	opts := []option.RequestOption{option.WithAPIKey(c.apiKey)}
+	if c.baseURL != "" {
+		opts = append(opts, option.WithBaseURL(c.baseURL))
+	}
+	client := openai.NewClient(opts...)
+
+	// Build request - ask for JSON response
+	content := []openai.ChatCompletionContentPartUnionParam{
+		openai.ImageContentPart(openai.ChatCompletionContentPartImageImageURLParam{
+			URL: imageURL,
+		}),
+		openai.TextContentPart("What are the dimensions of this image? Respond with JSON only: {\"width\": int, \"height\": int}"),
+	}
+
+	params := openai.ChatCompletionNewParams{
+		Model:    openai.ChatModel(modelID),
+		Messages: []openai.ChatCompletionMessageParamUnion{openai.UserMessage(content)},
+		MaxTokens: openai.Int(int64(100)),
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	resp, err := client.Chat.Completions.New(ctx, params)
+	if err != nil {
+		return 0, 0, fmt.Errorf("probe request failed: %w", err)
+	}
+
+	if len(resp.Choices) == 0 {
+		return 0, 0, fmt.Errorf("no response from model")
+	}
+
+	// Parse JSON response
+	var result struct {
+		Width  int `json:"width"`
+		Height int `json:"height"`
+	}
+	if err := json.Unmarshal([]byte(resp.Choices[0].Message.Content), &result); err != nil {
+		return 0, 0, fmt.Errorf("failed to parse response: %w", err)
+	}
+
+	log.Printf("[models.Client] Probed %s: effective_image=%dx%d", modelID, result.Width, result.Height)
+	return result.Width, result.Height, nil
 }
