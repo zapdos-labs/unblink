@@ -69,3 +69,29 @@ func (c *Client) CheckNodeAccess(nodeID, userID string) (bool, error) {
 
 	return isAssociated, nil
 }
+
+// ListUserNodes returns all node IDs associated with a user
+func (c *Client) ListUserNodes(userID string) ([]string, error) {
+	querySQL := `SELECT node_id FROM user_node WHERE user_id = $1 ORDER BY created_at DESC`
+
+	rows, err := c.db.Query(querySQL, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list user nodes: %w", err)
+	}
+	defer rows.Close()
+
+	var nodeIDs []string
+	for rows.Next() {
+		var nodeID string
+		if err := rows.Scan(&nodeID); err != nil {
+			return nil, fmt.Errorf("failed to scan node_id: %w", err)
+		}
+		nodeIDs = append(nodeIDs, nodeID)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating rows: %w", err)
+	}
+
+	return nodeIDs, nil
+}

@@ -1,0 +1,33 @@
+name: Discord Notify
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  discord-notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Discord webhook
+        env:
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          MESSAGE=$(printf '%s' "$COMMIT_MESSAGE" | jq -Rs .)
+          curl -X POST "$DISCORD_WEBHOOK" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"content\": \"\",
+              \"embeds\": [{
+                \"title\": \"🚀 New Push to ${{ github.repository }}\",
+                \"description\": \"**Branch:** \`${{ github.ref_name }}\`\n**Commit:** \`${{ github.sha }}\`\n**Author:** ${{ github.actor }}\n\n[View Changes](${{ github.event.head_commit.url }})\",
+                \"color\": 5814783,
+                \"fields\": [
+                  {\"name\": \"Message\", \"value\": $MESSAGE, \"inline\": false}
+                ],
+                \"footer\": {\"text\": \"GitHub Actions\"},
+                \"timestamp\": \"${{ github.event.head_commit.timestamp }}\"
+              }]
+            }"

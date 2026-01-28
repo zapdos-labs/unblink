@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file service/v1/service.proto.
  */
 export const file_service_v1_service: GenFile = /*@__PURE__*/
-  fileDesc("ChhzZXJ2aWNlL3YxL3NlcnZpY2UucHJvdG8SCnNlcnZpY2UudjEioQEKB1NlcnZpY2USCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRILCgN1cmwYAyABKAkSDwoHbm9kZV9pZBgEIAEoCRIuCgpjcmVhdGVkX2F0GAUgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIuCgp1cGRhdGVkX2F0GAYgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCJCChRDcmVhdGVTZXJ2aWNlUmVxdWVzdBIMCgRuYW1lGAEgASgJEgsKA3VybBgCIAEoCRIPCgdub2RlX2lkGAMgASgJIj0KFUNyZWF0ZVNlcnZpY2VSZXNwb25zZRIkCgdzZXJ2aWNlGAEgASgLMhMuc2VydmljZS52MS5TZXJ2aWNlIi4KG0xpc3RTZXJ2aWNlc0J5Tm9kZUlkUmVxdWVzdBIPCgdub2RlX2lkGAEgASgJIkUKHExpc3RTZXJ2aWNlc0J5Tm9kZUlkUmVzcG9uc2USJQoIc2VydmljZXMYASADKAsyEy5zZXJ2aWNlLnYxLlNlcnZpY2UiPQoUVXBkYXRlU2VydmljZVJlcXVlc3QSCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRILCgN1cmwYAyABKAkiPQoVVXBkYXRlU2VydmljZVJlc3BvbnNlEiQKB3NlcnZpY2UYASABKAsyEy5zZXJ2aWNlLnYxLlNlcnZpY2UiKgoURGVsZXRlU2VydmljZVJlcXVlc3QSEgoKc2VydmljZV9pZBgBIAEoCSIoChVEZWxldGVTZXJ2aWNlUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCDL9AgoOU2VydmljZVNlcnZpY2USVAoNQ3JlYXRlU2VydmljZRIgLnNlcnZpY2UudjEuQ3JlYXRlU2VydmljZVJlcXVlc3QaIS5zZXJ2aWNlLnYxLkNyZWF0ZVNlcnZpY2VSZXNwb25zZRJpChRMaXN0U2VydmljZXNCeU5vZGVJZBInLnNlcnZpY2UudjEuTGlzdFNlcnZpY2VzQnlOb2RlSWRSZXF1ZXN0Giguc2VydmljZS52MS5MaXN0U2VydmljZXNCeU5vZGVJZFJlc3BvbnNlElQKDVVwZGF0ZVNlcnZpY2USIC5zZXJ2aWNlLnYxLlVwZGF0ZVNlcnZpY2VSZXF1ZXN0GiEuc2VydmljZS52MS5VcGRhdGVTZXJ2aWNlUmVzcG9uc2USVAoNRGVsZXRlU2VydmljZRIgLnNlcnZpY2UudjEuRGVsZXRlU2VydmljZVJlcXVlc3QaIS5zZXJ2aWNlLnYxLkRlbGV0ZVNlcnZpY2VSZXNwb25zZUIpWid1bmJsaW5rL3NlcnZlci9nZW4vc2VydmljZS92MTtzZXJ2aWNldjFiBnByb3RvMw", [file_google_protobuf_timestamp]);
+  fileDesc("ChhzZXJ2aWNlL3YxL3NlcnZpY2UucHJvdG8SCnNlcnZpY2UudjEioQEKB1NlcnZpY2USCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRILCgN1cmwYAyABKAkSDwoHbm9kZV9pZBgEIAEoCRIuCgpjcmVhdGVkX2F0GAUgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIuCgp1cGRhdGVkX2F0GAYgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCJCChRDcmVhdGVTZXJ2aWNlUmVxdWVzdBIMCgRuYW1lGAEgASgJEgsKA3VybBgCIAEoCRIPCgdub2RlX2lkGAMgASgJIj0KFUNyZWF0ZVNlcnZpY2VSZXNwb25zZRIkCgdzZXJ2aWNlGAEgASgLMhMuc2VydmljZS52MS5TZXJ2aWNlIi4KG0xpc3RTZXJ2aWNlc0J5Tm9kZUlkUmVxdWVzdBIPCgdub2RlX2lkGAEgASgJIkUKHExpc3RTZXJ2aWNlc0J5Tm9kZUlkUmVzcG9uc2USJQoIc2VydmljZXMYASADKAsyEy5zZXJ2aWNlLnYxLlNlcnZpY2UiPQoUVXBkYXRlU2VydmljZVJlcXVlc3QSCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRILCgN1cmwYAyABKAkiPQoVVXBkYXRlU2VydmljZVJlc3BvbnNlEiQKB3NlcnZpY2UYASABKAsyEy5zZXJ2aWNlLnYxLlNlcnZpY2UiKgoURGVsZXRlU2VydmljZVJlcXVlc3QSEgoKc2VydmljZV9pZBgBIAEoCSIoChVEZWxldGVTZXJ2aWNlUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCCIrChhBc3NvY2lhdGVVc2VyTm9kZVJlcXVlc3QSDwoHbm9kZV9pZBgBIAEoCSIsChlBc3NvY2lhdGVVc2VyTm9kZVJlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgiFgoUTGlzdFVzZXJOb2Rlc1JlcXVlc3QiKQoVTGlzdFVzZXJOb2Rlc1Jlc3BvbnNlEhAKCG5vZGVfaWRzGAEgAygJMrUECg5TZXJ2aWNlU2VydmljZRJUCg1DcmVhdGVTZXJ2aWNlEiAuc2VydmljZS52MS5DcmVhdGVTZXJ2aWNlUmVxdWVzdBohLnNlcnZpY2UudjEuQ3JlYXRlU2VydmljZVJlc3BvbnNlEmkKFExpc3RTZXJ2aWNlc0J5Tm9kZUlkEicuc2VydmljZS52MS5MaXN0U2VydmljZXNCeU5vZGVJZFJlcXVlc3QaKC5zZXJ2aWNlLnYxLkxpc3RTZXJ2aWNlc0J5Tm9kZUlkUmVzcG9uc2USVAoNVXBkYXRlU2VydmljZRIgLnNlcnZpY2UudjEuVXBkYXRlU2VydmljZVJlcXVlc3QaIS5zZXJ2aWNlLnYxLlVwZGF0ZVNlcnZpY2VSZXNwb25zZRJUCg1EZWxldGVTZXJ2aWNlEiAuc2VydmljZS52MS5EZWxldGVTZXJ2aWNlUmVxdWVzdBohLnNlcnZpY2UudjEuRGVsZXRlU2VydmljZVJlc3BvbnNlEmAKEUFzc29jaWF0ZVVzZXJOb2RlEiQuc2VydmljZS52MS5Bc3NvY2lhdGVVc2VyTm9kZVJlcXVlc3QaJS5zZXJ2aWNlLnYxLkFzc29jaWF0ZVVzZXJOb2RlUmVzcG9uc2USVAoNTGlzdFVzZXJOb2RlcxIgLnNlcnZpY2UudjEuTGlzdFVzZXJOb2Rlc1JlcXVlc3QaIS5zZXJ2aWNlLnYxLkxpc3RVc2VyTm9kZXNSZXNwb25zZUIpWid1bmJsaW5rL3NlcnZlci9nZW4vc2VydmljZS92MTtzZXJ2aWNldjFiBnByb3RvMw", [file_google_protobuf_timestamp]);
 
 /**
  * @generated from message service.v1.Service
@@ -213,6 +213,70 @@ export const DeleteServiceResponseSchema: GenMessage<DeleteServiceResponse> = /*
   messageDesc(file_service_v1_service, 8);
 
 /**
+ * @generated from message service.v1.AssociateUserNodeRequest
+ */
+export type AssociateUserNodeRequest = Message<"service.v1.AssociateUserNodeRequest"> & {
+  /**
+   * @generated from field: string node_id = 1;
+   */
+  nodeId: string;
+};
+
+/**
+ * Describes the message service.v1.AssociateUserNodeRequest.
+ * Use `create(AssociateUserNodeRequestSchema)` to create a new message.
+ */
+export const AssociateUserNodeRequestSchema: GenMessage<AssociateUserNodeRequest> = /*@__PURE__*/
+  messageDesc(file_service_v1_service, 9);
+
+/**
+ * @generated from message service.v1.AssociateUserNodeResponse
+ */
+export type AssociateUserNodeResponse = Message<"service.v1.AssociateUserNodeResponse"> & {
+  /**
+   * @generated from field: bool success = 1;
+   */
+  success: boolean;
+};
+
+/**
+ * Describes the message service.v1.AssociateUserNodeResponse.
+ * Use `create(AssociateUserNodeResponseSchema)` to create a new message.
+ */
+export const AssociateUserNodeResponseSchema: GenMessage<AssociateUserNodeResponse> = /*@__PURE__*/
+  messageDesc(file_service_v1_service, 10);
+
+/**
+ * @generated from message service.v1.ListUserNodesRequest
+ */
+export type ListUserNodesRequest = Message<"service.v1.ListUserNodesRequest"> & {
+};
+
+/**
+ * Describes the message service.v1.ListUserNodesRequest.
+ * Use `create(ListUserNodesRequestSchema)` to create a new message.
+ */
+export const ListUserNodesRequestSchema: GenMessage<ListUserNodesRequest> = /*@__PURE__*/
+  messageDesc(file_service_v1_service, 11);
+
+/**
+ * @generated from message service.v1.ListUserNodesResponse
+ */
+export type ListUserNodesResponse = Message<"service.v1.ListUserNodesResponse"> & {
+  /**
+   * @generated from field: repeated string node_ids = 1;
+   */
+  nodeIds: string[];
+};
+
+/**
+ * Describes the message service.v1.ListUserNodesResponse.
+ * Use `create(ListUserNodesResponseSchema)` to create a new message.
+ */
+export const ListUserNodesResponseSchema: GenMessage<ListUserNodesResponse> = /*@__PURE__*/
+  messageDesc(file_service_v1_service, 12);
+
+/**
  * @generated from service service.v1.ServiceService
  */
 export const ServiceService: GenService<{
@@ -249,6 +313,24 @@ export const ServiceService: GenService<{
     methodKind: "unary";
     input: typeof DeleteServiceRequestSchema;
     output: typeof DeleteServiceResponseSchema;
+  },
+  /**
+   * Node access management
+   *
+   * @generated from rpc service.v1.ServiceService.AssociateUserNode
+   */
+  associateUserNode: {
+    methodKind: "unary";
+    input: typeof AssociateUserNodeRequestSchema;
+    output: typeof AssociateUserNodeResponseSchema;
+  },
+  /**
+   * @generated from rpc service.v1.ServiceService.ListUserNodes
+   */
+  listUserNodes: {
+    methodKind: "unary";
+    input: typeof ListUserNodesRequestSchema;
+    output: typeof ListUserNodesResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_service_v1_service, 0);

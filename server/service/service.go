@@ -33,6 +33,8 @@ type Database interface {
 	UpdateService(id, name, url string) error
 	DeleteService(id string) error
 	CheckNodeAccess(nodeID, userID string) (bool, error)
+	AssociateUserNode(userID, nodeID string) error
+	ListUserNodes(userID string) ([]string, error)
 }
 
 type Service struct {
@@ -211,6 +213,49 @@ func (s *Service) DeleteService(ctx context.Context, req *connect.Request[servic
 
 	return connect.NewResponse(&servicev1.DeleteServiceResponse{
 		Success: true,
+	}), nil
+}
+
+// AssociateUserNode associates a node with the authenticated user
+func (s *Service) AssociateUserNode(ctx context.Context, req *connect.Request[servicev1.AssociateUserNodeRequest]) (*connect.Response[servicev1.AssociateUserNodeResponse], error) {
+	if req.Msg.NodeId == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("node_id is required"))
+	}
+
+	// Get authenticated user ID from context
+	userID, ok := ctxutil.GetUserIDFromContext(ctx)
+	if !ok {
+		return nil, connect.NewError(connect.CodeUnauthenticated, fmt.Errorf("not authenticated"))
+	}
+
+	// Associate the node with the user
+	err := s.db.AssociateUserNode(userID, req.Msg.NodeId)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to associate user with node: %w", err))
+	}
+
+	log.Printf("[Service] Associated user_id=%s with node_id=%s", userID, req.Msg.NodeId)
+
+	return connect.NewResponse(&servicev1.AssociateUserNodeResponse{
+		Success: true,
+	}), nil
+}
+
+// ListUserNodes lists all nodes associated with the authenticated user
+func (s *Service) ListUserNodes(ctx context.Context, req *connect.Request[servicev1.ListUserNodesRequest]) (*connect.Response[servicev1.ListUserNodesResponse], error) {
+	// Get authenticated user ID from context
+	userID, ok := ctxutil.GetUserIDFromContext(ctx)
+	if !ok {
+		return nil, connect.NewError(connect.CodeUnauthenticated, fmt.Errorf("not authenticated"))
+	}
+
+	nodeIDs, err := s.db.ListUserNodes(userID)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to list user nodes: %w", err))
+	}
+
+	return connect.NewResponse(&servicev1.ListUserNodesResponse{
+		NodeIds: nodeIDs,
 	}), nil
 }
 

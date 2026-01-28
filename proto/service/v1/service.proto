@@ -12,6 +12,10 @@ service ServiceService {
   rpc ListServicesByNodeId(ListServicesByNodeIdRequest) returns (ListServicesByNodeIdResponse);
   rpc UpdateService(UpdateServiceRequest) returns (UpdateServiceResponse);
   rpc DeleteService(DeleteServiceRequest) returns (DeleteServiceResponse);
+
+  // Node access management
+  rpc AssociateUserNode(AssociateUserNodeRequest) returns (AssociateUserNodeResponse);
+  rpc ListUserNodes(ListUserNodesRequest) returns (ListUserNodesResponse);
 }
 
 // Data structures
@@ -61,5 +65,19 @@ message DeleteServiceRequest {
 
 message DeleteServiceResponse {
   bool success = 1;
+}
+
+message AssociateUserNodeRequest {
+  string node_id = 1;
+}
+
+message AssociateUserNodeResponse {
+  bool success = 1;
+}
+
+message ListUserNodesRequest {}
+
+message ListUserNodesResponse {
+  repeated string node_ids = 1;
 }
 

@@ -45,6 +45,12 @@ const (
 	// ServiceServiceDeleteServiceProcedure is the fully-qualified name of the ServiceService's
 	// DeleteService RPC.
 	ServiceServiceDeleteServiceProcedure = "/service.v1.ServiceService/DeleteService"
+	// ServiceServiceAssociateUserNodeProcedure is the fully-qualified name of the ServiceService's
+	// AssociateUserNode RPC.
+	ServiceServiceAssociateUserNodeProcedure = "/service.v1.ServiceService/AssociateUserNode"
+	// ServiceServiceListUserNodesProcedure is the fully-qualified name of the ServiceService's
+	// ListUserNodes RPC.
+	ServiceServiceListUserNodesProcedure = "/service.v1.ServiceService/ListUserNodes"
 )
 
 // ServiceServiceClient is a client for the service.v1.ServiceService service.
@@ -54,6 +60,9 @@ type ServiceServiceClient interface {
 	ListServicesByNodeId(context.Context, *connect.Request[v1.ListServicesByNodeIdRequest]) (*connect.Response[v1.ListServicesByNodeIdResponse], error)
 	UpdateService(context.Context, *connect.Request[v1.UpdateServiceRequest]) (*connect.Response[v1.UpdateServiceResponse], error)
 	DeleteService(context.Context, *connect.Request[v1.DeleteServiceRequest]) (*connect.Response[v1.DeleteServiceResponse], error)
+	// Node access management
+	AssociateUserNode(context.Context, *connect.Request[v1.AssociateUserNodeRequest]) (*connect.Response[v1.AssociateUserNodeResponse], error)
+	ListUserNodes(context.Context, *connect.Request[v1.ListUserNodesRequest]) (*connect.Response[v1.ListUserNodesResponse], error)
 }
 
 // NewServiceServiceClient constructs a client for the service.v1.ServiceService service. By
@@ -91,6 +100,18 @@ func NewServiceServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(serviceServiceMethods.ByName("DeleteService")),
 			connect.WithClientOptions(opts...),
 		),
+		associateUserNode: connect.NewClient[v1.AssociateUserNodeRequest, v1.AssociateUserNodeResponse](
+			httpClient,
+			baseURL+ServiceServiceAssociateUserNodeProcedure,
+			connect.WithSchema(serviceServiceMethods.ByName("AssociateUserNode")),
+			connect.WithClientOptions(opts...),
+		),
+		listUserNodes: connect.NewClient[v1.ListUserNodesRequest, v1.ListUserNodesResponse](
+			httpClient,
+			baseURL+ServiceServiceListUserNodesProcedure,
+			connect.WithSchema(serviceServiceMethods.ByName("ListUserNodes")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -100,6 +121,8 @@ type serviceServiceClient struct {
 	listServicesByNodeId *connect.Client[v1.ListServicesByNodeIdRequest, v1.ListServicesByNodeIdResponse]
 	updateService        *connect.Client[v1.UpdateServiceRequest, v1.UpdateServiceResponse]
 	deleteService        *connect.Client[v1.DeleteServiceRequest, v1.DeleteServiceResponse]
+	associateUserNode    *connect.Client[v1.AssociateUserNodeRequest, v1.AssociateUserNodeResponse]
+	listUserNodes        *connect.Client[v1.ListUserNodesRequest, v1.ListUserNodesResponse]
 }
 
 // CreateService calls service.v1.ServiceService.CreateService.
@@ -122,6 +145,16 @@ func (c *serviceServiceClient) DeleteService(ctx context.Context, req *connect.R
 	return c.deleteService.CallUnary(ctx, req)
 }
 
+// AssociateUserNode calls service.v1.ServiceService.AssociateUserNode.
+func (c *serviceServiceClient) AssociateUserNode(ctx context.Context, req *connect.Request[v1.AssociateUserNodeRequest]) (*connect.Response[v1.AssociateUserNodeResponse], error) {
+	return c.associateUserNode.CallUnary(ctx, req)
+}
+
+// ListUserNodes calls service.v1.ServiceService.ListUserNodes.
+func (c *serviceServiceClient) ListUserNodes(ctx context.Context, req *connect.Request[v1.ListUserNodesRequest]) (*connect.Response[v1.ListUserNodesResponse], error) {
+	return c.listUserNodes.CallUnary(ctx, req)
+}
+
 // ServiceServiceHandler is an implementation of the service.v1.ServiceService service.
 type ServiceServiceHandler interface {
 	// Service management
@@ -129,6 +162,9 @@ type ServiceServiceHandler interface {
 	ListServicesByNodeId(context.Context, *connect.Request[v1.ListServicesByNodeIdRequest]) (*connect.Response[v1.ListServicesByNodeIdResponse], error)
 	UpdateService(context.Context, *connect.Request[v1.UpdateServiceRequest]) (*connect.Response[v1.UpdateServiceResponse], error)
 	DeleteService(context.Context, *connect.Request[v1.DeleteServiceRequest]) (*connect.Response[v1.DeleteServiceResponse], error)
+	// Node access management
+	AssociateUserNode(context.Context, *connect.Request[v1.AssociateUserNodeRequest]) (*connect.Response[v1.AssociateUserNodeResponse], error)
+	ListUserNodes(context.Context, *connect.Request[v1.ListUserNodesRequest]) (*connect.Response[v1.ListUserNodesResponse], error)
 }
 
 // NewServiceServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -162,6 +198,18 @@ func NewServiceServiceHandler(svc ServiceServiceHandler, opts ...connect.Handler
 		connect.WithSchema(serviceServiceMethods.ByName("DeleteService")),
 		connect.WithHandlerOptions(opts...),
 	)
+	serviceServiceAssociateUserNodeHandler := connect.NewUnaryHandler(
+		ServiceServiceAssociateUserNodeProcedure,
+		svc.AssociateUserNode,
+		connect.WithSchema(serviceServiceMethods.ByName("AssociateUserNode")),
+		connect.WithHandlerOptions(opts...),
+	)
+	serviceServiceListUserNodesHandler := connect.NewUnaryHandler(
+		ServiceServiceListUserNodesProcedure,
+		svc.ListUserNodes,
+		connect.WithSchema(serviceServiceMethods.ByName("ListUserNodes")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/service.v1.ServiceService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case ServiceServiceCreateServiceProcedure:
@@ -172,6 +220,10 @@ func NewServiceServiceHandler(svc ServiceServiceHandler, opts ...connect.Handler
 			serviceServiceUpdateServiceHandler.ServeHTTP(w, r)
 		case ServiceServiceDeleteServiceProcedure:
 			serviceServiceDeleteServiceHandler.ServeHTTP(w, r)
+		case ServiceServiceAssociateUserNodeProcedure:
+			serviceServiceAssociateUserNodeHandler.ServeHTTP(w, r)
+		case ServiceServiceListUserNodesProcedure:
+			serviceServiceListUserNodesHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -195,4 +247,12 @@ func (UnimplementedServiceServiceHandler) UpdateService(context.Context, *connec
 
 func (UnimplementedServiceServiceHandler) DeleteService(context.Context, *connect.Request[v1.DeleteServiceRequest]) (*connect.Response[v1.DeleteServiceResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("service.v1.ServiceService.DeleteService is not implemented"))
+}
+
+func (UnimplementedServiceServiceHandler) AssociateUserNode(context.Context, *connect.Request[v1.AssociateUserNodeRequest]) (*connect.Response[v1.AssociateUserNodeResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("service.v1.ServiceService.AssociateUserNode is not implemented"))
+}
+
+func (UnimplementedServiceServiceHandler) ListUserNodes(context.Context, *connect.Request[v1.ListUserNodesRequest]) (*connect.Response[v1.ListUserNodesResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("service.v1.ServiceService.ListUserNodes is not implemented"))
 }

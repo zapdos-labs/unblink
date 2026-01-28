@@ -490,6 +490,174 @@ func (x *DeleteServiceResponse) GetSuccess() bool {
 	return false
 }
 
+type AssociateUserNodeRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	NodeId        string                 `protobuf:"bytes,1,opt,name=node_id,json=nodeId,proto3" json:"node_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AssociateUserNodeRequest) Reset() {
+	*x = AssociateUserNodeRequest{}
+	mi := &file_service_v1_service_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AssociateUserNodeRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AssociateUserNodeRequest) ProtoMessage() {}
+
+func (x *AssociateUserNodeRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_service_v1_service_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AssociateUserNodeRequest.ProtoReflect.Descriptor instead.
+func (*AssociateUserNodeRequest) Descriptor() ([]byte, []int) {
+	return file_service_v1_service_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *AssociateUserNodeRequest) GetNodeId() string {
+	if x != nil {
+		return x.NodeId
+	}
+	return ""
+}
+
+type AssociateUserNodeResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AssociateUserNodeResponse) Reset() {
+	*x = AssociateUserNodeResponse{}
+	mi := &file_service_v1_service_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AssociateUserNodeResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AssociateUserNodeResponse) ProtoMessage() {}
+
+func (x *AssociateUserNodeResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_service_v1_service_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AssociateUserNodeResponse.ProtoReflect.Descriptor instead.
+func (*AssociateUserNodeResponse) Descriptor() ([]byte, []int) {
+	return file_service_v1_service_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *AssociateUserNodeResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+type ListUserNodesRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListUserNodesRequest) Reset() {
+	*x = ListUserNodesRequest{}
+	mi := &file_service_v1_service_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListUserNodesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListUserNodesRequest) ProtoMessage() {}
+
+func (x *ListUserNodesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_service_v1_service_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListUserNodesRequest.ProtoReflect.Descriptor instead.
+func (*ListUserNodesRequest) Descriptor() ([]byte, []int) {
+	return file_service_v1_service_proto_rawDescGZIP(), []int{11}
+}
+
+type ListUserNodesResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	NodeIds       []string               `protobuf:"bytes,1,rep,name=node_ids,json=nodeIds,proto3" json:"node_ids,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListUserNodesResponse) Reset() {
+	*x = ListUserNodesResponse{}
+	mi := &file_service_v1_service_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListUserNodesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListUserNodesResponse) ProtoMessage() {}
+
+func (x *ListUserNodesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_service_v1_service_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListUserNodesResponse.ProtoReflect.Descriptor instead.
+func (*ListUserNodesResponse) Descriptor() ([]byte, []int) {
+	return file_service_v1_service_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *ListUserNodesResponse) GetNodeIds() []string {
+	if x != nil {
+		return x.NodeIds
+	}
+	return nil
+}
+
 var File_service_v1_service_proto protoreflect.FileDescriptor
 
 const file_service_v1_service_proto_rawDesc = "" +
@@ -525,12 +693,21 @@ const file_service_v1_service_proto_rawDesc = "" +
 	"\n" +
 	"service_id\x18\x01 \x01(\tR\tserviceId\"1\n" +
 	"\x15DeleteServiceResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess2\xfd\x02\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"3\n" +
+	"\x18AssociateUserNodeRequest\x12\x17\n" +
+	"\anode_id\x18\x01 \x01(\tR\x06nodeId\"5\n" +
+	"\x19AssociateUserNodeResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"\x16\n" +
+	"\x14ListUserNodesRequest\"2\n" +
+	"\x15ListUserNodesResponse\x12\x19\n" +
+	"\bnode_ids\x18\x01 \x03(\tR\anodeIds2\xb5\x04\n" +
 	"\x0eServiceService\x12T\n" +
 	"\rCreateService\x12 .service.v1.CreateServiceRequest\x1a!.service.v1.CreateServiceResponse\x12i\n" +
 	"\x14ListServicesByNodeId\x12'.service.v1.ListServicesByNodeIdRequest\x1a(.service.v1.ListServicesByNodeIdResponse\x12T\n" +
 	"\rUpdateService\x12 .service.v1.UpdateServiceRequest\x1a!.service.v1.UpdateServiceResponse\x12T\n" +
-	"\rDeleteService\x12 .service.v1.DeleteServiceRequest\x1a!.service.v1.DeleteServiceResponseB)Z'unblink/server/gen/service/v1;servicev1b\x06proto3"
+	"\rDeleteService\x12 .service.v1.DeleteServiceRequest\x1a!.service.v1.DeleteServiceResponse\x12`\n" +
+	"\x11AssociateUserNode\x12$.service.v1.AssociateUserNodeRequest\x1a%.service.v1.AssociateUserNodeResponse\x12T\n" +
+	"\rListUserNodes\x12 .service.v1.ListUserNodesRequest\x1a!.service.v1.ListUserNodesResponseB)Z'unblink/server/gen/service/v1;servicev1b\x06proto3"
 
 var (
 	file_service_v1_service_proto_rawDescOnce sync.Once
@@ -544,7 +721,7 @@ func file_service_v1_service_proto_rawDescGZIP() []byte {
 	return file_service_v1_service_proto_rawDescData
 }
 
-var file_service_v1_service_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_service_v1_service_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
 var file_service_v1_service_proto_goTypes = []any{
 	(*Service)(nil),                      // 0: service.v1.Service
 	(*CreateServiceRequest)(nil),         // 1: service.v1.CreateServiceRequest
@@ -555,27 +732,35 @@ var file_service_v1_service_proto_goTypes = []any{
 	(*UpdateServiceResponse)(nil),        // 6: service.v1.UpdateServiceResponse
 	(*DeleteServiceRequest)(nil),         // 7: service.v1.DeleteServiceRequest
 	(*DeleteServiceResponse)(nil),        // 8: service.v1.DeleteServiceResponse
-	(*timestamppb.Timestamp)(nil),        // 9: google.protobuf.Timestamp
+	(*AssociateUserNodeRequest)(nil),     // 9: service.v1.AssociateUserNodeRequest
+	(*AssociateUserNodeResponse)(nil),    // 10: service.v1.AssociateUserNodeResponse
+	(*ListUserNodesRequest)(nil),         // 11: service.v1.ListUserNodesRequest
+	(*ListUserNodesResponse)(nil),        // 12: service.v1.ListUserNodesResponse
+	(*timestamppb.Timestamp)(nil),        // 13: google.protobuf.Timestamp
 }
 var file_service_v1_service_proto_depIdxs = []int32{
-	9, // 0: service.v1.Service.created_at:type_name -> google.protobuf.Timestamp
-	9, // 1: service.v1.Service.updated_at:type_name -> google.protobuf.Timestamp
-	0, // 2: service.v1.CreateServiceResponse.service:type_name -> service.v1.Service
-	0, // 3: service.v1.ListServicesByNodeIdResponse.services:type_name -> service.v1.Service
-	0, // 4: service.v1.UpdateServiceResponse.service:type_name -> service.v1.Service
-	1, // 5: service.v1.ServiceService.CreateService:input_type -> service.v1.CreateServiceRequest
-	3, // 6: service.v1.ServiceService.ListServicesByNodeId:input_type -> service.v1.ListServicesByNodeIdRequest
-	5, // 7: service.v1.ServiceService.UpdateService:input_type -> service.v1.UpdateServiceRequest
-	7, // 8: service.v1.ServiceService.DeleteService:input_type -> service.v1.DeleteServiceRequest
-	2, // 9: service.v1.ServiceService.CreateService:output_type -> service.v1.CreateServiceResponse
-	4, // 10: service.v1.ServiceService.ListServicesByNodeId:output_type -> service.v1.ListServicesByNodeIdResponse
-	6, // 11: service.v1.ServiceService.UpdateService:output_type -> service.v1.UpdateServiceResponse
-	8, // 12: service.v1.ServiceService.DeleteService:output_type -> service.v1.DeleteServiceResponse
-	9, // [9:13] is the sub-list for method output_type
-	5, // [5:9] is the sub-list for method input_type
-	5, // [5:5] is the sub-list for extension type_name
-	5, // [5:5] is the sub-list for extension extendee
-	0, // [0:5] is the sub-list for field type_name
+	13, // 0: service.v1.Service.created_at:type_name -> google.protobuf.Timestamp
+	13, // 1: service.v1.Service.updated_at:type_name -> google.protobuf.Timestamp
+	0,  // 2: service.v1.CreateServiceResponse.service:type_name -> service.v1.Service
+	0,  // 3: service.v1.ListServicesByNodeIdResponse.services:type_name -> service.v1.Service
+	0,  // 4: service.v1.UpdateServiceResponse.service:type_name -> service.v1.Service
+	1,  // 5: service.v1.ServiceService.CreateService:input_type -> service.v1.CreateServiceRequest
+	3,  // 6: service.v1.ServiceService.ListServicesByNodeId:input_type -> service.v1.ListServicesByNodeIdRequest
+	5,  // 7: service.v1.ServiceService.UpdateService:input_type -> service.v1.UpdateServiceRequest
+	7,  // 8: service.v1.ServiceService.DeleteService:input_type -> service.v1.DeleteServiceRequest
+	9,  // 9: service.v1.ServiceService.AssociateUserNode:input_type -> service.v1.AssociateUserNodeRequest
+	11, // 10: service.v1.ServiceService.ListUserNodes:input_type -> service.v1.ListUserNodesRequest
+	2,  // 11: service.v1.ServiceService.CreateService:output_type -> service.v1.CreateServiceResponse
+	4,  // 12: service.v1.ServiceService.ListServicesByNodeId:output_type -> service.v1.ListServicesByNodeIdResponse
+	6,  // 13: service.v1.ServiceService.UpdateService:output_type -> service.v1.UpdateServiceResponse
+	8,  // 14: service.v1.ServiceService.DeleteService:output_type -> service.v1.DeleteServiceResponse
+	10, // 15: service.v1.ServiceService.AssociateUserNode:output_type -> service.v1.AssociateUserNodeResponse
+	12, // 16: service.v1.ServiceService.ListUserNodes:output_type -> service.v1.ListUserNodesResponse
+	11, // [11:17] is the sub-list for method output_type
+	5,  // [5:11] is the sub-list for method input_type
+	5,  // [5:5] is the sub-list for extension type_name
+	5,  // [5:5] is the sub-list for extension extendee
+	0,  // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_service_v1_service_proto_init() }
@@ -589,7 +774,7 @@ func file_service_v1_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_service_v1_service_proto_rawDesc), len(file_service_v1_service_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   9,
+			NumMessages:   13,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
