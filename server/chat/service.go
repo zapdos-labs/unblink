@@ -9,9 +9,9 @@ import (
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/option"
 
-	"unb/server/models"
-	chatv1 "unb/server/gen/chat/v1"
-	"unb/server/gen/chat/v1/chatv1connect"
+	"unblink/server/models"
+	chatv1 "unblink/server/gen/chat/v1"
+	"unblink/server/gen/chat/v1/chatv1connect"
 )
 
 // generateID creates a unique ID using crypto/rand

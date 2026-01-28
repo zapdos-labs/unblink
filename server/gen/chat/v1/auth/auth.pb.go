@@ -674,7 +674,7 @@ const file_chat_v1_auth_auth_proto_rawDesc = "" +
 	"\x14CreateAndLinkAccount\x12).chat.v1.auth.CreateAndLinkAccountRequest\x1a*.chat.v1.auth.CreateAndLinkAccountResponse\x12@\n" +
 	"\x05Login\x12\x1a.chat.v1.auth.LoginRequest\x1a\x1b.chat.v1.auth.LoginResponse\x12F\n" +
 	"\aGetUser\x12\x1c.chat.v1.auth.GetUserRequest\x1a\x1d.chat.v1.auth.GetUserResponse\x12d\n" +
-	"\x11UpdateUserProfile\x12&.chat.v1.auth.UpdateUserProfileRequest\x1a'.chat.v1.auth.UpdateUserProfileResponseB$Z\"unb/server/gen/chat/v1/auth;authv1b\x06proto3"
+	"\x11UpdateUserProfile\x12&.chat.v1.auth.UpdateUserProfileRequest\x1a'.chat.v1.auth.UpdateUserProfileResponseB$Z\"unblink/server/gen/chat/v1/auth;authv1b\x06proto3"
 
 var (
 	file_chat_v1_auth_auth_proto_rawDescOnce sync.Once

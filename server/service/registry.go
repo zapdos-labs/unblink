@@ -6,10 +6,10 @@ import (
 	"sync"
 	"time"
 
-	"unb/database"
-	"unb/server"
-	servicev1 "unb/server/gen/service/v1"
-	"unb/server/webrtc"
+	"unblink/database"
+	"unblink/server"
+	servicev1 "unblink/server/gen/service/v1"
+	"unblink/server/webrtc"
 )
 
 // ServiceState tracks the state of a service
@@ -57,9 +57,7 @@ type ServiceRegistry struct {
 }
 
 // NewServiceRegistry creates a new service registry
-func NewServiceRegistry(db *database.Client, frameInterval time.Duration, framesDir string, srv *server.Server, batchMgr *webrtc.BatchManager, idleTimeout time.Duration, maxRetries int) *ServiceRegistry {
-	storage := webrtc.NewStorage(framesDir)
-
+func NewServiceRegistry(db *database.Client, frameInterval time.Duration, storage *webrtc.Storage, srv *server.Server, batchMgr *webrtc.BatchManager, idleTimeout time.Duration, maxRetries int) *ServiceRegistry {
 	// Wire up callback to save frame metadata to database when frames are saved to disk
 	storage.SetOnSaved(func(serviceID, frameID, framePath string, timestamp time.Time, fileSize int64) {
 		metadata := &database.FrameMetadata{}

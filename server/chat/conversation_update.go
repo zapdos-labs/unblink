@@ -6,7 +6,7 @@ import (
 
 	"connectrpc.com/connect"
 
-	chatv1 "unb/server/gen/chat/v1"
+	chatv1 "unblink/server/gen/chat/v1"
 )
 
 func (s *Service) UpdateConversation(ctx context.Context, req *connect.Request[chatv1.UpdateConversationRequest]) (*connect.Response[chatv1.UpdateConversationResponse], error) {

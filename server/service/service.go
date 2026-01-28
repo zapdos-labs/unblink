@@ -11,9 +11,9 @@ import (
 	"connectrpc.com/connect"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	servicev1 "unb/server/gen/service/v1"
-	"unb/server/gen/service/v1/servicev1connect"
-	"unb/server/internal/ctxutil"
+	servicev1 "unblink/server/gen/service/v1"
+	"unblink/server/gen/service/v1/servicev1connect"
+	"unblink/server/internal/ctxutil"
 )
 
 // generateID creates a unique ID using crypto/rand

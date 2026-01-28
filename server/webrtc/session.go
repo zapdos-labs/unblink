@@ -12,7 +12,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/pion/webrtc/v4"
 
-	"unb/server"
+	"unblink/server"
 )
 
 // Session represents an active WebRTC session

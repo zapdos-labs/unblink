@@ -24,12 +24,12 @@ type Config struct {
 	JWTSecret string `json:"jwt_secret"`
 
 	// Main chat model settings
-	ChatOpenAIModel  string `json:"chat_openai_model"`
+	ChatOpenAIModel   string `json:"chat_openai_model"`
 	ChatOpenAIBaseURL string `json:"chat_openai_base_url"`
 	ChatOpenAIAPIKey  string `json:"chat_openai_api_key,omitempty"`
 
 	// Fast model for follow-ups
-	FastOpenAIModel  string `json:"fast_openai_model"`
+	FastOpenAIModel   string `json:"fast_openai_model"`
 	FastOpenAIBaseURL string `json:"fast_openai_base_url"`
 	FastOpenAIAPIKey  string `json:"fast_openai_api_key,omitempty"`
 
@@ -67,7 +67,7 @@ func ConfigPath() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("get home dir: %w", err)
 	}
-	return filepath.Join(homeDir, ".unb", "server.config.json"), nil
+	return filepath.Join(homeDir, ".unblink", "server.config.json"), nil
 }
 
 // LoadConfig reads and validates the server configuration from a JSON file

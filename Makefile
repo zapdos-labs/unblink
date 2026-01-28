@@ -24,11 +24,13 @@ generate-ts:
 	cd proto && npx buf generate --template buf.gen.ts.yaml
 
 # Drop database schema
-drop-schema:
-	go run cmd/server/main.go -drop
-
+drop:
+	go run cmd/cli/main.go -drop
 
 # Typecheck (ts and go)
 typecheck:
 	cd app && npx tsc --noEmit
 	go vet ./...
+
+delete-app-dir:
+	go run cmd/cli/main.go -delete-app-dir

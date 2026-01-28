@@ -10,7 +10,7 @@ import (
 	errors "errors"
 	http "net/http"
 	strings "strings"
-	auth "unb/server/gen/chat/v1/auth"
+	auth "unblink/server/gen/chat/v1/auth"
 )
 
 // This is a compile-time assertion to ensure that this generated file and the connect package are

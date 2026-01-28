@@ -7,8 +7,8 @@ import (
 
 	"connectrpc.com/connect"
 
-	"unb/server"
-	webrtcv1 "unb/server/gen/webrtc/v1"
+	"unblink/server"
+	webrtcv1 "unblink/server/gen/webrtc/v1"
 )
 
 // Service implements the WebRTC gRPC/Connect service

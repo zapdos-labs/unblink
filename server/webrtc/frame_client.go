@@ -10,7 +10,7 @@ import (
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/option"
 
-	"unb/server/models"
+	"unblink/server/models"
 )
 
 // FrameClient handles communication with vLLM endpoints (OpenAI-compatible)

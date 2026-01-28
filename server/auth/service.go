@@ -6,9 +6,9 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"unb/database"
-	authv1 "unb/server/gen/chat/v1/auth"
-	"unb/server/internal/ctxutil"
+	"unblink/database"
+	authv1 "unblink/server/gen/chat/v1/auth"
+	"unblink/server/internal/ctxutil"
 
 	"connectrpc.com/connect"
 	"google.golang.org/protobuf/types/known/timestamppb"

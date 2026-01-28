@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	servicev1 "unb/server/gen/service/v1"
+	servicev1 "unblink/server/gen/service/v1"
 )
 
 const (

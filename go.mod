@@ -1,4 +1,4 @@
-module unb
+module unblink
 
 go 1.25.4
 
@@ -8,6 +8,7 @@ require (
 	github.com/fxamacker/cbor/v2 v2.9.0
 	github.com/go-gst/go-gst v1.4.0
 	github.com/golang-jwt/jwt/v5 v5.2.1
+	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/invopop/jsonschema v0.13.0

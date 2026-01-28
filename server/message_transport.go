@@ -7,7 +7,7 @@ import (
 
 	"github.com/gorilla/websocket"
 
-	"unb/shared"
+	"unblink/shared"
 )
 
 const MaxMessageSize = 16 * 1024 * 1024 // 16 MB

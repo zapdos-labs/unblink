@@ -1,36 +1,42 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 
-	"unb/database"
-	"unb/server"
-	"unb/server/auth"
-	"unb/server/chat"
-	"unb/server/gen/chat/v1/auth/authv1connect"
-	"unb/server/models"
-	"unb/server/gen/chat/v1/chatv1connect"
-	"unb/server/gen/service/v1/servicev1connect"
-	"unb/server/gen/webrtc/v1/webrtcv1connect"
-	"unb/server/service"
-	"unb/server/webrtc"
+	"unblink/database"
+	"unblink/server"
+	"unblink/server/auth"
+	"unblink/server/chat"
+	"unblink/server/gen/chat/v1/auth/authv1connect"
+	"unblink/server/gen/chat/v1/chatv1connect"
+	"unblink/server/gen/service/v1/servicev1connect"
+	"unblink/server/gen/webrtc/v1/webrtcv1connect"
+	"unblink/server/models"
+	"unblink/server/service"
+	"unblink/server/webrtc"
 
 	"connectrpc.com/connect"
 	"github.com/go-gst/go-gst/gst"
 )
 
 func main() {
+	// Define flags
+	configPath := flag.String("config", "", "Path to config file (default: ~/.unblink/server.config.json)")
+
+	// Parse flags
+	flag.Parse()
+
 	// Initialize GStreamer
 	gst.Init(nil)
 
 	// Load configuration from file (all fields required)
-	config, err := server.LoadConfig("")
+	config, err := server.LoadConfig(*configPath)
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
@@ -41,16 +47,6 @@ func main() {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 	defer dbClient.Close()
-
-	// Drop schema if requested
-	if len(os.Args) > 1 && os.Args[1] == "-drop" {
-		log.Println("Dropping schema...")
-		if err := dbClient.DropSchema(); err != nil {
-			log.Fatalf("Failed to drop schema: %v", err)
-		}
-		log.Println("Schema dropped successfully")
-		os.Exit(0)
-	}
 
 	// Create schema if needed
 	if err := dbClient.CreateSchema(); err != nil {
@@ -100,12 +96,16 @@ func main() {
 	authInterceptor := server.NewAuthInterceptor(jwtManager)
 	log.Printf("Initialized auth interceptor")
 
+	// Create storage for frames
+	storage := webrtc.NewStorage(config.FramesBaseDir())
+	log.Printf("[Main] Initialized storage: baseDir=%s", config.FramesBaseDir())
+
 	// Create VLM frame client and batch manager
 	var batchManager *webrtc.BatchManager
 	if config.VLMOpenAIBaseURL != "" {
 		vlmTimeout := time.Duration(config.VLMTimeoutSec) * time.Second
 		frameClient := webrtc.NewFrameClient(config.VLMOpenAIBaseURL, config.VLMOpenAIModel, config.VLMOpenAIAPIKey, vlmTimeout, "Summarize the video", modelRegistry)
-		batchManager = webrtc.NewBatchManager(frameClient, config.FrameBatchSize, config.FramesBaseDir())
+		batchManager = webrtc.NewBatchManager(frameClient, config.FrameBatchSize, storage)
 		log.Printf("[Main] Initialized VLM frame client: url=%s, model=%s, batchSize=%d, timeout=%vs", config.VLMOpenAIBaseURL, config.VLMOpenAIModel, config.FrameBatchSize, config.VLMTimeoutSec)
 	} else {
 		log.Printf("[Main] VLM not configured, frame summaries disabled")
@@ -117,7 +117,7 @@ func main() {
 	serviceRegistry := service.NewServiceRegistry(
 		dbClient,
 		frameInterval,
-		config.FramesBaseDir(),
+		storage,
 		nil, // will be set after nodeServer is created
 		batchManager,
 		idleTimeout,

@@ -11,7 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 
-	"unb/shared"
+	"unblink/shared"
 )
 
 // Bridge represents an active bridge connection

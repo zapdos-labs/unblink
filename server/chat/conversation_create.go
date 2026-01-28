@@ -8,8 +8,8 @@ import (
 	"connectrpc.com/connect"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"unb/server/internal/ctxutil"
-	chatv1 "unb/server/gen/chat/v1"
+	"unblink/server/internal/ctxutil"
+	chatv1 "unblink/server/gen/chat/v1"
 )
 
 // GetUserIDFromContext extracts the user ID from the context

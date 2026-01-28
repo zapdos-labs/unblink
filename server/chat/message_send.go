@@ -13,7 +13,7 @@ import (
 	"github.com/openai/openai-go/v3"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	chatv1 "unb/server/gen/chat/v1"
+	chatv1 "unblink/server/gen/chat/v1"
 )
 
 func (s *Service) SendMessage(ctx context.Context, req *connect.Request[chatv1.SendMessageRequest], stream *connect.ServerStream[chatv1.SendMessageResponse]) error {

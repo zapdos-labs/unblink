@@ -23,23 +23,24 @@ type BatchManager struct {
 	frameBatches    map[string][]*Frame        // serviceID -> pending frames
 	rollingContexts map[string]*rollingContext // serviceID -> rolling state
 	baseInstruction string                     // Base instruction
-	storageBaseDir  string                     // Base directory for storing annotated frames
+	storage         *Storage                   // Storage for saving annotated frames
 	mu              sync.Mutex
 }
 
 // NewBatchManager creates a new batch manager
-func NewBatchManager(client *FrameClient, batchSize int, storageBaseDir string) *BatchManager {
+func NewBatchManager(client *FrameClient, batchSize int, storage *Storage) *BatchManager {
 	return &BatchManager{
 		client:           client,
 		batchSize:        batchSize,
 		frameBatches:     make(map[string][]*Frame),
 		rollingContexts:  make(map[string]*rollingContext),
 		baseInstruction:  "Analyze these video frames for motion, action, emotion, facial expressions, and subtle details. Detect ALL objects and return bounding boxes in NORMALIZED 1000 COORDINATES (0=top/left, 1000=bottom/right).",
-		storageBaseDir:   storageBaseDir,
+		storage:          storage,
 	}
 }
 
 // AddFrame adds a frame to the batch and sends if batch is full
+// Frame should already be preprocessed (resized + timestamp burnt in)
 func (m *BatchManager) AddFrame(frame *Frame) {
 	m.mu.Lock()
 
@@ -143,8 +144,16 @@ func (m *BatchManager) sendBatch(serviceID string, frames []*Frame, previousResp
 			annotatedData = finalFrame.Data // fall back to original
 		}
 
-		// Save annotated frame to disk for debugging
-		go SaveAnnotatedFrame(annotatedData, serviceID, finalFrame.Timestamp, m.storageBaseDir)
+		// Save annotated frame to disk (replaces the preprocessed-only version)
+		// This goes to the same storage/frames/{serviceID}/ directory
+		if m.storage != nil {
+			annotatedFrame := &Frame{
+				Data:      annotatedData,
+				Timestamp: finalFrame.Timestamp,
+				ServiceID: serviceID,
+			}
+			m.storage.Save(serviceID, annotatedFrame)
+		}
 
 		// Update context with annotated frame for next batch's continuity
 		// This is a "set of marks" approach - the model sees previous detections as visual markers

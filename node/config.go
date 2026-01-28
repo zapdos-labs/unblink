@@ -13,9 +13,9 @@ import (
 
 // Config represents the v2 node configuration
 type Config struct {
-	RelayAddress string       `json:"relay_address"`
-	NodeID       string       `json:"node_id"`
-	Token        string       `json:"token"`
+	RelayAddress string        `json:"relay_address"`
+	NodeID       string        `json:"node_id"`
+	Token        string        `json:"token"`
 	Reconnect    ReconnectConf `json:"reconnect"`
 }
 
@@ -37,7 +37,7 @@ func GetDefaultConfigPath() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("get home dir: %w", err)
 	}
-	return filepath.Join(homeDir, ".unb", "config.json"), nil
+	return filepath.Join(homeDir, ".unblink", "config.json"), nil
 }
 
 // Load creates a ConfigFile, resolving default path if customPath is empty

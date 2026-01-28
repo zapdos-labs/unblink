@@ -8,8 +8,8 @@ import (
 
 	"github.com/AlexxIT/go2rtc/pkg/core"
 
-	"unb/server"
-	"unb/server/webrtc"
+	"unblink/server"
+	"unblink/server/webrtc"
 )
 
 // ServiceHandler encapsulates all components needed to handle an active service
@@ -109,12 +109,27 @@ func (h *ServiceHandler) Start() error {
 
 	// Create and start extractor
 	h.extractor = webrtc.NewFrameExtractor(h.serviceID, h.frameInterval, func(frame *webrtc.Frame) {
-		// Save frame to disk
-		h.storage.Save(h.serviceID, frame)
+		// Preprocess frame: resize to max 800px edge and burn in timestamp
+		preprocessedData, err := webrtc.PreprocessFrame(frame.Data, frame.Timestamp)
+		if err != nil {
+			log.Printf("[ServiceHandler] Failed to preprocess frame for service %s: %v", h.serviceID, err)
+			// Fall back to original frame if preprocessing fails
+			preprocessedData = frame.Data
+		}
 
-		// Add frame to batch manager for vLLM processing
+		// Create preprocessed frame
+		preprocessedFrame := &webrtc.Frame{
+			Data:      preprocessedData,
+			Timestamp: frame.Timestamp,
+			ServiceID: frame.ServiceID,
+		}
+
+		// Save preprocessed frame to disk
+		h.storage.Save(h.serviceID, preprocessedFrame)
+
+		// Add preprocessed frame to batch manager for vLLM processing
 		if h.batchManager != nil {
-			h.batchManager.AddFrame(frame)
+			h.batchManager.AddFrame(preprocessedFrame)
 		}
 	})
 

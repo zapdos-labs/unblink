@@ -8,7 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"unb/node"
+	"unblink/node"
 )
 
 var configPath string
@@ -146,7 +146,7 @@ func printUsage() {
 	fmt.Println("  logout         Remove saved token")
 	fmt.Println()
 	fmt.Println("Options:")
-	fmt.Println("  -config <path>  Use custom config file (default: ~/.unb/config.json)")
+	fmt.Println("  -config <path>  Use custom config file (default: ~/.unblink/config.json)")
 	fmt.Println("  -h, --help     Show this help message")
 	fmt.Println()
 	fmt.Println("Examples:")

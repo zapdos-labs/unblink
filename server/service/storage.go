@@ -9,9 +9,9 @@ import (
 
 	"connectrpc.com/connect"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"unb/database"
-	servicev1 "unb/server/gen/service/v1"
-	"unb/server/gen/service/v1/servicev1connect"
+	"unblink/database"
+	servicev1 "unblink/server/gen/service/v1"
+	"unblink/server/gen/service/v1/servicev1connect"
 )
 
 // StorageDatabase defines the interface for storage database operations
