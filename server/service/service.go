@@ -47,26 +47,6 @@ func NewService(db Database, registry *ServiceRegistry) *Service {
 	}
 }
 
-// verifyNodeOwnership checks if the user can access the node.
-// A node is accessible if it's public (no users associated) or the user is associated with it.
-func (s *Service) verifyNodeOwnership(ctx context.Context, nodeID string) error {
-	userID, ok := ctxutil.GetUserIDFromContext(ctx)
-	if !ok {
-		return connect.NewError(connect.CodeUnauthenticated, fmt.Errorf("not authenticated"))
-	}
-
-	hasAccess, err := s.db.CheckNodeAccess(nodeID, userID)
-	if err != nil {
-		return connect.NewError(connect.CodeInternal, fmt.Errorf("failed to verify node access: %w", err))
-	}
-
-	if !hasAccess {
-		return connect.NewError(connect.CodePermissionDenied, fmt.Errorf("you don't have access to this node"))
-	}
-
-	return nil
-}
-
 // CreateService creates a new service
 func (s *Service) CreateService(ctx context.Context, req *connect.Request[servicev1.CreateServiceRequest]) (*connect.Response[servicev1.CreateServiceResponse], error) {
 	if req.Msg.NodeId == "" {
@@ -74,7 +54,7 @@ func (s *Service) CreateService(ctx context.Context, req *connect.Request[servic
 	}
 
 	// Verify node access first
-	if err := s.verifyNodeOwnership(ctx, req.Msg.NodeId); err != nil {
+	if err := ctxutil.CheckNodeAccessWithContext(ctx, s.db, req.Msg.NodeId); err != nil {
 		return nil, err
 	}
 
@@ -129,7 +109,7 @@ func (s *Service) ListServicesByNodeId(ctx context.Context, req *connect.Request
 	}
 
 	// Verify node access first
-	if err := s.verifyNodeOwnership(ctx, req.Msg.NodeId); err != nil {
+	if err := ctxutil.CheckNodeAccessWithContext(ctx, s.db, req.Msg.NodeId); err != nil {
 		return nil, err
 	}
 
@@ -166,7 +146,7 @@ func (s *Service) UpdateService(ctx context.Context, req *connect.Request[servic
 	}
 
 	// Verify node access first
-	if err := s.verifyNodeOwnership(ctx, existingService.NodeId); err != nil {
+	if err := ctxutil.CheckNodeAccessWithContext(ctx, s.db, existingService.NodeId); err != nil {
 		return nil, err
 	}
 
@@ -213,7 +193,7 @@ func (s *Service) DeleteService(ctx context.Context, req *connect.Request[servic
 	}
 
 	// Verify node access first
-	if err := s.verifyNodeOwnership(ctx, service.NodeId); err != nil {
+	if err := ctxutil.CheckNodeAccessWithContext(ctx, s.db, service.NodeId); err != nil {
 		return nil, err
 	}
 

@@ -3,13 +3,15 @@ package ctxutil
 import (
 	"context"
 	"fmt"
+
+	"connectrpc.com/connect"
 )
 
 // Context key type for user ID
 type contextKey string
 
 const (
-	UserIDKey      contextKey = "userID"
+	UserIDKey        contextKey = "userID"
 	ContextKeyUserID contextKey = "userID"
 	ContextKeyClaims contextKey = "claims"
 )
@@ -44,4 +46,29 @@ func GetRequiredUserIDFromContext(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("user ID not found in context")
 	}
 	return userID, nil
+}
+
+// NodeAccessChecker defines the interface for checking node access
+type NodeAccessChecker interface {
+	CheckNodeAccess(nodeID, userID string) (bool, error)
+}
+
+// CheckNodeAccessWithContext checks if the user can access the node.
+// A node is accessible if it's public (no users associated) or the user is associated with it.
+func CheckNodeAccessWithContext(ctx context.Context, db NodeAccessChecker, nodeID string) error {
+	userID, ok := GetUserIDFromContext(ctx)
+	if !ok {
+		return connect.NewError(connect.CodeUnauthenticated, fmt.Errorf("not authenticated"))
+	}
+
+	hasAccess, err := db.CheckNodeAccess(nodeID, userID)
+	if err != nil {
+		return connect.NewError(connect.CodeInternal, fmt.Errorf("failed to verify node access: %w", err))
+	}
+
+	if !hasAccess {
+		return connect.NewError(connect.CodePermissionDenied, fmt.Errorf("you don't have access to this node"))
+	}
+
+	return nil
 }

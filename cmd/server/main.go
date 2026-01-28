@@ -168,6 +168,15 @@ func main() {
 	mux.Handle(framesPath, framesHandler)
 	log.Printf("Mounted StorageService at %s (with auth)", framesPath)
 
+	// Create and mount EventService with auth interceptor
+	eventService := service.NewEventService(dbClient)
+	eventPath, eventHandler := servicev1connect.NewEventServiceHandler(
+		eventService,
+		connect.WithInterceptors(authInterceptor),
+	)
+	mux.Handle(eventPath, eventHandler)
+	log.Printf("Mounted EventService at %s (with auth)", eventPath)
+
 	// Initialize node server for WebSocket connections
 	nodeServer := server.NewServer(config)
 
@@ -211,6 +220,7 @@ func main() {
 	log.Printf("  - Chat RPC: /chat.v1.ChatService/*")
 	log.Printf("  - Service RPC: /service.v1.ServiceService/*")
 	log.Printf("  - Storage RPC: /service.v1.StorageService/*")
+	log.Printf("  - Event RPC: /service.v1.EventService/*")
 	log.Printf("  - WebRTC RPC: /webrtc.v1.WebRTCService/*")
 	log.Printf("  - Node WebSocket: /node/connect")
 	log.Printf("  - Storage HTTP: /storage/{itemID}")
