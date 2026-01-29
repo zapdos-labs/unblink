@@ -1,4 +1,4 @@
-import { createEffect, createSignal, onCleanup } from "solid-js";
+import { createEffect, createSignal, onCleanup, untrack } from "solid-js";
 import { eventClient } from "@/src/lib/rpc";
 import type { Event } from "@/gen/service/v1/event_pb";
 
@@ -10,100 +10,118 @@ interface UseEventsOptions {
 
 export function useEvents(options: UseEventsOptions) {
   const [events, setEvents] = createSignal<Event[]>([]);
-  const [isConnected, setIsConnected] = createSignal(false);
   const [isLoading, setIsLoading] = createSignal(false);
   const [error, setError] = createSignal<Error | null>(null);
 
   let abortController: AbortController | null = null;
-
-  // Fetch historical events
-  const fetchHistoricalEvents = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await eventClient.listEventsByNodeId({
-        nodeId: options.nodeId,
-        pageSize: 10,
-        pageOffset: 0,
-      });
-      setEvents(response.events || []);
-    } catch (err) {
-      console.error("[useEvents] Failed to fetch historical events:", err);
-      setError(err as Error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Start streaming events
-  const startStream = async () => {
-    abortController = new AbortController();
-    setIsConnected(false);
-    setError(null);
-
-    try {
-      const stream = eventClient.streamEventsByNodeId(
-        {
-          nodeId: options.nodeId,
-          serviceId: options.serviceId ?? "",
-          sinceTimestamp: BigInt(0),
-        },
-        { signal: abortController.signal }
-      );
-
-      setIsConnected(true);
-
-      for await (const response of stream) {
-        if (response.payload.case === "event") {
-          const event = response.payload.value;
-          // Add new event to the beginning of the list
-          setEvents((prev) => [event, ...prev].slice(0, 10));
-        } else if (response.payload.case === "heartbeat") {
-          console.log("[useEvents] Heartbeat:", response.payload.value);
-        }
-      }
-    } catch (err) {
-      if ((err as Error).name !== "AbortError") {
-        setError(err as Error);
-        console.error("[useEvents] Stream error:", err);
-      }
-    } finally {
-      setIsConnected(false);
-      abortController = null;
-    }
-  };
+  let streamActive = false;
 
   // Stop streaming
   const stopStream = () => {
     abortController?.abort();
+    abortController = null;
+    streamActive = false;
   };
 
   // Initialize: fetch historical events and start streaming
   createEffect(() => {
-    if (options.enabled === false) {
+    // Check enabled state without tracking it
+    const enabled = untrack(() => options.enabled);
+    if (enabled === false) {
       stopStream();
       return;
     }
 
-    const _ = options.nodeId;
+    // Capture current values without tracking
+    const nodeId = untrack(() => options.nodeId);
+    const serviceId = untrack(() => options.serviceId);
+
+    // Stop any existing stream before starting a new one
     stopStream();
 
-    // Fetch historical events first
-    fetchHistoricalEvents();
+    // Mark stream as active to prevent race conditions
+    streamActive = true;
+    const currentAbortController = new AbortController();
+    abortController = currentAbortController;
 
-    // Then start streaming
-    startStream();
+    // Fetch historical events
+    const fetchAndStream = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const response = await eventClient.listEventsByNodeId({
+          nodeId,
+          pageSize: 10,
+          pageOffset: 0,
+        });
+
+        // Check if we're still the active stream
+        if (abortController !== currentAbortController) {
+          return; // This effect was cleaned up, abort
+        }
+
+        setEvents(response.events || []);
+      } catch (err) {
+        // Only set error if we're still the active stream
+        if (abortController === currentAbortController) {
+          console.error("[useEvents] Failed to fetch historical events:", err);
+          setError(err as Error);
+        }
+        return;
+      } finally {
+        if (abortController === currentAbortController) {
+          setIsLoading(false);
+        }
+      }
+
+      // Then start streaming
+      try {
+        const stream = eventClient.streamEventsByNodeId(
+          {
+            nodeId,
+            serviceId: serviceId ?? "",
+            sinceTimestamp: BigInt(0),
+          },
+          { signal: currentAbortController.signal }
+        );
+
+        for await (const response of stream) {
+          // Double-check we're still the active stream
+          if (abortController !== currentAbortController) {
+            break; // This effect was cleaned up, abort
+          }
+
+          if (response.payload.case === "event") {
+            const event = response.payload.value;
+            // Add new event to the beginning of the list
+            setEvents((prev) => [event, ...prev].slice(0, 10));
+          } else if (response.payload.case === "heartbeat") {
+            console.log("[useEvents] Heartbeat:", response.payload.value);
+          }
+        }
+      } catch (err) {
+        // Only set error if this wasn't an abort
+        if ((err as Error).name !== "AbortError" && abortController === currentAbortController) {
+          setError(err as Error);
+          console.error("[useEvents] Stream error:", err);
+        }
+      } finally {
+        if (abortController === currentAbortController) {
+          streamActive = false;
+          abortController = null;
+        }
+      }
+    };
+
+    fetchAndStream();
 
     onCleanup(stopStream);
   });
 
   return {
     events,
-    isConnected,
     isLoading,
     error,
-    fetchHistoricalEvents,
-    startStream,
-    stopStream,
   };
 }
