@@ -283,6 +283,148 @@ func (x *CountEventsForUserResponse) GetCount() int64 {
 	return 0
 }
 
+type StreamEventsByNodeIdRequest struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	NodeId         string                 `protobuf:"bytes,1,opt,name=node_id,json=nodeId,proto3" json:"node_id,omitempty"`                          // Required: filter events by node
+	ServiceId      string                 `protobuf:"bytes,2,opt,name=service_id,json=serviceId,proto3" json:"service_id,omitempty"`                 // Optional: filter by specific service
+	SinceTimestamp int64                  `protobuf:"varint,3,opt,name=since_timestamp,json=sinceTimestamp,proto3" json:"since_timestamp,omitempty"` // Optional: Unix nanoseconds (for replay)
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *StreamEventsByNodeIdRequest) Reset() {
+	*x = StreamEventsByNodeIdRequest{}
+	mi := &file_service_v1_event_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StreamEventsByNodeIdRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StreamEventsByNodeIdRequest) ProtoMessage() {}
+
+func (x *StreamEventsByNodeIdRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_service_v1_event_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StreamEventsByNodeIdRequest.ProtoReflect.Descriptor instead.
+func (*StreamEventsByNodeIdRequest) Descriptor() ([]byte, []int) {
+	return file_service_v1_event_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *StreamEventsByNodeIdRequest) GetNodeId() string {
+	if x != nil {
+		return x.NodeId
+	}
+	return ""
+}
+
+func (x *StreamEventsByNodeIdRequest) GetServiceId() string {
+	if x != nil {
+		return x.ServiceId
+	}
+	return ""
+}
+
+func (x *StreamEventsByNodeIdRequest) GetSinceTimestamp() int64 {
+	if x != nil {
+		return x.SinceTimestamp
+	}
+	return 0
+}
+
+type StreamEventsByNodeIdResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Payload:
+	//
+	//	*StreamEventsByNodeIdResponse_Event
+	//	*StreamEventsByNodeIdResponse_Heartbeat
+	Payload       isStreamEventsByNodeIdResponse_Payload `protobuf_oneof:"payload"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *StreamEventsByNodeIdResponse) Reset() {
+	*x = StreamEventsByNodeIdResponse{}
+	mi := &file_service_v1_event_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StreamEventsByNodeIdResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StreamEventsByNodeIdResponse) ProtoMessage() {}
+
+func (x *StreamEventsByNodeIdResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_service_v1_event_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StreamEventsByNodeIdResponse.ProtoReflect.Descriptor instead.
+func (*StreamEventsByNodeIdResponse) Descriptor() ([]byte, []int) {
+	return file_service_v1_event_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *StreamEventsByNodeIdResponse) GetPayload() isStreamEventsByNodeIdResponse_Payload {
+	if x != nil {
+		return x.Payload
+	}
+	return nil
+}
+
+func (x *StreamEventsByNodeIdResponse) GetEvent() *Event {
+	if x != nil {
+		if x, ok := x.Payload.(*StreamEventsByNodeIdResponse_Event); ok {
+			return x.Event
+		}
+	}
+	return nil
+}
+
+func (x *StreamEventsByNodeIdResponse) GetHeartbeat() string {
+	if x != nil {
+		if x, ok := x.Payload.(*StreamEventsByNodeIdResponse_Heartbeat); ok {
+			return x.Heartbeat
+		}
+	}
+	return ""
+}
+
+type isStreamEventsByNodeIdResponse_Payload interface {
+	isStreamEventsByNodeIdResponse_Payload()
+}
+
+type StreamEventsByNodeIdResponse_Event struct {
+	Event *Event `protobuf:"bytes,1,opt,name=event,proto3,oneof"` // New event
+}
+
+type StreamEventsByNodeIdResponse_Heartbeat struct {
+	Heartbeat string `protobuf:"bytes,2,opt,name=heartbeat,proto3,oneof"` // Keep-alive (every 30s)
+}
+
+func (*StreamEventsByNodeIdResponse_Event) isStreamEventsByNodeIdResponse_Payload() {}
+
+func (*StreamEventsByNodeIdResponse_Heartbeat) isStreamEventsByNodeIdResponse_Payload() {}
+
 var File_service_v1_event_proto protoreflect.FileDescriptor
 
 const file_service_v1_event_proto_rawDesc = "" +
@@ -307,10 +449,20 @@ const file_service_v1_event_proto_rawDesc = "" +
 	"totalCount\"\x1b\n" +
 	"\x19CountEventsForUserRequest\"2\n" +
 	"\x1aCountEventsForUserResponse\x12\x14\n" +
-	"\x05count\x18\x01 \x01(\x03R\x05count2\xd8\x01\n" +
+	"\x05count\x18\x01 \x01(\x03R\x05count\"~\n" +
+	"\x1bStreamEventsByNodeIdRequest\x12\x17\n" +
+	"\anode_id\x18\x01 \x01(\tR\x06nodeId\x12\x1d\n" +
+	"\n" +
+	"service_id\x18\x02 \x01(\tR\tserviceId\x12'\n" +
+	"\x0fsince_timestamp\x18\x03 \x01(\x03R\x0esinceTimestamp\"t\n" +
+	"\x1cStreamEventsByNodeIdResponse\x12)\n" +
+	"\x05event\x18\x01 \x01(\v2\x11.service.v1.EventH\x00R\x05event\x12\x1e\n" +
+	"\theartbeat\x18\x02 \x01(\tH\x00R\theartbeatB\t\n" +
+	"\apayload2\xc5\x02\n" +
 	"\fEventService\x12c\n" +
 	"\x12ListEventsByNodeId\x12%.service.v1.ListEventsByNodeIdRequest\x1a&.service.v1.ListEventsByNodeIdResponse\x12c\n" +
-	"\x12CountEventsForUser\x12%.service.v1.CountEventsForUserRequest\x1a&.service.v1.CountEventsForUserResponseB)Z'unblink/server/gen/service/v1;servicev1b\x06proto3"
+	"\x12CountEventsForUser\x12%.service.v1.CountEventsForUserRequest\x1a&.service.v1.CountEventsForUserResponse\x12k\n" +
+	"\x14StreamEventsByNodeId\x12'.service.v1.StreamEventsByNodeIdRequest\x1a(.service.v1.StreamEventsByNodeIdResponse0\x01B)Z'unblink/server/gen/service/v1;servicev1b\x06proto3"
 
 var (
 	file_service_v1_event_proto_rawDescOnce sync.Once
@@ -324,29 +476,34 @@ func file_service_v1_event_proto_rawDescGZIP() []byte {
 	return file_service_v1_event_proto_rawDescData
 }
 
-var file_service_v1_event_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_service_v1_event_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_service_v1_event_proto_goTypes = []any{
-	(*Event)(nil),                      // 0: service.v1.Event
-	(*ListEventsByNodeIdRequest)(nil),  // 1: service.v1.ListEventsByNodeIdRequest
-	(*ListEventsByNodeIdResponse)(nil), // 2: service.v1.ListEventsByNodeIdResponse
-	(*CountEventsForUserRequest)(nil),  // 3: service.v1.CountEventsForUserRequest
-	(*CountEventsForUserResponse)(nil), // 4: service.v1.CountEventsForUserResponse
-	(*structpb.Struct)(nil),            // 5: google.protobuf.Struct
-	(*timestamppb.Timestamp)(nil),      // 6: google.protobuf.Timestamp
+	(*Event)(nil),                        // 0: service.v1.Event
+	(*ListEventsByNodeIdRequest)(nil),    // 1: service.v1.ListEventsByNodeIdRequest
+	(*ListEventsByNodeIdResponse)(nil),   // 2: service.v1.ListEventsByNodeIdResponse
+	(*CountEventsForUserRequest)(nil),    // 3: service.v1.CountEventsForUserRequest
+	(*CountEventsForUserResponse)(nil),   // 4: service.v1.CountEventsForUserResponse
+	(*StreamEventsByNodeIdRequest)(nil),  // 5: service.v1.StreamEventsByNodeIdRequest
+	(*StreamEventsByNodeIdResponse)(nil), // 6: service.v1.StreamEventsByNodeIdResponse
+	(*structpb.Struct)(nil),              // 7: google.protobuf.Struct
+	(*timestamppb.Timestamp)(nil),        // 8: google.protobuf.Timestamp
 }
 var file_service_v1_event_proto_depIdxs = []int32{
-	5, // 0: service.v1.Event.payload:type_name -> google.protobuf.Struct
-	6, // 1: service.v1.Event.created_at:type_name -> google.protobuf.Timestamp
+	7, // 0: service.v1.Event.payload:type_name -> google.protobuf.Struct
+	8, // 1: service.v1.Event.created_at:type_name -> google.protobuf.Timestamp
 	0, // 2: service.v1.ListEventsByNodeIdResponse.events:type_name -> service.v1.Event
-	1, // 3: service.v1.EventService.ListEventsByNodeId:input_type -> service.v1.ListEventsByNodeIdRequest
-	3, // 4: service.v1.EventService.CountEventsForUser:input_type -> service.v1.CountEventsForUserRequest
-	2, // 5: service.v1.EventService.ListEventsByNodeId:output_type -> service.v1.ListEventsByNodeIdResponse
-	4, // 6: service.v1.EventService.CountEventsForUser:output_type -> service.v1.CountEventsForUserResponse
-	5, // [5:7] is the sub-list for method output_type
-	3, // [3:5] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	0, // 3: service.v1.StreamEventsByNodeIdResponse.event:type_name -> service.v1.Event
+	1, // 4: service.v1.EventService.ListEventsByNodeId:input_type -> service.v1.ListEventsByNodeIdRequest
+	3, // 5: service.v1.EventService.CountEventsForUser:input_type -> service.v1.CountEventsForUserRequest
+	5, // 6: service.v1.EventService.StreamEventsByNodeId:input_type -> service.v1.StreamEventsByNodeIdRequest
+	2, // 7: service.v1.EventService.ListEventsByNodeId:output_type -> service.v1.ListEventsByNodeIdResponse
+	4, // 8: service.v1.EventService.CountEventsForUser:output_type -> service.v1.CountEventsForUserResponse
+	6, // 9: service.v1.EventService.StreamEventsByNodeId:output_type -> service.v1.StreamEventsByNodeIdResponse
+	7, // [7:10] is the sub-list for method output_type
+	4, // [4:7] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_service_v1_event_proto_init() }
@@ -354,13 +511,17 @@ func file_service_v1_event_proto_init() {
 	if File_service_v1_event_proto != nil {
 		return
 	}
+	file_service_v1_event_proto_msgTypes[6].OneofWrappers = []any{
+		(*StreamEventsByNodeIdResponse_Event)(nil),
+		(*StreamEventsByNodeIdResponse_Heartbeat)(nil),
+	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_service_v1_event_proto_rawDesc), len(file_service_v1_event_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

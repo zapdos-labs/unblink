@@ -1,11 +1,11 @@
-import { onMount, Show } from 'solid-js'
-import { fetchServices, services, activeTab, permissionState } from '../shared'
+import { onMount, Show, Switch, Match } from 'solid-js'
+import { activeTab, fetchServices, permissionState, services } from '../shared'
 import { setAuthScreen } from '../signals/authSignals'
-import ChatView from './ChatView'
-import VideoTile from './VideoTile'
+import CameraView from './CameraView'
 import SideBar from './SideBar'
-import SettingsView from './SettingsView'
+import ChatView from './ChatView'
 import EventsView from './EventsView'
+import SettingsView from './SettingsView'
 
 interface MainProps {
   nodeId: string
@@ -61,32 +61,27 @@ export default function Main(props: MainProps) {
           )
         }
         // state === 'ok' - show dashboard
-        return (
-          <div class="flex items-start h-full">
-            <SideBar nodeId={props.nodeId} />
+        return <div class="flex items-start h-full">
+          <SideBar nodeId={props.nodeId} />
 
-            {/* Main Content Area */}
-            <div class="flex-1 h-full">
-              {(() => {
-                const tab = activeTab()
-                if (tab.type === 'chat') return <ChatView />
-                if (tab.type === 'settings') return <SettingsView nodeId={props.nodeId} />
-                if (tab.type === 'events') return <EventsView nodeId={props.nodeId} />
-                // tab.type === 'view'
-                const service = services().find((s) => s.id === tab.serviceId)
-                if (!service) return <ChatView />
-                return (
-                  <VideoTile
-                    nodeId={tab.nodeId}
-                    serviceId={tab.serviceId}
-                    serviceUrl={service.serviceUrl}
-                    name={tab.name}
-                  />
-                )
-              })()}
-            </div>
+          {/* Main Content Area */}
+          <div class="flex-1 h-full">
+            <Switch fallback={<ChatView />}>
+              <Match when={activeTab().type === 'chat'}>
+                <ChatView />
+              </Match>
+              <Match when={activeTab().type === 'view'}>
+                <CameraView />
+              </Match>
+              <Match when={activeTab().type === 'events'}>
+                <EventsView nodeId={props.nodeId} />
+              </Match>
+              <Match when={activeTab().type === 'settings'}>
+                <SettingsView nodeId={props.nodeId} />
+              </Match>
+            </Switch>
           </div>
-        )
+        </div>
       })()}
     </Show>
   )

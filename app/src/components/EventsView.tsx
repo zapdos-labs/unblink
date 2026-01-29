@@ -4,6 +4,7 @@ import { services } from '../shared'
 import { toaster } from '../ark/ArkToast'
 import type { Event } from '@/gen/service/v1/event_pb'
 import { FiChevronLeft, FiChevronRight, FiRefreshCw, FiX } from 'solid-icons/fi'
+import { Button } from './Button'
 
 const EVENTS_PER_PAGE = 20
 
@@ -146,14 +147,13 @@ export default function EventsView(props: EventsViewProps) {
             {totalCount()} event{totalCount() !== 1 ? 's' : ''} across {services().length} service{services().length !== 1 ? 's' : ''}
           </p>
         </div>
-        <button
+        <Button
           onClick={() => loadEvents(currentPage())}
-          class="drop-shadow-xl px-3 py-1.5 rounded-xl border border-neu-750 bg-neu-800 hover:bg-neu-850 flex items-center space-x-2 text-sm text-white disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={loading()}
+          loading={loading()}
         >
           <FiRefreshCw class={`w-4 h-4 ${loading() ? 'animate-spin' : ''}`} />
           <span>Refresh</span>
-        </button>
+        </Button>
       </div>
 
       {/* Table */}

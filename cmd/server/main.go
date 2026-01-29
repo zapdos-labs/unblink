@@ -100,12 +100,15 @@ func main() {
 	storage := webrtc.NewStorage(config.FramesBaseDir())
 	log.Printf("[Main] Initialized storage: baseDir=%s", config.FramesBaseDir())
 
+	// Create event service BEFORE batch manager (batch manager needs the broadcaster)
+	eventService := service.NewEventService(dbClient)
+
 	// Create VLM frame client and batch manager
 	var batchManager *webrtc.BatchManager
 	if config.VLMOpenAIBaseURL != "" {
 		vlmTimeout := time.Duration(config.VLMTimeoutSec) * time.Second
 		frameClient := webrtc.NewFrameClient(config.VLMOpenAIBaseURL, config.VLMOpenAIModel, config.VLMOpenAIAPIKey, vlmTimeout, "Summarize the video", modelRegistry)
-		batchManager = webrtc.NewBatchManager(frameClient, config.FrameBatchSize, storage, dbClient)
+		batchManager = webrtc.NewBatchManager(frameClient, config.FrameBatchSize, storage, dbClient, eventService.GetBroadcaster())
 		log.Printf("[Main] Initialized VLM frame client: url=%s, model=%s, batchSize=%d, timeout=%vs", config.VLMOpenAIBaseURL, config.VLMOpenAIModel, config.FrameBatchSize, config.VLMTimeoutSec)
 	} else {
 		log.Printf("[Main] VLM not configured, frame summaries disabled")
@@ -168,8 +171,7 @@ func main() {
 	mux.Handle(framesPath, framesHandler)
 	log.Printf("Mounted StorageService at %s (with auth)", framesPath)
 
-	// Create and mount EventService with auth interceptor
-	eventService := service.NewEventService(dbClient)
+	// Mount EventService with auth interceptor
 	eventPath, eventHandler := servicev1connect.NewEventServiceHandler(
 		eventService,
 		connect.WithInterceptors(authInterceptor),

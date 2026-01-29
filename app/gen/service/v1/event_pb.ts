@@ -12,7 +12,7 @@ import type { JsonObject, Message } from "@bufbuild/protobuf";
  * Describes the file service/v1/event.proto.
  */
 export const file_service_v1_event: GenFile = /*@__PURE__*/
-  fileDesc("ChZzZXJ2aWNlL3YxL2V2ZW50LnByb3RvEgpzZXJ2aWNlLnYxIoEBCgVFdmVudBIKCgJpZBgBIAEoCRISCgpzZXJ2aWNlX2lkGAIgASgJEigKB3BheWxvYWQYAyABKAsyFy5nb29nbGUucHJvdG9idWYuU3RydWN0Ei4KCmNyZWF0ZWRfYXQYBCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wIlQKGUxpc3RFdmVudHNCeU5vZGVJZFJlcXVlc3QSDwoHbm9kZV9pZBgBIAEoCRIRCglwYWdlX3NpemUYAiABKAUSEwoLcGFnZV9vZmZzZXQYAyABKAUiVAoaTGlzdEV2ZW50c0J5Tm9kZUlkUmVzcG9uc2USIQoGZXZlbnRzGAEgAygLMhEuc2VydmljZS52MS5FdmVudBITCgt0b3RhbF9jb3VudBgCIAEoBSIbChlDb3VudEV2ZW50c0ZvclVzZXJSZXF1ZXN0IisKGkNvdW50RXZlbnRzRm9yVXNlclJlc3BvbnNlEg0KBWNvdW50GAEgASgDMtgBCgxFdmVudFNlcnZpY2USYwoSTGlzdEV2ZW50c0J5Tm9kZUlkEiUuc2VydmljZS52MS5MaXN0RXZlbnRzQnlOb2RlSWRSZXF1ZXN0GiYuc2VydmljZS52MS5MaXN0RXZlbnRzQnlOb2RlSWRSZXNwb25zZRJjChJDb3VudEV2ZW50c0ZvclVzZXISJS5zZXJ2aWNlLnYxLkNvdW50RXZlbnRzRm9yVXNlclJlcXVlc3QaJi5zZXJ2aWNlLnYxLkNvdW50RXZlbnRzRm9yVXNlclJlc3BvbnNlQilaJ3VuYmxpbmsvc2VydmVyL2dlbi9zZXJ2aWNlL3YxO3NlcnZpY2V2MWIGcHJvdG8z", [file_google_protobuf_timestamp, file_google_protobuf_struct]);
+  fileDesc("ChZzZXJ2aWNlL3YxL2V2ZW50LnByb3RvEgpzZXJ2aWNlLnYxIoEBCgVFdmVudBIKCgJpZBgBIAEoCRISCgpzZXJ2aWNlX2lkGAIgASgJEigKB3BheWxvYWQYAyABKAsyFy5nb29nbGUucHJvdG9idWYuU3RydWN0Ei4KCmNyZWF0ZWRfYXQYBCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wIlQKGUxpc3RFdmVudHNCeU5vZGVJZFJlcXVlc3QSDwoHbm9kZV9pZBgBIAEoCRIRCglwYWdlX3NpemUYAiABKAUSEwoLcGFnZV9vZmZzZXQYAyABKAUiVAoaTGlzdEV2ZW50c0J5Tm9kZUlkUmVzcG9uc2USIQoGZXZlbnRzGAEgAygLMhEuc2VydmljZS52MS5FdmVudBITCgt0b3RhbF9jb3VudBgCIAEoBSIbChlDb3VudEV2ZW50c0ZvclVzZXJSZXF1ZXN0IisKGkNvdW50RXZlbnRzRm9yVXNlclJlc3BvbnNlEg0KBWNvdW50GAEgASgDIlsKG1N0cmVhbUV2ZW50c0J5Tm9kZUlkUmVxdWVzdBIPCgdub2RlX2lkGAEgASgJEhIKCnNlcnZpY2VfaWQYAiABKAkSFwoPc2luY2VfdGltZXN0YW1wGAMgASgDImIKHFN0cmVhbUV2ZW50c0J5Tm9kZUlkUmVzcG9uc2USIgoFZXZlbnQYASABKAsyES5zZXJ2aWNlLnYxLkV2ZW50SAASEwoJaGVhcnRiZWF0GAIgASgJSABCCQoHcGF5bG9hZDLFAgoMRXZlbnRTZXJ2aWNlEmMKEkxpc3RFdmVudHNCeU5vZGVJZBIlLnNlcnZpY2UudjEuTGlzdEV2ZW50c0J5Tm9kZUlkUmVxdWVzdBomLnNlcnZpY2UudjEuTGlzdEV2ZW50c0J5Tm9kZUlkUmVzcG9uc2USYwoSQ291bnRFdmVudHNGb3JVc2VyEiUuc2VydmljZS52MS5Db3VudEV2ZW50c0ZvclVzZXJSZXF1ZXN0GiYuc2VydmljZS52MS5Db3VudEV2ZW50c0ZvclVzZXJSZXNwb25zZRJrChRTdHJlYW1FdmVudHNCeU5vZGVJZBInLnNlcnZpY2UudjEuU3RyZWFtRXZlbnRzQnlOb2RlSWRSZXF1ZXN0Giguc2VydmljZS52MS5TdHJlYW1FdmVudHNCeU5vZGVJZFJlc3BvbnNlMAFCKVondW5ibGluay9zZXJ2ZXIvZ2VuL3NlcnZpY2UvdjE7c2VydmljZXYxYgZwcm90bzM", [file_google_protobuf_timestamp, file_google_protobuf_struct]);
 
 /**
  * @generated from message service.v1.Event
@@ -132,6 +132,72 @@ export const CountEventsForUserResponseSchema: GenMessage<CountEventsForUserResp
   messageDesc(file_service_v1_event, 4);
 
 /**
+ * @generated from message service.v1.StreamEventsByNodeIdRequest
+ */
+export type StreamEventsByNodeIdRequest = Message<"service.v1.StreamEventsByNodeIdRequest"> & {
+  /**
+   * Required: filter events by node
+   *
+   * @generated from field: string node_id = 1;
+   */
+  nodeId: string;
+
+  /**
+   * Optional: filter by specific service
+   *
+   * @generated from field: string service_id = 2;
+   */
+  serviceId: string;
+
+  /**
+   * Optional: Unix nanoseconds (for replay)
+   *
+   * @generated from field: int64 since_timestamp = 3;
+   */
+  sinceTimestamp: bigint;
+};
+
+/**
+ * Describes the message service.v1.StreamEventsByNodeIdRequest.
+ * Use `create(StreamEventsByNodeIdRequestSchema)` to create a new message.
+ */
+export const StreamEventsByNodeIdRequestSchema: GenMessage<StreamEventsByNodeIdRequest> = /*@__PURE__*/
+  messageDesc(file_service_v1_event, 5);
+
+/**
+ * @generated from message service.v1.StreamEventsByNodeIdResponse
+ */
+export type StreamEventsByNodeIdResponse = Message<"service.v1.StreamEventsByNodeIdResponse"> & {
+  /**
+   * @generated from oneof service.v1.StreamEventsByNodeIdResponse.payload
+   */
+  payload: {
+    /**
+     * New event
+     *
+     * @generated from field: service.v1.Event event = 1;
+     */
+    value: Event;
+    case: "event";
+  } | {
+    /**
+     * Keep-alive (every 30s)
+     *
+     * @generated from field: string heartbeat = 2;
+     */
+    value: string;
+    case: "heartbeat";
+  } | { case: undefined; value?: undefined };
+};
+
+/**
+ * Describes the message service.v1.StreamEventsByNodeIdResponse.
+ * Use `create(StreamEventsByNodeIdResponseSchema)` to create a new message.
+ */
+export const StreamEventsByNodeIdResponseSchema: GenMessage<StreamEventsByNodeIdResponse> = /*@__PURE__*/
+  messageDesc(file_service_v1_event, 6);
+
+/**
  * @generated from service service.v1.EventService
  */
 export const EventService: GenService<{
@@ -152,6 +218,16 @@ export const EventService: GenService<{
     methodKind: "unary";
     input: typeof CountEventsForUserRequestSchema;
     output: typeof CountEventsForUserResponseSchema;
+  },
+  /**
+   * Streaming events
+   *
+   * @generated from rpc service.v1.EventService.StreamEventsByNodeId
+   */
+  streamEventsByNodeId: {
+    methodKind: "server_streaming";
+    input: typeof StreamEventsByNodeIdRequestSchema;
+    output: typeof StreamEventsByNodeIdResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_service_v1_event, 0);

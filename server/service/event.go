@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"fmt"
+	"log"
+	"time"
 
 	"connectrpc.com/connect"
 
@@ -20,13 +22,20 @@ type EventDatabase interface {
 }
 
 type EventService struct {
-	db EventDatabase
+	db         EventDatabase
+	broadcaster *EventBroadcaster
 }
 
 func NewEventService(db EventDatabase) *EventService {
 	return &EventService{
-		db: db,
+		db:          db,
+		broadcaster: NewEventBroadcaster(),
 	}
+}
+
+// GetBroadcaster returns the event broadcaster (for BatchManager to use)
+func (s *EventService) GetBroadcaster() *EventBroadcaster {
+	return s.broadcaster
 }
 
 // ListEventsByNodeId retrieves events for all services in a node with pagination
@@ -70,6 +79,66 @@ func (s *EventService) CountEventsForUser(ctx context.Context, req *connect.Requ
 	return connect.NewResponse(&servicev1.CountEventsForUserResponse{
 		Count: count,
 	}), nil
+}
+
+// StreamEventsByNodeId streams events in real-time for a node
+func (s *EventService) StreamEventsByNodeId(ctx context.Context, req *connect.Request[servicev1.StreamEventsByNodeIdRequest], stream *connect.ServerStream[servicev1.StreamEventsByNodeIdResponse]) error {
+	nodeID := req.Msg.NodeId
+	if nodeID == "" {
+		return connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("node_id is required"))
+	}
+
+	// Verify node access
+	if err := ctxutil.CheckNodeAccessWithContext(ctx, s.db, nodeID); err != nil {
+		return err
+	}
+
+	serviceID := req.Msg.ServiceId
+
+	log.Printf("[EventService] Starting stream: node=%s, service=%s", nodeID, serviceID)
+
+	// Subscribe to events
+	eventChan, cancel := s.broadcaster.Subscribe(ctx, nodeID, serviceID)
+	defer cancel()
+
+	// Start heartbeat ticker
+	heartbeat := time.NewTicker(30 * time.Second)
+	defer heartbeat.Stop()
+
+	// Stream loop
+	for {
+		select {
+		case <-ctx.Done():
+			log.Printf("[EventService] Stream context done: node=%s", nodeID)
+			return nil
+
+		case event, ok := <-eventChan:
+			if !ok {
+				log.Printf("[EventService] Event channel closed: node=%s", nodeID)
+				return nil
+			}
+
+			if err := stream.Send(&servicev1.StreamEventsByNodeIdResponse{
+				Payload: &servicev1.StreamEventsByNodeIdResponse_Event{
+					Event: event,
+				},
+			}); err != nil {
+				log.Printf("[EventService] Stream send error: node=%s, err=%v", nodeID, err)
+				return err
+			}
+
+		case <-heartbeat.C:
+			// Send heartbeat to keep connection alive
+			if err := stream.Send(&servicev1.StreamEventsByNodeIdResponse{
+				Payload: &servicev1.StreamEventsByNodeIdResponse_Heartbeat{
+					Heartbeat: fmt.Sprintf("ping:%d", time.Now().Unix()),
+				},
+			}); err != nil {
+				log.Printf("[EventService] Heartbeat send error: node=%s, err=%v", nodeID, err)
+				return err
+			}
+		}
+	}
 }
 
 // Ensure EventService implements interface

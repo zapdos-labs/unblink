@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@ark-ui/solid": "^5.30.0",
+    "date-fns": "^4.1.0",
     "dompurify": "^3.3.1",
     "marked": "^17.0.1",
     "solid-icons": "^1.2.0",

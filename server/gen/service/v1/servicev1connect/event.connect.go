@@ -39,6 +39,9 @@ const (
 	// EventServiceCountEventsForUserProcedure is the fully-qualified name of the EventService's
 	// CountEventsForUser RPC.
 	EventServiceCountEventsForUserProcedure = "/service.v1.EventService/CountEventsForUser"
+	// EventServiceStreamEventsByNodeIdProcedure is the fully-qualified name of the EventService's
+	// StreamEventsByNodeId RPC.
+	EventServiceStreamEventsByNodeIdProcedure = "/service.v1.EventService/StreamEventsByNodeId"
 )
 
 // EventServiceClient is a client for the service.v1.EventService service.
@@ -46,6 +49,8 @@ type EventServiceClient interface {
 	// Event management
 	ListEventsByNodeId(context.Context, *connect.Request[v1.ListEventsByNodeIdRequest]) (*connect.Response[v1.ListEventsByNodeIdResponse], error)
 	CountEventsForUser(context.Context, *connect.Request[v1.CountEventsForUserRequest]) (*connect.Response[v1.CountEventsForUserResponse], error)
+	// Streaming events
+	StreamEventsByNodeId(context.Context, *connect.Request[v1.StreamEventsByNodeIdRequest]) (*connect.ServerStreamForClient[v1.StreamEventsByNodeIdResponse], error)
 }
 
 // NewEventServiceClient constructs a client for the service.v1.EventService service. By default, it
@@ -71,13 +76,20 @@ func NewEventServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(eventServiceMethods.ByName("CountEventsForUser")),
 			connect.WithClientOptions(opts...),
 		),
+		streamEventsByNodeId: connect.NewClient[v1.StreamEventsByNodeIdRequest, v1.StreamEventsByNodeIdResponse](
+			httpClient,
+			baseURL+EventServiceStreamEventsByNodeIdProcedure,
+			connect.WithSchema(eventServiceMethods.ByName("StreamEventsByNodeId")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // eventServiceClient implements EventServiceClient.
 type eventServiceClient struct {
-	listEventsByNodeId *connect.Client[v1.ListEventsByNodeIdRequest, v1.ListEventsByNodeIdResponse]
-	countEventsForUser *connect.Client[v1.CountEventsForUserRequest, v1.CountEventsForUserResponse]
+	listEventsByNodeId   *connect.Client[v1.ListEventsByNodeIdRequest, v1.ListEventsByNodeIdResponse]
+	countEventsForUser   *connect.Client[v1.CountEventsForUserRequest, v1.CountEventsForUserResponse]
+	streamEventsByNodeId *connect.Client[v1.StreamEventsByNodeIdRequest, v1.StreamEventsByNodeIdResponse]
 }
 
 // ListEventsByNodeId calls service.v1.EventService.ListEventsByNodeId.
@@ -90,11 +102,18 @@ func (c *eventServiceClient) CountEventsForUser(ctx context.Context, req *connec
 	return c.countEventsForUser.CallUnary(ctx, req)
 }
 
+// StreamEventsByNodeId calls service.v1.EventService.StreamEventsByNodeId.
+func (c *eventServiceClient) StreamEventsByNodeId(ctx context.Context, req *connect.Request[v1.StreamEventsByNodeIdRequest]) (*connect.ServerStreamForClient[v1.StreamEventsByNodeIdResponse], error) {
+	return c.streamEventsByNodeId.CallServerStream(ctx, req)
+}
+
 // EventServiceHandler is an implementation of the service.v1.EventService service.
 type EventServiceHandler interface {
 	// Event management
 	ListEventsByNodeId(context.Context, *connect.Request[v1.ListEventsByNodeIdRequest]) (*connect.Response[v1.ListEventsByNodeIdResponse], error)
 	CountEventsForUser(context.Context, *connect.Request[v1.CountEventsForUserRequest]) (*connect.Response[v1.CountEventsForUserResponse], error)
+	// Streaming events
+	StreamEventsByNodeId(context.Context, *connect.Request[v1.StreamEventsByNodeIdRequest], *connect.ServerStream[v1.StreamEventsByNodeIdResponse]) error
 }
 
 // NewEventServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -116,12 +135,20 @@ func NewEventServiceHandler(svc EventServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(eventServiceMethods.ByName("CountEventsForUser")),
 		connect.WithHandlerOptions(opts...),
 	)
+	eventServiceStreamEventsByNodeIdHandler := connect.NewServerStreamHandler(
+		EventServiceStreamEventsByNodeIdProcedure,
+		svc.StreamEventsByNodeId,
+		connect.WithSchema(eventServiceMethods.ByName("StreamEventsByNodeId")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/service.v1.EventService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case EventServiceListEventsByNodeIdProcedure:
 			eventServiceListEventsByNodeIdHandler.ServeHTTP(w, r)
 		case EventServiceCountEventsForUserProcedure:
 			eventServiceCountEventsForUserHandler.ServeHTTP(w, r)
+		case EventServiceStreamEventsByNodeIdProcedure:
+			eventServiceStreamEventsByNodeIdHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -137,4 +164,8 @@ func (UnimplementedEventServiceHandler) ListEventsByNodeId(context.Context, *con
 
 func (UnimplementedEventServiceHandler) CountEventsForUser(context.Context, *connect.Request[v1.CountEventsForUserRequest]) (*connect.Response[v1.CountEventsForUserResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("service.v1.EventService.CountEventsForUser is not implemented"))
+}
+
+func (UnimplementedEventServiceHandler) StreamEventsByNodeId(context.Context, *connect.Request[v1.StreamEventsByNodeIdRequest], *connect.ServerStream[v1.StreamEventsByNodeIdResponse]) error {
+	return connect.NewError(connect.CodeUnimplemented, errors.New("service.v1.EventService.StreamEventsByNodeId is not implemented"))
 }

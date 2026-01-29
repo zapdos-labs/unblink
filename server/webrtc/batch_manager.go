@@ -10,8 +10,15 @@ import (
 
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/structpb"
+	"google.golang.org/protobuf/types/known/timestamppb"
+	servicev1 "unblink/server/gen/service/v1"
 	"unblink/database"
 )
+
+// EventBroadcaster interface for broadcasting events (avoid circular dependency)
+type EventBroadcaster interface {
+	Broadcast(event *servicev1.Event, nodeID string)
+}
 
 // rollingContext holds the rolling state for a service
 type rollingContext struct {
@@ -23,28 +30,30 @@ type rollingContext struct {
 // BatchManager accumulates frames and sends them in batches to vLLM
 // It maintains rolling context per service, asking the model to describe only what's new
 type BatchManager struct {
-	client          *FrameClient
-	batchSize       int
-	frameBuffers    map[string][]*Frame        // serviceID -> buffer of frames (max size = batchSize)
-	rollingContexts map[string]*rollingContext // serviceID -> rolling state
-	processingLocks map[string]bool            // serviceID -> is currently processing
-	baseInstruction string                     // Base instruction
-	storage         *Storage                   // Storage for saving annotated frames
-	db              *database.Client           // Database for events
-	mu              sync.Mutex
+	client            *FrameClient
+	batchSize         int
+	frameBuffers      map[string][]*Frame        // serviceID -> buffer of frames (max size = batchSize)
+	rollingContexts   map[string]*rollingContext // serviceID -> rolling state
+	processingLocks   map[string]bool            // serviceID -> is currently processing
+	baseInstruction   string                     // Base instruction
+	storage           *Storage                   // Storage for saving annotated frames
+	db                *database.Client           // Database for events
+	eventBroadcaster  EventBroadcaster           // For broadcasting events to subscribers
+	mu                sync.Mutex
 }
 
 // NewBatchManager creates a new batch manager
-func NewBatchManager(client *FrameClient, batchSize int, storage *Storage, db *database.Client) *BatchManager {
+func NewBatchManager(client *FrameClient, batchSize int, storage *Storage, db *database.Client, broadcaster EventBroadcaster) *BatchManager {
 	return &BatchManager{
-		client:          client,
-		batchSize:       batchSize,
-		frameBuffers:    make(map[string][]*Frame),
-		rollingContexts: make(map[string]*rollingContext),
-		processingLocks: make(map[string]bool),
-		baseInstruction: "Analyze these video frames for motion, action, emotion, facial expressions, and subtle details. Detect the most important objects (MAX 10) and return bounding boxes in NORMALIZED 1000 COORDINATES (0=top/left, 1000=bottom/right).",
-		storage:         storage,
-		db:              db,
+		client:           client,
+		batchSize:        batchSize,
+		frameBuffers:     make(map[string][]*Frame),
+		rollingContexts:  make(map[string]*rollingContext),
+		processingLocks:  make(map[string]bool),
+		baseInstruction:  "Analyze these video frames for motion, action, emotion, facial expressions, and subtle details. Detect the most important objects (MAX 10) and return bounding boxes in NORMALIZED 1000 COORDINATES (0=top/left, 1000=bottom/right).",
+		storage:          storage,
+		db:               db,
+		eventBroadcaster: broadcaster,
 	}
 }
 
@@ -198,6 +207,20 @@ func (m *BatchManager) sendBatch(serviceID string, frames []*Frame, previousResp
 					eventID := uuid.New().String()
 					if err := m.db.CreateEvent(eventID, serviceID, payload); err != nil {
 						log.Printf("[BatchManager] Failed to create event: %v", err)
+					} else {
+						// Broadcast the event to subscribers
+						if m.eventBroadcaster != nil {
+							event := &servicev1.Event{
+								Id:        eventID,
+								ServiceId: serviceID,
+								Payload:   payload,
+								CreatedAt: timestamppb.New(time.Now()),
+							}
+							// Get node_id from service
+							if svc, err := m.db.GetService(serviceID); err == nil && svc != nil {
+								m.eventBroadcaster.Broadcast(event, svc.NodeId)
+							}
+						}
 					}
 				}
 			}

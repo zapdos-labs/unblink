@@ -11,6 +11,9 @@ service EventService {
   // Event management
   rpc ListEventsByNodeId(ListEventsByNodeIdRequest) returns (ListEventsByNodeIdResponse);
   rpc CountEventsForUser(CountEventsForUserRequest) returns (CountEventsForUserResponse);
+
+  // Streaming events
+  rpc StreamEventsByNodeId(StreamEventsByNodeIdRequest) returns (stream StreamEventsByNodeIdResponse);
 }
 
 // Data structures
@@ -39,4 +42,17 @@ message CountEventsForUserRequest {}
 
 message CountEventsForUserResponse {
   int64 count = 1;
+}
+
+message StreamEventsByNodeIdRequest {
+  string node_id = 1;           // Required: filter events by node
+  string service_id = 2;        // Optional: filter by specific service
+  int64 since_timestamp = 3;    // Optional: Unix nanoseconds (for replay)
+}
+
+message StreamEventsByNodeIdResponse {
+  oneof payload {
+    Event event = 1;            // New event
+    string heartbeat = 2;       // Keep-alive (every 30s)
+  }
 }
