@@ -62,7 +62,7 @@ func main() {
 func runNode(configFile *node.ConfigFile) {
 	reconnectCfg := configFile.Config.Reconnect
 	if reconnectCfg.Enabled {
-		log.Printf("[Node] Auto-reconnect enabled (max_num_attempts=%d)", reconnectCfg.MaxNumAttempts)
+		log.Printf("[Node] Auto-reconnect enabled (infinite retries)")
 	} else {
 		log.Printf("[Node] Auto-reconnect is DISABLED")
 	}
