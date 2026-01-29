@@ -27,7 +27,7 @@ type Event struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	ServiceId     string                 `protobuf:"bytes,2,opt,name=service_id,json=serviceId,proto3" json:"service_id,omitempty"`
-	Payload       *structpb.Value        `protobuf:"bytes,3,opt,name=payload,proto3" json:"payload,omitempty"`
+	Payload       *structpb.Struct       `protobuf:"bytes,3,opt,name=payload,proto3" json:"payload,omitempty"`
 	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -77,7 +77,7 @@ func (x *Event) GetServiceId() string {
 	return ""
 }
 
-func (x *Event) GetPayload() *structpb.Value {
+func (x *Event) GetPayload() *structpb.Struct {
 	if x != nil {
 		return x.Payload
 	}
@@ -91,27 +91,29 @@ func (x *Event) GetCreatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
-type ListEventsByServiceIdRequest struct {
+type ListEventsByNodeIdRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ServiceId     string                 `protobuf:"bytes,1,opt,name=service_id,json=serviceId,proto3" json:"service_id,omitempty"`
+	NodeId        string                 `protobuf:"bytes,1,opt,name=node_id,json=nodeId,proto3" json:"node_id,omitempty"`
+	PageSize      int32                  `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`       // Number of events per page (default 20, max 100)
+	PageOffset    int32                  `protobuf:"varint,3,opt,name=page_offset,json=pageOffset,proto3" json:"page_offset,omitempty"` // Offset for pagination (0-based)
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ListEventsByServiceIdRequest) Reset() {
-	*x = ListEventsByServiceIdRequest{}
+func (x *ListEventsByNodeIdRequest) Reset() {
+	*x = ListEventsByNodeIdRequest{}
 	mi := &file_service_v1_event_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ListEventsByServiceIdRequest) String() string {
+func (x *ListEventsByNodeIdRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListEventsByServiceIdRequest) ProtoMessage() {}
+func (*ListEventsByNodeIdRequest) ProtoMessage() {}
 
-func (x *ListEventsByServiceIdRequest) ProtoReflect() protoreflect.Message {
+func (x *ListEventsByNodeIdRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_service_v1_event_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -123,39 +125,54 @@ func (x *ListEventsByServiceIdRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListEventsByServiceIdRequest.ProtoReflect.Descriptor instead.
-func (*ListEventsByServiceIdRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ListEventsByNodeIdRequest.ProtoReflect.Descriptor instead.
+func (*ListEventsByNodeIdRequest) Descriptor() ([]byte, []int) {
 	return file_service_v1_event_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *ListEventsByServiceIdRequest) GetServiceId() string {
+func (x *ListEventsByNodeIdRequest) GetNodeId() string {
 	if x != nil {
-		return x.ServiceId
+		return x.NodeId
 	}
 	return ""
 }
 
-type ListEventsByServiceIdResponse struct {
+func (x *ListEventsByNodeIdRequest) GetPageSize() int32 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
+}
+
+func (x *ListEventsByNodeIdRequest) GetPageOffset() int32 {
+	if x != nil {
+		return x.PageOffset
+	}
+	return 0
+}
+
+type ListEventsByNodeIdResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Events        []*Event               `protobuf:"bytes,1,rep,name=events,proto3" json:"events,omitempty"`
+	TotalCount    int32                  `protobuf:"varint,2,opt,name=total_count,json=totalCount,proto3" json:"total_count,omitempty"` // Total number of events (for client-side pagination UI)
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ListEventsByServiceIdResponse) Reset() {
-	*x = ListEventsByServiceIdResponse{}
+func (x *ListEventsByNodeIdResponse) Reset() {
+	*x = ListEventsByNodeIdResponse{}
 	mi := &file_service_v1_event_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ListEventsByServiceIdResponse) String() string {
+func (x *ListEventsByNodeIdResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListEventsByServiceIdResponse) ProtoMessage() {}
+func (*ListEventsByNodeIdResponse) ProtoMessage() {}
 
-func (x *ListEventsByServiceIdResponse) ProtoReflect() protoreflect.Message {
+func (x *ListEventsByNodeIdResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_service_v1_event_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -167,16 +184,103 @@ func (x *ListEventsByServiceIdResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListEventsByServiceIdResponse.ProtoReflect.Descriptor instead.
-func (*ListEventsByServiceIdResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use ListEventsByNodeIdResponse.ProtoReflect.Descriptor instead.
+func (*ListEventsByNodeIdResponse) Descriptor() ([]byte, []int) {
 	return file_service_v1_event_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *ListEventsByServiceIdResponse) GetEvents() []*Event {
+func (x *ListEventsByNodeIdResponse) GetEvents() []*Event {
 	if x != nil {
 		return x.Events
 	}
 	return nil
+}
+
+func (x *ListEventsByNodeIdResponse) GetTotalCount() int32 {
+	if x != nil {
+		return x.TotalCount
+	}
+	return 0
+}
+
+type CountEventsForUserRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CountEventsForUserRequest) Reset() {
+	*x = CountEventsForUserRequest{}
+	mi := &file_service_v1_event_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CountEventsForUserRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CountEventsForUserRequest) ProtoMessage() {}
+
+func (x *CountEventsForUserRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_service_v1_event_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CountEventsForUserRequest.ProtoReflect.Descriptor instead.
+func (*CountEventsForUserRequest) Descriptor() ([]byte, []int) {
+	return file_service_v1_event_proto_rawDescGZIP(), []int{3}
+}
+
+type CountEventsForUserResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Count         int64                  `protobuf:"varint,1,opt,name=count,proto3" json:"count,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CountEventsForUserResponse) Reset() {
+	*x = CountEventsForUserResponse{}
+	mi := &file_service_v1_event_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CountEventsForUserResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CountEventsForUserResponse) ProtoMessage() {}
+
+func (x *CountEventsForUserResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_service_v1_event_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CountEventsForUserResponse.ProtoReflect.Descriptor instead.
+func (*CountEventsForUserResponse) Descriptor() ([]byte, []int) {
+	return file_service_v1_event_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *CountEventsForUserResponse) GetCount() int64 {
+	if x != nil {
+		return x.Count
+	}
+	return 0
 }
 
 var File_service_v1_event_proto protoreflect.FileDescriptor
@@ -184,21 +288,29 @@ var File_service_v1_event_proto protoreflect.FileDescriptor
 const file_service_v1_event_proto_rawDesc = "" +
 	"\n" +
 	"\x16service/v1/event.proto\x12\n" +
-	"service.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1cgoogle/protobuf/struct.proto\"\xa3\x01\n" +
+	"service.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1cgoogle/protobuf/struct.proto\"\xa4\x01\n" +
 	"\x05Event\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1d\n" +
 	"\n" +
-	"service_id\x18\x02 \x01(\tR\tserviceId\x120\n" +
-	"\apayload\x18\x03 \x01(\v2\x16.google.protobuf.ValueR\apayload\x129\n" +
+	"service_id\x18\x02 \x01(\tR\tserviceId\x121\n" +
+	"\apayload\x18\x03 \x01(\v2\x17.google.protobuf.StructR\apayload\x129\n" +
 	"\n" +
-	"created_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"=\n" +
-	"\x1cListEventsByServiceIdRequest\x12\x1d\n" +
-	"\n" +
-	"service_id\x18\x01 \x01(\tR\tserviceId\"J\n" +
-	"\x1dListEventsByServiceIdResponse\x12)\n" +
-	"\x06events\x18\x01 \x03(\v2\x11.service.v1.EventR\x06events2|\n" +
-	"\fEventService\x12l\n" +
-	"\x15ListEventsByServiceId\x12(.service.v1.ListEventsByServiceIdRequest\x1a).service.v1.ListEventsByServiceIdResponseB)Z'unblink/server/gen/service/v1;servicev1b\x06proto3"
+	"created_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"r\n" +
+	"\x19ListEventsByNodeIdRequest\x12\x17\n" +
+	"\anode_id\x18\x01 \x01(\tR\x06nodeId\x12\x1b\n" +
+	"\tpage_size\x18\x02 \x01(\x05R\bpageSize\x12\x1f\n" +
+	"\vpage_offset\x18\x03 \x01(\x05R\n" +
+	"pageOffset\"h\n" +
+	"\x1aListEventsByNodeIdResponse\x12)\n" +
+	"\x06events\x18\x01 \x03(\v2\x11.service.v1.EventR\x06events\x12\x1f\n" +
+	"\vtotal_count\x18\x02 \x01(\x05R\n" +
+	"totalCount\"\x1b\n" +
+	"\x19CountEventsForUserRequest\"2\n" +
+	"\x1aCountEventsForUserResponse\x12\x14\n" +
+	"\x05count\x18\x01 \x01(\x03R\x05count2\xd8\x01\n" +
+	"\fEventService\x12c\n" +
+	"\x12ListEventsByNodeId\x12%.service.v1.ListEventsByNodeIdRequest\x1a&.service.v1.ListEventsByNodeIdResponse\x12c\n" +
+	"\x12CountEventsForUser\x12%.service.v1.CountEventsForUserRequest\x1a&.service.v1.CountEventsForUserResponseB)Z'unblink/server/gen/service/v1;servicev1b\x06proto3"
 
 var (
 	file_service_v1_event_proto_rawDescOnce sync.Once
@@ -212,22 +324,26 @@ func file_service_v1_event_proto_rawDescGZIP() []byte {
 	return file_service_v1_event_proto_rawDescData
 }
 
-var file_service_v1_event_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_service_v1_event_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_service_v1_event_proto_goTypes = []any{
-	(*Event)(nil),                         // 0: service.v1.Event
-	(*ListEventsByServiceIdRequest)(nil),  // 1: service.v1.ListEventsByServiceIdRequest
-	(*ListEventsByServiceIdResponse)(nil), // 2: service.v1.ListEventsByServiceIdResponse
-	(*structpb.Value)(nil),                // 3: google.protobuf.Value
-	(*timestamppb.Timestamp)(nil),         // 4: google.protobuf.Timestamp
+	(*Event)(nil),                      // 0: service.v1.Event
+	(*ListEventsByNodeIdRequest)(nil),  // 1: service.v1.ListEventsByNodeIdRequest
+	(*ListEventsByNodeIdResponse)(nil), // 2: service.v1.ListEventsByNodeIdResponse
+	(*CountEventsForUserRequest)(nil),  // 3: service.v1.CountEventsForUserRequest
+	(*CountEventsForUserResponse)(nil), // 4: service.v1.CountEventsForUserResponse
+	(*structpb.Struct)(nil),            // 5: google.protobuf.Struct
+	(*timestamppb.Timestamp)(nil),      // 6: google.protobuf.Timestamp
 }
 var file_service_v1_event_proto_depIdxs = []int32{
-	3, // 0: service.v1.Event.payload:type_name -> google.protobuf.Value
-	4, // 1: service.v1.Event.created_at:type_name -> google.protobuf.Timestamp
-	0, // 2: service.v1.ListEventsByServiceIdResponse.events:type_name -> service.v1.Event
-	1, // 3: service.v1.EventService.ListEventsByServiceId:input_type -> service.v1.ListEventsByServiceIdRequest
-	2, // 4: service.v1.EventService.ListEventsByServiceId:output_type -> service.v1.ListEventsByServiceIdResponse
-	4, // [4:5] is the sub-list for method output_type
-	3, // [3:4] is the sub-list for method input_type
+	5, // 0: service.v1.Event.payload:type_name -> google.protobuf.Struct
+	6, // 1: service.v1.Event.created_at:type_name -> google.protobuf.Timestamp
+	0, // 2: service.v1.ListEventsByNodeIdResponse.events:type_name -> service.v1.Event
+	1, // 3: service.v1.EventService.ListEventsByNodeId:input_type -> service.v1.ListEventsByNodeIdRequest
+	3, // 4: service.v1.EventService.CountEventsForUser:input_type -> service.v1.CountEventsForUserRequest
+	2, // 5: service.v1.EventService.ListEventsByNodeId:output_type -> service.v1.ListEventsByNodeIdResponse
+	4, // 6: service.v1.EventService.CountEventsForUser:output_type -> service.v1.CountEventsForUserResponse
+	5, // [5:7] is the sub-list for method output_type
+	3, // [3:5] is the sub-list for method input_type
 	3, // [3:3] is the sub-list for extension type_name
 	3, // [3:3] is the sub-list for extension extendee
 	0, // [0:3] is the sub-list for field type_name
@@ -244,7 +360,7 @@ func file_service_v1_event_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_service_v1_event_proto_rawDesc), len(file_service_v1_event_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

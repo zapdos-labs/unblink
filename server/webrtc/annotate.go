@@ -64,18 +64,18 @@ func ScaleBBox(rawBBox []float64, actualWidth, actualHeight int) BBox {
 
 // DrawLabel draws text with background for visibility
 func DrawLabel(dst *image.RGBA, x, y int, text string, textColor, bgColor color.Color) {
-	const padding = 2
+	const padding = 1
 	d := &font.Drawer{
 		Dst:  dst,
 		Src:  image.NewUniform(textColor),
 		Face: basicfont.Face7x13,
-		Dot:  fixed.Point26_6{X: fixed.I(x + padding), Y: fixed.I(y + padding + 10)},
+		Dot:  fixed.Point26_6{X: fixed.I(x + padding), Y: fixed.I(y + padding + 8)},
 	}
 
 	// Measure text
 	advance := d.MeasureString(text)
 	textWidth := advance.Ceil()
-	textHeight := 13
+	textHeight := 10
 
 	// Draw background rectangle
 	for by := y; by < y+textHeight+2*padding; by++ {
@@ -143,8 +143,8 @@ func AnnotateFrame(jpegData []byte, vlmResponse string) ([]byte, error) {
 		tagKey := fmt.Sprintf("%s%d", obj.Label, obj.ID)
 		textColor := hashToBrightColor(tagKey)
 
-		// Draw tag: "label: id" at center with black background
-		tag := fmt.Sprintf("%s: %d", obj.Label, obj.ID)
+		// Draw only the ID number at center with black background
+		tag := fmt.Sprintf("%d", obj.ID)
 		DrawLabel(rgba, centerX, centerY, tag, textColor, color.Black)
 	}
 

@@ -4,15 +4,15 @@
 
 import type { GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv2";
 import { fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
-import type { Timestamp, Value } from "@bufbuild/protobuf/wkt";
+import type { Timestamp } from "@bufbuild/protobuf/wkt";
 import { file_google_protobuf_struct, file_google_protobuf_timestamp } from "@bufbuild/protobuf/wkt";
-import type { Message } from "@bufbuild/protobuf";
+import type { JsonObject, Message } from "@bufbuild/protobuf";
 
 /**
  * Describes the file service/v1/event.proto.
  */
 export const file_service_v1_event: GenFile = /*@__PURE__*/
-  fileDesc("ChZzZXJ2aWNlL3YxL2V2ZW50LnByb3RvEgpzZXJ2aWNlLnYxIoABCgVFdmVudBIKCgJpZBgBIAEoCRISCgpzZXJ2aWNlX2lkGAIgASgJEicKB3BheWxvYWQYAyABKAsyFi5nb29nbGUucHJvdG9idWYuVmFsdWUSLgoKY3JlYXRlZF9hdBgEIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAiMgocTGlzdEV2ZW50c0J5U2VydmljZUlkUmVxdWVzdBISCgpzZXJ2aWNlX2lkGAEgASgJIkIKHUxpc3RFdmVudHNCeVNlcnZpY2VJZFJlc3BvbnNlEiEKBmV2ZW50cxgBIAMoCzIRLnNlcnZpY2UudjEuRXZlbnQyfAoMRXZlbnRTZXJ2aWNlEmwKFUxpc3RFdmVudHNCeVNlcnZpY2VJZBIoLnNlcnZpY2UudjEuTGlzdEV2ZW50c0J5U2VydmljZUlkUmVxdWVzdBopLnNlcnZpY2UudjEuTGlzdEV2ZW50c0J5U2VydmljZUlkUmVzcG9uc2VCKVondW5ibGluay9zZXJ2ZXIvZ2VuL3NlcnZpY2UvdjE7c2VydmljZXYxYgZwcm90bzM", [file_google_protobuf_timestamp, file_google_protobuf_struct]);
+  fileDesc("ChZzZXJ2aWNlL3YxL2V2ZW50LnByb3RvEgpzZXJ2aWNlLnYxIoEBCgVFdmVudBIKCgJpZBgBIAEoCRISCgpzZXJ2aWNlX2lkGAIgASgJEigKB3BheWxvYWQYAyABKAsyFy5nb29nbGUucHJvdG9idWYuU3RydWN0Ei4KCmNyZWF0ZWRfYXQYBCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wIlQKGUxpc3RFdmVudHNCeU5vZGVJZFJlcXVlc3QSDwoHbm9kZV9pZBgBIAEoCRIRCglwYWdlX3NpemUYAiABKAUSEwoLcGFnZV9vZmZzZXQYAyABKAUiVAoaTGlzdEV2ZW50c0J5Tm9kZUlkUmVzcG9uc2USIQoGZXZlbnRzGAEgAygLMhEuc2VydmljZS52MS5FdmVudBITCgt0b3RhbF9jb3VudBgCIAEoBSIbChlDb3VudEV2ZW50c0ZvclVzZXJSZXF1ZXN0IisKGkNvdW50RXZlbnRzRm9yVXNlclJlc3BvbnNlEg0KBWNvdW50GAEgASgDMtgBCgxFdmVudFNlcnZpY2USYwoSTGlzdEV2ZW50c0J5Tm9kZUlkEiUuc2VydmljZS52MS5MaXN0RXZlbnRzQnlOb2RlSWRSZXF1ZXN0GiYuc2VydmljZS52MS5MaXN0RXZlbnRzQnlOb2RlSWRSZXNwb25zZRJjChJDb3VudEV2ZW50c0ZvclVzZXISJS5zZXJ2aWNlLnYxLkNvdW50RXZlbnRzRm9yVXNlclJlcXVlc3QaJi5zZXJ2aWNlLnYxLkNvdW50RXZlbnRzRm9yVXNlclJlc3BvbnNlQilaJ3VuYmxpbmsvc2VydmVyL2dlbi9zZXJ2aWNlL3YxO3NlcnZpY2V2MWIGcHJvdG8z", [file_google_protobuf_timestamp, file_google_protobuf_struct]);
 
 /**
  * @generated from message service.v1.Event
@@ -29,9 +29,9 @@ export type Event = Message<"service.v1.Event"> & {
   serviceId: string;
 
   /**
-   * @generated from field: google.protobuf.Value payload = 3;
+   * @generated from field: google.protobuf.Struct payload = 3;
    */
-  payload?: Value;
+  payload?: JsonObject;
 
   /**
    * @generated from field: google.protobuf.Timestamp created_at = 4;
@@ -47,38 +47,89 @@ export const EventSchema: GenMessage<Event> = /*@__PURE__*/
   messageDesc(file_service_v1_event, 0);
 
 /**
- * @generated from message service.v1.ListEventsByServiceIdRequest
+ * @generated from message service.v1.ListEventsByNodeIdRequest
  */
-export type ListEventsByServiceIdRequest = Message<"service.v1.ListEventsByServiceIdRequest"> & {
+export type ListEventsByNodeIdRequest = Message<"service.v1.ListEventsByNodeIdRequest"> & {
   /**
-   * @generated from field: string service_id = 1;
+   * @generated from field: string node_id = 1;
    */
-  serviceId: string;
+  nodeId: string;
+
+  /**
+   * Number of events per page (default 20, max 100)
+   *
+   * @generated from field: int32 page_size = 2;
+   */
+  pageSize: number;
+
+  /**
+   * Offset for pagination (0-based)
+   *
+   * @generated from field: int32 page_offset = 3;
+   */
+  pageOffset: number;
 };
 
 /**
- * Describes the message service.v1.ListEventsByServiceIdRequest.
- * Use `create(ListEventsByServiceIdRequestSchema)` to create a new message.
+ * Describes the message service.v1.ListEventsByNodeIdRequest.
+ * Use `create(ListEventsByNodeIdRequestSchema)` to create a new message.
  */
-export const ListEventsByServiceIdRequestSchema: GenMessage<ListEventsByServiceIdRequest> = /*@__PURE__*/
+export const ListEventsByNodeIdRequestSchema: GenMessage<ListEventsByNodeIdRequest> = /*@__PURE__*/
   messageDesc(file_service_v1_event, 1);
 
 /**
- * @generated from message service.v1.ListEventsByServiceIdResponse
+ * @generated from message service.v1.ListEventsByNodeIdResponse
  */
-export type ListEventsByServiceIdResponse = Message<"service.v1.ListEventsByServiceIdResponse"> & {
+export type ListEventsByNodeIdResponse = Message<"service.v1.ListEventsByNodeIdResponse"> & {
   /**
    * @generated from field: repeated service.v1.Event events = 1;
    */
   events: Event[];
+
+  /**
+   * Total number of events (for client-side pagination UI)
+   *
+   * @generated from field: int32 total_count = 2;
+   */
+  totalCount: number;
 };
 
 /**
- * Describes the message service.v1.ListEventsByServiceIdResponse.
- * Use `create(ListEventsByServiceIdResponseSchema)` to create a new message.
+ * Describes the message service.v1.ListEventsByNodeIdResponse.
+ * Use `create(ListEventsByNodeIdResponseSchema)` to create a new message.
  */
-export const ListEventsByServiceIdResponseSchema: GenMessage<ListEventsByServiceIdResponse> = /*@__PURE__*/
+export const ListEventsByNodeIdResponseSchema: GenMessage<ListEventsByNodeIdResponse> = /*@__PURE__*/
   messageDesc(file_service_v1_event, 2);
+
+/**
+ * @generated from message service.v1.CountEventsForUserRequest
+ */
+export type CountEventsForUserRequest = Message<"service.v1.CountEventsForUserRequest"> & {
+};
+
+/**
+ * Describes the message service.v1.CountEventsForUserRequest.
+ * Use `create(CountEventsForUserRequestSchema)` to create a new message.
+ */
+export const CountEventsForUserRequestSchema: GenMessage<CountEventsForUserRequest> = /*@__PURE__*/
+  messageDesc(file_service_v1_event, 3);
+
+/**
+ * @generated from message service.v1.CountEventsForUserResponse
+ */
+export type CountEventsForUserResponse = Message<"service.v1.CountEventsForUserResponse"> & {
+  /**
+   * @generated from field: int64 count = 1;
+   */
+  count: bigint;
+};
+
+/**
+ * Describes the message service.v1.CountEventsForUserResponse.
+ * Use `create(CountEventsForUserResponseSchema)` to create a new message.
+ */
+export const CountEventsForUserResponseSchema: GenMessage<CountEventsForUserResponse> = /*@__PURE__*/
+  messageDesc(file_service_v1_event, 4);
 
 /**
  * @generated from service service.v1.EventService
@@ -87,12 +138,20 @@ export const EventService: GenService<{
   /**
    * Event management
    *
-   * @generated from rpc service.v1.EventService.ListEventsByServiceId
+   * @generated from rpc service.v1.EventService.ListEventsByNodeId
    */
-  listEventsByServiceId: {
+  listEventsByNodeId: {
     methodKind: "unary";
-    input: typeof ListEventsByServiceIdRequestSchema;
-    output: typeof ListEventsByServiceIdResponseSchema;
+    input: typeof ListEventsByNodeIdRequestSchema;
+    output: typeof ListEventsByNodeIdResponseSchema;
+  },
+  /**
+   * @generated from rpc service.v1.EventService.CountEventsForUser
+   */
+  countEventsForUser: {
+    methodKind: "unary";
+    input: typeof CountEventsForUserRequestSchema;
+    output: typeof CountEventsForUserResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_service_v1_event, 0);

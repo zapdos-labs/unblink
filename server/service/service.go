@@ -33,6 +33,7 @@ type Database interface {
 	UpdateService(id, name, url string) error
 	DeleteService(id string) error
 	CheckNodeAccess(nodeID, userID string) (bool, error)
+	IsGuest(userID string) (bool, error)
 	AssociateUserNode(userID, nodeID string) error
 	ListUserNodes(userID string) ([]string, error)
 }
@@ -228,8 +229,17 @@ func (s *Service) AssociateUserNode(ctx context.Context, req *connect.Request[se
 		return nil, connect.NewError(connect.CodeUnauthenticated, fmt.Errorf("not authenticated"))
 	}
 
+	// Only allow non-guest users to associate nodes
+	isGuest, err := s.db.IsGuest(userID)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to check guest status: %w", err))
+	}
+	if isGuest {
+		return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("guest users cannot associate nodes"))
+	}
+
 	// Associate the node with the user
-	err := s.db.AssociateUserNode(userID, req.Msg.NodeId)
+	err = s.db.AssociateUserNode(userID, req.Msg.NodeId)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to associate user with node: %w", err))
 	}

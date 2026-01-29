@@ -9,7 +9,8 @@ import "google/protobuf/struct.proto";
 
 service EventService {
   // Event management
-  rpc ListEventsByServiceId(ListEventsByServiceIdRequest) returns (ListEventsByServiceIdResponse);
+  rpc ListEventsByNodeId(ListEventsByNodeIdRequest) returns (ListEventsByNodeIdResponse);
+  rpc CountEventsForUser(CountEventsForUserRequest) returns (CountEventsForUserResponse);
 }
 
 // Data structures
@@ -17,16 +18,25 @@ service EventService {
 message Event {
   string id = 1;
   string service_id = 2;
-  google.protobuf.Value payload = 3;
+  google.protobuf.Struct payload = 3;
   google.protobuf.Timestamp created_at = 4;
 }
 
 // Request/Response messages
 
-message ListEventsByServiceIdRequest {
-  string service_id = 1;
+message ListEventsByNodeIdRequest {
+  string node_id = 1;
+  int32 page_size = 2;      // Number of events per page (default 20, max 100)
+  int32 page_offset = 3;    // Offset for pagination (0-based)
 }
 
-message ListEventsByServiceIdResponse {
+message ListEventsByNodeIdResponse {
   repeated Event events = 1;
+  int32 total_count = 2;    // Total number of events (for client-side pagination UI)
+}
+
+message CountEventsForUserRequest {}
+
+message CountEventsForUserResponse {
+  int64 count = 1;
 }

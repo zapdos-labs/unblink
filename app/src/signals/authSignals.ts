@@ -14,6 +14,9 @@ export const [authState, setAuthState] = createSignal<AuthState>({
   isLoading: true,  // Critical: start as loading
 });
 
+export type AuthScreen = "login" | "create-account" | null;
+export const [authScreen, setAuthScreen] = createSignal<AuthScreen>(null);
+
 export const initAuth = async () => {
   console.log("[authSignals] Starting auth initialization...");
 
@@ -67,4 +70,36 @@ export const logout = () => {
     isAuthenticated: false,
     isLoading: false,
   });
+};
+
+export const login = async (email: string, password: string) => {
+  const response = await authClient.login({ email, password });
+  if (response.success && response.token && response.user) {
+    setToken(response.token);
+    setAuthState({
+      user: response.user,
+      isAuthenticated: true,
+      isLoading: false,
+    });
+    return true;
+  }
+  return false;
+};
+
+export const createAccount = async (email: string, password: string, name?: string) => {
+  const response = await authClient.createAndLinkAccount({
+    email,
+    password,
+    name,
+  });
+  if (response.success && response.token && response.user) {
+    setToken(response.token);
+    setAuthState({
+      user: response.user,
+      isAuthenticated: true,
+      isLoading: false,
+    });
+    return true;
+  }
+  return false;
 };

@@ -2,21 +2,22 @@ package webrtc
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/google/uuid"
-	"unblink/database"
 	"google.golang.org/protobuf/types/known/structpb"
+	"unblink/database"
 )
 
 // rollingContext holds the rolling state for a service
 type rollingContext struct {
-	lastFrame         *Frame // Last frame from previous batch
-	previousResponse  string // Last VLM raw response (JSON)
-	lastBatchSentTime int64  // Unix nano timestamp of last batch sent (for ordering)
+	lastFrame         *Frame       // Last frame from previous batch
+	previousResponse  *VLMResponse // Last VLM parsed response (full object with description and objects)
+	lastBatchSentTime int64        // Unix nano timestamp of last batch sent (for ordering)
 }
 
 // BatchManager accumulates frames and sends them in batches to vLLM
@@ -24,8 +25,9 @@ type rollingContext struct {
 type BatchManager struct {
 	client          *FrameClient
 	batchSize       int
-	frameBatches    map[string][]*Frame        // serviceID -> pending frames
+	frameBuffers    map[string][]*Frame        // serviceID -> buffer of frames (max size = batchSize)
 	rollingContexts map[string]*rollingContext // serviceID -> rolling state
+	processingLocks map[string]bool            // serviceID -> is currently processing
 	baseInstruction string                     // Base instruction
 	storage         *Storage                   // Storage for saving annotated frames
 	db              *database.Client           // Database for events
@@ -35,40 +37,55 @@ type BatchManager struct {
 // NewBatchManager creates a new batch manager
 func NewBatchManager(client *FrameClient, batchSize int, storage *Storage, db *database.Client) *BatchManager {
 	return &BatchManager{
-		client:           client,
-		batchSize:        batchSize,
-		frameBatches:     make(map[string][]*Frame),
-		rollingContexts:  make(map[string]*rollingContext),
-		baseInstruction:  "Analyze these video frames for motion, action, emotion, facial expressions, and subtle details. Detect ALL objects and return bounding boxes in NORMALIZED 1000 COORDINATES (0=top/left, 1000=bottom/right).",
-		storage:          storage,
-		db:               db,
+		client:          client,
+		batchSize:       batchSize,
+		frameBuffers:    make(map[string][]*Frame),
+		rollingContexts: make(map[string]*rollingContext),
+		processingLocks: make(map[string]bool),
+		baseInstruction: "Analyze these video frames for motion, action, emotion, facial expressions, and subtle details. Detect the most important objects (MAX 10) and return bounding boxes in NORMALIZED 1000 COORDINATES (0=top/left, 1000=bottom/right).",
+		storage:         storage,
+		db:              db,
 	}
 }
 
-// AddFrame adds a frame to the batch and sends if batch is full
-// Frame should already be preprocessed (resized + timestamp burnt in)
+// AddFrame adds a frame to the buffer
+// If processing: add to buffer, remove oldest if buffer full
+// If not processing: grab all frames in buffer and send
 func (m *BatchManager) AddFrame(frame *Frame) {
 	m.mu.Lock()
 
 	serviceID := frame.ServiceID
 
-	// Initialize batch if needed
-	if m.frameBatches[serviceID] == nil {
-		m.frameBatches[serviceID] = make([]*Frame, 0, m.batchSize)
+	// Initialize buffer if needed
+	if m.frameBuffers[serviceID] == nil {
+		m.frameBuffers[serviceID] = make([]*Frame, 0, m.batchSize)
 	}
 
-	// Add frame to batch
-	m.frameBatches[serviceID] = append(m.frameBatches[serviceID], frame)
+	buffer := m.frameBuffers[serviceID]
 
-	// Check if batch is ready to send
-	batch := m.frameBatches[serviceID]
-	shouldSend := len(batch) >= m.batchSize
+	// Add frame to buffer
+	buffer = append(buffer, frame)
+
+	// If buffer exceeds batch size, remove oldest frame (FIFO)
+	if len(buffer) > m.batchSize {
+		buffer = buffer[1:] // Remove first (oldest) element
+		log.Printf("[BatchManager] Buffer full for service %s, removed oldest frame", serviceID)
+	}
+
+	m.frameBuffers[serviceID] = buffer
+
+	// Check if we should send a batch:
+	// 1. Buffer is full (== batchSize)
+	// 2. This service is not currently processing
+	shouldSend := len(buffer) == m.batchSize && !m.processingLocks[serviceID]
 
 	if shouldSend {
-		// Copy batch and clear
-		framesToSend := make([]*Frame, len(batch))
-		copy(framesToSend, batch)
-		m.frameBatches[serviceID] = nil
+		// Grab all frames from buffer
+		framesToSend := make([]*Frame, len(buffer))
+		copy(framesToSend, buffer)
+
+		// Clear the buffer
+		m.frameBuffers[serviceID] = nil
 
 		// Get or create context
 		rollCtx := m.rollingContexts[serviceID]
@@ -89,27 +106,39 @@ func (m *BatchManager) AddFrame(frame *Frame) {
 		rollCtx.lastFrame = newLastFrame
 		rollCtx.lastBatchSentTime = batchSentTime
 
+		// Mark service as processing
+		m.processingLocks[serviceID] = true
+
 		m.mu.Unlock()
 
 		// Send batch asynchronously to avoid blocking
 		go m.sendBatch(serviceID, framesToSend, prevResponse, prevLastFrame, batchSentTime)
 	} else {
+		if m.processingLocks[serviceID] {
+			log.Printf("[BatchManager] Buffering frame for service %s (currently processing, %d frames in buffer)", serviceID, len(buffer))
+		}
 		m.mu.Unlock()
 	}
 }
 
 // sendBatch sends a batch of frames to vLLM with rolling context
-func (m *BatchManager) sendBatch(serviceID string, frames []*Frame, previousResponse string, lastFrame *Frame, batchSentTime int64) {
+func (m *BatchManager) sendBatch(serviceID string, frames []*Frame, previousResponse *VLMResponse, lastFrame *Frame, batchSentTime int64) {
+	// Release the processing lock when done
+	defer func() {
+		m.mu.Lock()
+		delete(m.processingLocks, serviceID)
+		m.mu.Unlock()
+	}()
 	// Build instruction based on whether we have previous context
 	// Note: JSON schema is handled by response_format in FrameClient
 	instruction := m.baseInstruction
 
-	if previousResponse != "" {
+	if previousResponse != nil && previousResponse.Description != "" {
 		instruction = strings.Join([]string{
 			m.baseInstruction,
 			"",
 			"PREVIOUS ANALYSIS (use for object tracking):",
-			previousResponse,
+			previousResponse.Description,
 			"",
 			"IMPORTANT: Use NORMALIZED 1000 COORDINATES for all bounding boxes.",
 			"- Coordinates range from 0 to 1000",
@@ -140,29 +169,43 @@ func (m *BatchManager) sendBatch(serviceID string, frames []*Frame, previousResp
 	}
 
 	if len(response.Choices) > 0 {
-		newResponse := response.Choices[0].Message.Content
+		newResponseStr := response.Choices[0].Message.Content
 
-		// Create event for VLM indexing
+		// Parse VLM response into structured format
+		var vlmResp VLMResponse
+		if err := json.Unmarshal([]byte(newResponseStr), &vlmResp); err != nil {
+			log.Printf("[BatchManager] Failed to parse VLM response: %v", err)
+			return
+		}
+
+		// Create event for VLM indexing with structured data
 		if m.db != nil {
-			payload, _ := structpb.NewValue(&structpb.Value{
-				Kind: &structpb.Value_StructValue{
-					StructValue: &structpb.Struct{
-						Fields: map[string]*structpb.Value{
-							"type":     structpb.NewStringValue("vlm-indexing"),
-							"response": structpb.NewStringValue(newResponse),
-						},
-					},
-				},
-			})
-			eventID := uuid.New().String()
-			if err := m.db.CreateEvent(eventID, serviceID, payload); err != nil {
-				log.Printf("[BatchManager] Failed to create event: %v", err)
+			// Convert VLMResponse struct to map via JSON round-trip for structpb compatibility
+			var responseMap map[string]any
+			respJSON, err := json.Marshal(vlmResp)
+			if err != nil {
+				log.Printf("[BatchManager] Failed to marshal VLM response: %v", err)
+			} else if err := json.Unmarshal(respJSON, &responseMap); err != nil {
+				log.Printf("[BatchManager] Failed to unmarshal VLM response to map: %v", err)
+			} else {
+				payload, err := structpb.NewStruct(map[string]any{
+					"type":     "vlm-indexing",
+					"response": responseMap,
+				})
+				if err != nil {
+					log.Printf("[BatchManager] Failed to create event payload: %v", err)
+				} else {
+					eventID := uuid.New().String()
+					if err := m.db.CreateEvent(eventID, serviceID, payload); err != nil {
+						log.Printf("[BatchManager] Failed to create event: %v", err)
+					}
+				}
 			}
 		}
 
 		// Annotate the last frame with bounding boxes
 		finalFrame := framesToSend[len(framesToSend)-1]
-		annotatedData, err := AnnotateFrame(finalFrame.Data, newResponse)
+		annotatedData, err := AnnotateFrame(finalFrame.Data, newResponseStr)
 		if err != nil {
 			log.Printf("[BatchManager] Failed to annotate frame: %v", err)
 			annotatedData = finalFrame.Data // fall back to original
@@ -185,7 +228,8 @@ func (m *BatchManager) sendBatch(serviceID string, frames []*Frame, previousResp
 		m.mu.Lock()
 		if existingCtx := m.rollingContexts[serviceID]; existingCtx != nil {
 			if batchSentTime >= existingCtx.lastBatchSentTime {
-				existingCtx.previousResponse = newResponse
+				// Store the full VLM response for next batch context
+				existingCtx.previousResponse = &vlmResp
 				existingCtx.lastFrame = &Frame{
 					Data:      annotatedData, // Annotated frame with bounding boxes as visual markers
 					Timestamp: finalFrame.Timestamp,
@@ -199,20 +243,23 @@ func (m *BatchManager) sendBatch(serviceID string, frames []*Frame, previousResp
 		}
 		m.mu.Unlock()
 
-		log.Printf("[BatchManager] Service %s: annotated frame", serviceID)
+		log.Printf("[BatchManager] Service %s: annotated frame with %d objects", serviceID, len(vlmResp.Objects))
 	}
 }
 
-// Flush sends all pending batches regardless of size
+// Flush sends batches from buffers regardless of batch size
+// Grabs all available frames from each service's buffer
 func (m *BatchManager) Flush() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	for serviceID, batch := range m.frameBatches {
-		if len(batch) > 0 {
-			framesToSend := make([]*Frame, len(batch))
-			copy(framesToSend, batch)
-			m.frameBatches[serviceID] = nil
+	for serviceID, buffer := range m.frameBuffers {
+		if len(buffer) > 0 && !m.processingLocks[serviceID] {
+			framesToSend := make([]*Frame, len(buffer))
+			copy(framesToSend, buffer)
+
+			// Clear buffer
+			m.frameBuffers[serviceID] = nil
 
 			// Get or create context
 			rollCtx := m.rollingContexts[serviceID]
@@ -233,6 +280,9 @@ func (m *BatchManager) Flush() {
 			rollCtx.lastFrame = newLastFrame
 			rollCtx.lastBatchSentTime = batchSentTime
 
+			// Mark service as processing
+			m.processingLocks[serviceID] = true
+
 			go m.sendBatch(serviceID, framesToSend, prevResponse, prevLastFrame, batchSentTime)
 		}
 	}
@@ -242,8 +292,8 @@ func (m *BatchManager) Flush() {
 func (m *BatchManager) GetSummary(serviceID string) string {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	if rollCtx := m.rollingContexts[serviceID]; rollCtx != nil {
-		return rollCtx.previousResponse
+	if rollCtx := m.rollingContexts[serviceID]; rollCtx != nil && rollCtx.previousResponse != nil {
+		return rollCtx.previousResponse.Description
 	}
 	return ""
 }
@@ -278,7 +328,8 @@ func (m *BatchManager) ResetSummary(serviceID string) {
 func (m *BatchManager) RemoveService(serviceID string) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	delete(m.frameBatches, serviceID)
+	delete(m.frameBuffers, serviceID)
 	delete(m.rollingContexts, serviceID)
-	log.Printf("[BatchManager] Removed service %s (freed batches and context)", serviceID)
+	delete(m.processingLocks, serviceID)
+	log.Printf("[BatchManager] Removed service %s (freed buffer and context)", serviceID)
 }

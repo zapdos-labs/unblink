@@ -14,8 +14,9 @@ import (
 // EventDatabase defines the interface for event database operations
 type EventDatabase interface {
 	GetService(id string) (*servicev1.Service, error)
-	ListEventsByServiceId(serviceID string) ([]*servicev1.Event, error)
+	ListEventsByNodeId(nodeID string, pageSize, pageOffset int32) ([]*servicev1.Event, int32, error)
 	CheckNodeAccess(nodeID, userID string) (bool, error)
+	CountEventsForUser(userID string) (int64, error)
 }
 
 type EventService struct {
@@ -28,30 +29,46 @@ func NewEventService(db EventDatabase) *EventService {
 	}
 }
 
-// ListEventsByServiceId retrieves all events for a service
-func (s *EventService) ListEventsByServiceId(ctx context.Context, req *connect.Request[servicev1.ListEventsByServiceIdRequest]) (*connect.Response[servicev1.ListEventsByServiceIdResponse], error) {
-	if req.Msg.ServiceId == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("service_id is required"))
-	}
-
-	// Get the service to check node ownership
-	svc, err := s.db.GetService(req.Msg.ServiceId)
-	if err != nil {
-		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("service not found: %w", err))
+// ListEventsByNodeId retrieves events for all services in a node with pagination
+func (s *EventService) ListEventsByNodeId(ctx context.Context, req *connect.Request[servicev1.ListEventsByNodeIdRequest]) (*connect.Response[servicev1.ListEventsByNodeIdResponse], error) {
+	if req.Msg.NodeId == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("node_id is required"))
 	}
 
 	// Verify node access first
-	if err := ctxutil.CheckNodeAccessWithContext(ctx, s.db, svc.NodeId); err != nil {
+	if err := ctxutil.CheckNodeAccessWithContext(ctx, s.db, req.Msg.NodeId); err != nil {
 		return nil, err
 	}
 
-	events, err := s.db.ListEventsByServiceId(req.Msg.ServiceId)
+	pageSize := req.Msg.PageSize
+	pageOffset := req.Msg.PageOffset
+
+	events, totalCount, err := s.db.ListEventsByNodeId(req.Msg.NodeId, pageSize, pageOffset)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to list events: %w", err))
 	}
 
-	return connect.NewResponse(&servicev1.ListEventsByServiceIdResponse{
-		Events: events,
+	return connect.NewResponse(&servicev1.ListEventsByNodeIdResponse{
+		Events:     events,
+		TotalCount: totalCount,
+	}), nil
+}
+
+// CountEventsForUser counts all events accessible to the authenticated user
+func (s *EventService) CountEventsForUser(ctx context.Context, req *connect.Request[servicev1.CountEventsForUserRequest]) (*connect.Response[servicev1.CountEventsForUserResponse], error) {
+	// Get authenticated user ID from context
+	userID, ok := ctxutil.GetUserIDFromContext(ctx)
+	if !ok {
+		return nil, connect.NewError(connect.CodeUnauthenticated, fmt.Errorf("not authenticated"))
+	}
+
+	count, err := s.db.CountEventsForUser(userID)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to count events: %w", err))
+	}
+
+	return connect.NewResponse(&servicev1.CountEventsForUserResponse{
+		Count: count,
 	}), nil
 }
 

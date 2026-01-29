@@ -3,6 +3,7 @@ import {
   FiChevronRight,
   FiMessageCircle,
   FiSettings,
+  FiList,
 } from "solid-icons/fi";
 import { createSignal, For, Show } from "solid-js";
 import { services, activeTab, setActiveTab, type Tab, fetchServices } from "../shared";
@@ -70,6 +71,20 @@ export default function SideBar(props: SideBarProps) {
               <FiMessageCircle class="w-4 h-4 flex-shrink-0" />
               <Show when={!collapsed()}>
                 <div>Chat</div>
+              </Show>
+            </button>
+
+            {/* Events Tab */}
+            <button
+              onClick={() => setActiveTab({ type: "events" })}
+              data-active={activeTab().type === "events"}
+              class={`w-full flex items-center ${collapsed() ? "justify-center px-2" : "space-x-3 px-4"
+                } py-2 rounded-xl text-neu-400 hover:bg-neu-800 data-[active=true]:bg-neu-800 data-[active=true]:text-white`}
+              title={collapsed() ? "Events" : undefined}
+            >
+              <FiList class="w-4 h-4 flex-shrink-0" />
+              <Show when={!collapsed()}>
+                <div>Events</div>
               </Show>
             </button>
 

@@ -29,8 +29,8 @@ const (
 )
 
 // CreateEvent creates a new event
-func (c *Client) CreateEvent(id, serviceID string, payload *structpb.Value) error {
-	payloadJSON, err := protoValueToJSON(payload)
+func (c *Client) CreateEvent(id, serviceID string, payload *structpb.Struct) error {
+	payloadJSON, err := protoStructToJSON(payload)
 	if err != nil {
 		return fmt.Errorf("failed to convert payload: %w", err)
 	}
@@ -79,7 +79,7 @@ func (c *Client) GetEvent(id string) (*servicev1.Event, error) {
 		event.ServiceId = serviceID.String
 	}
 	if payloadJSON.Valid {
-		payload, err := jsonToProtoValue(payloadJSON.String)
+		payload, err := jsonToProtoStruct(payloadJSON.String)
 		if err != nil {
 			return nil, fmt.Errorf("failed to convert payload: %w", err)
 		}
@@ -103,18 +103,46 @@ func (c *Client) DeleteEvent(id string) error {
 	return nil
 }
 
-// ListEventsByServiceId retrieves all events for a service
-func (c *Client) ListEventsByServiceId(serviceID string) ([]*servicev1.Event, error) {
+// ListEventsByNodeId retrieves events for all services in a node with pagination
+func (c *Client) ListEventsByNodeId(nodeID string, pageSize, pageOffset int32) ([]*servicev1.Event, int32, error) {
+	// Set defaults
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+	if pageSize > 100 {
+		pageSize = 100
+	}
+
+	if pageOffset < 0 {
+		pageOffset = 0
+	}
+
+	// Get total count
+	var totalCount int32
+	countSQL := `
+		SELECT COUNT(*)
+		FROM events e
+		JOIN services s ON e.service_id = s.id
+		WHERE s.node_id = $1
+	`
+	err := c.db.QueryRow(countSQL, nodeID).Scan(&totalCount)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count events: %w", err)
+	}
+
+	// Get paginated results
 	querySQL := `
-		SELECT id, service_id, payload, created_at
-		FROM events
-		WHERE service_id = $1
-		ORDER BY created_at DESC
+		SELECT e.id, e.service_id, e.payload, e.created_at
+		FROM events e
+		JOIN services s ON e.service_id = s.id
+		WHERE s.node_id = $1
+		ORDER BY e.created_at DESC
+		LIMIT $2 OFFSET $3
 	`
 
-	rows, err := c.db.Query(querySQL, serviceID)
+	rows, err := c.db.Query(querySQL, nodeID, pageSize, pageOffset)
 	if err != nil {
-		return nil, fmt.Errorf("failed to list events: %w", err)
+		return nil, 0, fmt.Errorf("failed to list events: %w", err)
 	}
 	defer rows.Close()
 
@@ -132,16 +160,16 @@ func (c *Client) ListEventsByServiceId(serviceID string) ([]*servicev1.Event, er
 			&payloadJSON,
 			&createdAt,
 		); err != nil {
-			return nil, fmt.Errorf("failed to scan event: %w", err)
+			return nil, 0, fmt.Errorf("failed to scan event: %w", err)
 		}
 
 		if svcID.Valid {
 			event.ServiceId = svcID.String
 		}
 		if payloadJSON.Valid {
-			payload, err := jsonToProtoValue(payloadJSON.String)
+			payload, err := jsonToProtoStruct(payloadJSON.String)
 			if err != nil {
-				return nil, fmt.Errorf("failed to convert payload: %w", err)
+				return nil, 0, fmt.Errorf("failed to convert payload: %w", err)
 			}
 			event.Payload = payload
 		}
@@ -152,29 +180,57 @@ func (c *Client) ListEventsByServiceId(serviceID string) ([]*servicev1.Event, er
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error iterating events: %w", err)
+		return nil, 0, fmt.Errorf("error iterating events: %w", err)
 	}
 
-	return events, nil
+	return events, totalCount, nil
 }
 
-// protoValueToJSON converts a protobuf Value to JSON string
-func protoValueToJSON(v *structpb.Value) (string, error) {
-	if v == nil {
-		return "null", nil
+// protoStructToJSON converts a protobuf Struct to JSON string
+// It converts the protobuf Struct to a native Go map first to get clean JSON
+func protoStructToJSON(s *structpb.Struct) (string, error) {
+	if s == nil {
+		return "{}", nil
 	}
-	b, err := json.Marshal(v)
+	// Convert to native Go map to get clean JSON
+	nativeMap := s.AsMap()
+	b, err := json.Marshal(nativeMap)
 	if err != nil {
 		return "", err
 	}
 	return string(b), nil
 }
 
-// jsonToProtoValue converts a JSON string to protobuf Value
-func jsonToProtoValue(s string) (*structpb.Value, error) {
-	var v structpb.Value
-	if err := json.Unmarshal([]byte(s), &v); err != nil {
+// jsonToProtoStruct converts a JSON string to protobuf Struct
+// It first unmarshals to a native Go map, then converts to protobuf Struct
+func jsonToProtoStruct(s string) (*structpb.Struct, error) {
+	// First unmarshal to native Go map
+	var nativeMap map[string]interface{}
+	if err := json.Unmarshal([]byte(s), &nativeMap); err != nil {
 		return nil, err
 	}
-	return &v, nil
+	// Convert native Go map to protobuf Struct
+	return structpb.NewStruct(nativeMap)
+}
+
+// CountEventsForUser counts all events accessible to a user.
+// A user can access events from:
+// - Services on public nodes (no users associated)
+// - Services on private nodes where the user is explicitly associated
+func (c *Client) CountEventsForUser(userID string) (int64, error) {
+	querySQL := `
+		SELECT COUNT(DISTINCT e.id)
+		FROM events e
+		JOIN services s ON e.service_id = s.id
+		LEFT JOIN user_node un ON s.node_id = un.node_id
+		WHERE un.node_id IS NULL OR un.user_id = $1
+	`
+
+	var count int64
+	err := c.db.QueryRow(querySQL, userID).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("failed to count events for user: %w", err)
+	}
+
+	return count, nil
 }

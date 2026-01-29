@@ -95,6 +95,7 @@ func (c *FrameClient) SendFrameBatchWithStructuredOutput(ctx context.Context, fr
 		Messages: []openai.ChatCompletionMessageParamUnion{
 			openai.UserMessage(content),
 		},
+		MaxTokens: openai.Int(int64(6000)),
 		ResponseFormat: openai.ChatCompletionNewParamsResponseFormatUnion{
 			OfJSONSchema: &openai.ResponseFormatJSONSchemaParam{JSONSchema: schemaParam},
 		},

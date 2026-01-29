@@ -45,6 +45,20 @@ body {
 
 
 @theme {
+  --color-violet-50: #f4f1ff;
+  --color-violet-100: #ebe5ff;
+  --color-violet-200: #daceff;
+  --color-violet-300: #bfa7ff;
+  --color-violet-400: #a175ff;
+  --color-violet-500: #873dff;
+  --color-violet-600: #7c16ff;
+  --color-violet-700: #6f04fd;
+  --color-violet-800: #5c03d4;
+  --color-violet-900: #5005b3;
+  --color-violet-950: #2e0076;
+}
+
+@theme {
   --color-neu-50: #fafafa;
   --color-neu-100: #f5f5f5;
   --color-neu-150: #f0f0f0;
@@ -71,6 +85,10 @@ body {
   button:not(:disabled),
   [role="button"]:not(:disabled) {
     cursor: pointer;
+  }
+
+  .btn-primary {
+    @apply flex items-center justify-center space-x-2 text-neutral-400 hover:text-white transition-all duration-100 bg-neutral-900 hover:bg-neutral-950 border border-neutral-800/0 hover:border-neutral-800 px-4 py-2 rounded-lg;
   }
 
   .prose-text { line-height: 1.75; overflow-x: hidden; }

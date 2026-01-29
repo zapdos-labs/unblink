@@ -4,6 +4,7 @@ import { ChatService } from "@/gen/chat/v1/chat_pb";
 import { AuthService } from "@/gen/chat/v1/auth/auth_pb";
 import { WebRTCService } from "@/gen/webrtc/v1/webrtc_pb";
 import { ServiceService } from "@/gen/service/v1/service_pb";
+import { EventService } from "@/gen/service/v1/event_pb";
 
 const BASE_URL = import.meta.env.SERVER_API_URL ?? `${window.location.protocol}//${window.location.hostname}:8080`;
 
@@ -48,3 +49,4 @@ export const chatClient = createClient(ChatService, transport);
 export const authClient = createClient(AuthService, transport);
 export const webrtcClient = createClient(WebRTCService, transport);
 export const serviceClient = createClient(ServiceService, transport);
+export const eventClient = createClient(EventService, transport);

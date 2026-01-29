@@ -38,7 +38,7 @@ type Config struct {
 
 	// Frame extraction settings
 	FrameIntervalSeconds float64 `json:"frame_interval_seconds"` // Extraction interval in seconds
-	FrameBatchSize       int     `json:"frame_batch_size"`       // Frames to batch before sending
+	FrameBatchSize       int     `json:"frame_batch_size"`       // Frames to batch before sending (buffer size = batch size)
 
 	// VLM OpenAI settings for frame processing
 	VLMOpenAIModel   string `json:"vlm_openai_model"`

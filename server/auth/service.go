@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	"golang.org/x/crypto/bcrypt"
 	"unblink/database"
 	authv1 "unblink/server/gen/chat/v1/auth"
 	"unblink/server/internal/ctxutil"
@@ -143,15 +144,168 @@ func (s *Service) GetUser(ctx context.Context, req *connect.Request[authv1.GetUs
 }
 
 // CreateAndLinkAccount creates a new account or links an account to an existing guest user
-// Phase 2 - not implemented yet
 func (s *Service) CreateAndLinkAccount(ctx context.Context, req *connect.Request[authv1.CreateAndLinkAccountRequest]) (*connect.Response[authv1.CreateAndLinkAccountResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, fmt.Errorf("CreateAndLinkAccount is not implemented yet"))
+	email := req.Msg.Email
+	password := req.Msg.Password
+	name := req.Msg.Name
+
+	// Validate input
+	if email == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("email is required"))
+	}
+	if password == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("password is required"))
+	}
+	if len(password) < 8 {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("password must be at least 8 characters"))
+	}
+
+	// Check if account already exists
+	existingAccount, err := s.db.GetAccountByEmail(email)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to check existing account: %w", err))
+	}
+	if existingAccount != nil {
+		return nil, connect.NewError(connect.CodeAlreadyExists, fmt.Errorf("account with this email already exists"))
+	}
+
+	// Hash password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to hash password: %w", err))
+	}
+
+	// Get authenticated user ID (if guest user is creating account)
+	var userID string
+	if authUserID, ok := ctxutil.GetUserIDFromContext(ctx); ok {
+		// Guest user linking account
+		userID = authUserID
+
+		// Update profile with name if provided
+		if name != nil && *name != "" {
+			if err := s.db.UpdateUserProfile(userID, map[string]string{"name": *name}); err != nil {
+				return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to update user profile: %w", err))
+			}
+		}
+	} else {
+		// New user registration
+		userID = generateID()
+
+		// Create profile with name if provided
+		profile := make(map[string]string)
+		if name != nil && *name != "" {
+			profile["name"] = *name
+		}
+
+		// Create user in database
+		if err := s.db.CreateUser(userID, profile); err != nil {
+			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to create user: %w", err))
+		}
+	}
+
+	// Create email/password account
+	accountID := generateID()
+	payload := map[string]any{
+		"email":         email,
+		"password_hash": string(hashedPassword),
+	}
+
+	if err := s.db.CreateAccount(accountID, userID, "email_password", payload); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to create account: %w", err))
+	}
+
+	// Get the user
+	user, err := s.db.GetUser(userID)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to get user: %w", err))
+	}
+	if user == nil {
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("user not found"))
+	}
+
+	// Generate JWT token (non-guest now)
+	token, err := s.jwtManager.GenerateToken(userID, email, false) // isGuest = false
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to generate token: %w", err))
+	}
+
+	// Build response
+	protoUser := &authv1.User{
+		Id:      user.ID,
+		Profile: user.Profile,
+		IsGuest: false,
+		Email:   &email,
+		CreatedAt: timestamppb.New(user.CreatedAt),
+	}
+
+	return connect.NewResponse(&authv1.CreateAndLinkAccountResponse{
+		Success: true,
+		Token:    token,
+		User:     protoUser,
+	}), nil
 }
 
 // Login authenticates a user with email and password
-// Phase 2 - not implemented yet
 func (s *Service) Login(ctx context.Context, req *connect.Request[authv1.LoginRequest]) (*connect.Response[authv1.LoginResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, fmt.Errorf("Login is not implemented yet"))
+	email := req.Msg.Email
+	password := req.Msg.Password
+
+	// Validate input
+	if email == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("email is required"))
+	}
+	if password == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("password is required"))
+	}
+
+	// Get account by email
+	account, err := s.db.GetAccountByEmail(email)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to get account: %w", err))
+	}
+	if account == nil {
+		return nil, connect.NewError(connect.CodeUnauthenticated, fmt.Errorf("invalid email or password"))
+	}
+
+	// Verify password
+	storedHash, ok := account.Payload["password_hash"].(string)
+	if !ok {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("invalid account data"))
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(storedHash), []byte(password)); err != nil {
+		return nil, connect.NewError(connect.CodeUnauthenticated, fmt.Errorf("invalid email or password"))
+	}
+
+	// Get user
+	user, err := s.db.GetUser(account.UserID)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to get user: %w", err))
+	}
+	if user == nil {
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("user not found"))
+	}
+
+	// Generate JWT token
+	token, err := s.jwtManager.GenerateToken(user.ID, email, false) // isGuest = false
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to generate token: %w", err))
+	}
+
+	// Build response
+	protoUser := &authv1.User{
+		Id:        user.ID,
+		Profile:   user.Profile,
+		IsGuest:   false,
+		Email:     &email,
+		CreatedAt: timestamppb.New(user.CreatedAt),
+	}
+
+	return connect.NewResponse(&authv1.LoginResponse{
+		Success: true,
+		Token:    token,
+		User:     protoUser,
+	}), nil
 }
 
 // UpdateUserProfile updates the current user's profile

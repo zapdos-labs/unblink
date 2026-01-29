@@ -1,5 +1,7 @@
 import { JSX, onMount, Show } from "solid-js";
-import { authState, initAuth } from "../signals/authSignals";
+import { authState, initAuth, authScreen, setAuthScreen } from "../signals/authSignals";
+import LogInScreen from "../auth/LogInScreen";
+import CreateAccountScreen from "../auth/CreateAccountScreen";
 
 interface AuthenticatedProps {
   children: JSX.Element;
@@ -21,7 +23,21 @@ export function Authenticated(props: AuthenticatedProps) {
     <Show
       fallback={<div class="flex h-screen items-center justify-center text-white">Loading...</div>}
       when={authState().isAuthenticated && !authState().isLoading}>
-      {props.children}
+      <Show when={authScreen() === "login"}>
+        <LogInScreen
+          onSwitchToRegister={() => setAuthScreen("create-account")}
+          onSuccess={() => setAuthScreen(null)}
+        />
+      </Show>
+      <Show when={authScreen() === "create-account"}>
+        <CreateAccountScreen
+          onSwitchToLogin={() => setAuthScreen("login")}
+          onSuccess={() => setAuthScreen(null)}
+        />
+      </Show>
+      <Show when={!authScreen()}>
+        {props.children}
+      </Show>
     </Show>
   );
 }
