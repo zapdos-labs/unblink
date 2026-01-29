@@ -268,22 +268,24 @@ func (s *Service) SendMessage(ctx context.Context, req *connect.Request[chatv1.S
 			}
 		}
 
-		// Save and update assistant block
-		sanitizedContent := sanitizeForPostgres(fullContent)
-		assistantDataJSON, _ := json.Marshal(map[string]any{
-			"content": sanitizedContent,
-		})
-		assistantUIBlock.Data = string(assistantDataJSON)
-		assistantUIBlock, err = s.saveUIBlock(assistantUIBlock)
-		if err != nil {
-			log.Printf("[ChatService] Failed to save assistant UI block: %v", err)
-		} else {
-			if err := stream.Send(&chatv1.SendMessageResponse{
-				Event: &chatv1.SendMessageResponse_UiBlock{
-					UiBlock: assistantUIBlock,
-				},
-			}); err != nil {
-				return err
+		// Save and update assistant block (if any content was generated)
+		if assistantUIBlock != nil {
+			sanitizedContent := sanitizeForPostgres(fullContent)
+			assistantDataJSON, _ := json.Marshal(map[string]any{
+				"content": sanitizedContent,
+			})
+			assistantUIBlock.Data = string(assistantDataJSON)
+			assistantUIBlock, err = s.saveUIBlock(assistantUIBlock)
+			if err != nil {
+				log.Printf("[ChatService] Failed to save assistant UI block: %v", err)
+			} else {
+				if err := stream.Send(&chatv1.SendMessageResponse{
+					Event: &chatv1.SendMessageResponse_UiBlock{
+						UiBlock: assistantUIBlock,
+					},
+				}); err != nil {
+					return err
+				}
 			}
 		}
 

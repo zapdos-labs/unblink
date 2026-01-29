@@ -82,7 +82,7 @@ export default function UIBlockList(props: UIBlockListProps) {
                 </Match>
 
                 <Match when={block.role === "tool"}>
-                  <div class="">
+                  <div class="mt-4">
                     <ToolCallItem
                       toolName={(block.data as any).toolName}
                       state={(block.data as any).state}

@@ -13,6 +13,7 @@ import (
 	"unblink/server"
 	"unblink/server/auth"
 	"unblink/server/chat"
+	"unblink/server/chat/tools"
 	"unblink/server/gen/chat/v1/auth/authv1connect"
 	"unblink/server/gen/chat/v1/chatv1connect"
 	"unblink/server/gen/service/v1/servicev1connect"
@@ -90,6 +91,10 @@ func main() {
 		chatCfg.ContentTrimSafetyMargin = 10
 	}
 	chatService := chat.NewService(dbClient, chatCfg, modelRegistry)
+
+	// Register video search tool
+	videoSearchTool := tools.NewVideoSearchTool(dbClient)
+	chatService.RegisterTool(videoSearchTool)
 
 	// Initialize JWT manager and auth interceptor
 	jwtManager := server.NewJWTManager(config.JWTSecret)
