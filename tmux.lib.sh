@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # tmux.lib.sh - Shared functions for tmux session management
 # Source this file in your tmux scripts to use these functions

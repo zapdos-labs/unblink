@@ -23,7 +23,6 @@ import (
 	"unblink/server/webrtc"
 
 	"connectrpc.com/connect"
-	"github.com/go-gst/go-gst/gst"
 )
 
 func main() {
@@ -32,9 +31,6 @@ func main() {
 
 	// Parse flags
 	flag.Parse()
-
-	// Initialize GStreamer
-	gst.Init(nil)
 
 	// Load configuration from file (all fields required)
 	config, err := server.LoadConfig(*configPath)
