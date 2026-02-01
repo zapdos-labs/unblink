@@ -13,6 +13,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 	servicev1 "unblink/server/gen/service/v1"
 	"unblink/database"
+	"unblink/server/internal/timeutil"
 )
 
 // EventBroadcaster interface for broadcasting events (avoid circular dependency)
@@ -197,9 +198,18 @@ func (m *BatchManager) sendBatch(serviceID string, frames []*Frame, previousResp
 			} else if err := json.Unmarshal(respJSON, &responseMap); err != nil {
 				log.Printf("[BatchManager] Failed to unmarshal VLM response to map: %v", err)
 			} else {
+				// Calculate time span and granularity
+				firstFrame := framesToSend[0]
+				lastFrame := framesToSend[len(framesToSend)-1]
+				duration := lastFrame.Timestamp.Sub(firstFrame.Timestamp)
+				granularity := timeutil.CalculateGranularity(int64(duration.Seconds()))
+
 				payload, err := structpb.NewStruct(map[string]any{
-					"type":     "vlm-indexing",
-					"response": responseMap,
+					"type":       "vlm-indexing",
+					"granularity": string(granularity),
+					"from_iso":   timeutil.FormatToISO(firstFrame.Timestamp),
+					"to_iso":     timeutil.FormatToISO(lastFrame.Timestamp),
+					"response":   responseMap,
 				})
 				if err != nil {
 					log.Printf("[BatchManager] Failed to create event payload: %v", err)
