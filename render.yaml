@@ -1,0 +1,45 @@
+services:
+  - type: web
+    name: unblink-v2
+    runtime: docker
+    repo: https://github.com/zapdos-labs/unblink-v2
+    plan: starter
+    autoDeploy: true
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DASHBOARD_URL
+        value: https://app.zapdoslabs.com
+      - key: CHAT_OPENAI_MODEL
+        sync: false
+      - key: CHAT_OPENAI_BASE_URL
+        sync: false
+      - key: CHAT_OPENAI_API_KEY
+        sync: false
+      - key: VLM_OPENAI_MODEL
+        sync: false
+      - key: VLM_OPENAI_BASE_URL
+        sync: false
+      - key: VLM_OPENAI_API_KEY
+        sync: false
+      - key: VLM_TIMEOUT_SEC
+        value: "120"
+      - key: CONTENT_TRIM_SAFETY_MARGIN
+        value: "10"
+      - key: FRAME_INTERVAL_SECONDS
+        value: "5.0"
+      - key: FRAME_BATCH_SIZE
+        value: "3"
+      - key: BRIDGE_IDLE_TIMEOUT_SEC
+        value: "300"
+      - key: BRIDGE_MAX_RETRIES
+        value: "3"
+      - key: ENABLE_INDEXING
+        value: "true"
+      - key: APP_DIR
+        value: /data/unblink

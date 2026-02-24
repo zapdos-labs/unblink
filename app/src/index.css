@@ -1,0 +1,121 @@
+@import 'tailwindcss';
+@import './ark/ark.css';
+
+
+@layer base {
+
+  /* For Webkit-based browsers (Chrome, Safari, Edge) */
+  ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #1a1a1a;
+    /* Dark track background */
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #4a4a4a;
+    /* Darker thumb */
+    border-radius: 100vh;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #6a6a6a;
+    /* Slightly lighter on hover */
+  }
+
+  /* For Firefox */
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: #4a4a4a #1a1a1a;
+  }
+}
+
+body {
+  @apply bg-neu-950 text-white;
+  font-family: 'Inter', sans-serif;
+}
+
+@theme {
+  --font-montserrat: "Montserrat", sans-serif;
+  --font-nunito: "Nunito", sans-serif;
+}
+
+
+@theme {
+  --color-violet-50: #f4f1ff;
+  --color-violet-100: #ebe5ff;
+  --color-violet-200: #daceff;
+  --color-violet-300: #bfa7ff;
+  --color-violet-400: #a175ff;
+  --color-violet-500: #873dff;
+  --color-violet-600: #7c16ff;
+  --color-violet-700: #6f04fd;
+  --color-violet-800: #5c03d4;
+  --color-violet-900: #5005b3;
+  --color-violet-950: #2e0076;
+}
+
+@theme {
+  --color-neu-50: #fafafa;
+  --color-neu-100: #f5f5f5;
+  --color-neu-150: #f0f0f0;
+  --color-neu-200: #e5e5e5;
+  --color-neu-250: #dbdbdb;
+  --color-neu-300: #d4d4d4;
+  --color-neu-350: #c7c7c7;
+  --color-neu-400: #a3a3a3;
+  --color-neu-450: #8f8f8f;
+  --color-neu-500: #737373;
+  --color-neu-550: #5f5f5f;
+  --color-neu-600: #525252;
+  --color-neu-650: #464646;
+  --color-neu-700: #404040;
+  --color-neu-750: #343434;
+  --color-neu-800: #262626;
+  --color-neu-850: #1f1f1f;
+  --color-neu-900: #171717;
+  --color-neu-925: #0f0f0f;
+  --color-neu-950: #0a0a0a;
+}
+
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  .btn-primary {
+    @apply flex items-center justify-center space-x-2 text-neutral-400 hover:text-white transition-all duration-100 bg-neutral-900 hover:bg-neutral-950 border border-neutral-800/0 hover:border-neutral-800 px-4 py-2 rounded-lg;
+  }
+
+  .prose-text { line-height: 1.75; overflow-x: hidden; }
+  .prose-text ul { margin-top: 1.25rem; margin-bottom: 1.25rem; list-style-type: disc; padding-left: 1.5rem; }
+  .prose-text ul ul { margin-top: 0.75rem; margin-bottom: 0.75rem; list-style-type: circle; }
+  .prose-text ol { margin-top: 1.25rem; margin-bottom: 1.25rem; list-style-type: decimal; padding-left: 1.5rem; }
+  .prose-text li { margin-top: 0.5rem; margin-bottom: 0.5rem; }
+  .prose-text p { margin-top: 0; margin-bottom: 0; }
+  .prose-text * + p { margin-top: 1rem; }
+  .prose-text a { color: #a3a3a3; text-decoration: underline; }
+  .prose-text a:hover { color: #d4d4d4; }
+  .prose-text strong { font-weight: 700; }
+  .prose-text em { font-style: italic; }
+  .prose-text code { font-family: monospace; background: #262626; padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.875em; }
+  .prose-text pre { background: #171717; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; }
+  .prose-text pre code { background: none; padding: 0; }
+  .prose-text blockquote { border-left: 4px solid #404040; padding-left: 1rem; margin-top: 1rem; margin-bottom: 1rem; color: #a3a3a3; }
+  .prose-text .table-wrapper { overflow-x: scroll; margin-top: 1rem; margin-bottom: 1rem; max-width: 100%; }
+  .prose-text table { width: 100%; border-collapse: separate; border-spacing: 0; border-radius: 0.5rem; overflow: hidden; }
+  .prose-text th { font-weight: 700; text-align: left; padding: 0.5rem 0.75rem; border-bottom: 2px solid #404040; background: #1a1a1a; }
+  .prose-text td { padding: 0.5rem 0.75rem; border-bottom: 1px solid #262626; }
+  .prose-text tr:last-child td { border-bottom: none; }
+  .prose-text h1 { margin-top: 1.5rem; margin-bottom: 0.75rem; font-weight: 700; font-size: 1.5rem; line-height: 1.25; }
+  .prose-text h2 { margin-top: 1.5rem; margin-bottom: 0.75rem; font-weight: 700; font-size: 1.25rem; line-height: 1.3; }
+  .prose-text h3 { margin-top: 1.25rem; margin-bottom: 0.75rem; font-weight: 700; font-size: 1.125rem; line-height: 1.35; }
+  .prose-text h4 { margin-top: 1.25rem; margin-bottom: 0.75rem; font-weight: 600; font-size: 1rem; line-height: 1.4; }
+  .prose-text h5 { margin-top: 1.25rem; margin-bottom: 0.75rem; font-weight: 600; font-size: 0.875rem; }
+  .prose-text h6 { margin-top: 1.25rem; margin-bottom: 0.75rem; font-weight: 600; font-size: 0.75rem; }
+  .prose-text hr { border-color: #262626; margin-top: 1.5rem; margin-bottom: 1.5rem; }
+}

@@ -1,0 +1,150 @@
+syntax = "proto3";
+
+package chat.v1;
+
+option go_package = "unblink/server/gen/chat/v1;chatv1";
+
+import "google/protobuf/timestamp.proto";
+
+service ChatService {
+  // Conversation management
+  rpc CreateConversation(CreateConversationRequest) returns (CreateConversationResponse);
+  rpc ListConversations(ListConversationsRequest) returns (ListConversationsResponse);
+  rpc GetConversation(GetConversationRequest) returns (GetConversationResponse);
+  rpc UpdateConversation(UpdateConversationRequest) returns (UpdateConversationResponse);
+  rpc DeleteConversation(DeleteConversationRequest) returns (DeleteConversationResponse);
+
+  // Message history
+  rpc ListMessages(ListMessagesRequest) returns (ListMessagesResponse);
+
+  // UI blocks for rendering
+  rpc ListUIBlocks(ListUIBlocksRequest) returns (ListUIBlocksResponse);
+
+  // Streaming chat
+  rpc SendMessage(SendMessageRequest) returns (stream SendMessageResponse);
+}
+
+// Data structures
+
+message Conversation {
+  string id = 1;
+  string title = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp updated_at = 4;
+}
+
+enum Role {
+  ROLE_UNSPECIFIED = 0;
+  ROLE_USER = 1;
+  ROLE_MODEL = 2;
+  ROLE_TOOL = 3;
+  ROLE_REASONING = 4;
+}
+
+message Message {
+  string id = 1;
+  string conversation_id = 2;
+  string body = 3;
+  google.protobuf.Timestamp created_at = 4;
+}
+
+message UIBlock {
+  string id = 1;
+  string conversation_id = 2;
+  string role = 3;  // 'user', 'model', 'tool', 'reasoning', 'system'
+  string data = 4;  // JSON string
+  google.protobuf.Timestamp created_at = 5;
+}
+
+// Request/Response messages
+
+message CreateConversationRequest {
+  string title = 1;
+}
+
+message CreateConversationResponse {
+  Conversation conversation = 1;
+}
+
+message ListConversationsRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+}
+
+message ListConversationsResponse {
+  repeated Conversation conversations = 1;
+  string next_page_token = 2;
+}
+
+message GetConversationRequest {
+  string conversation_id = 1;
+}
+
+message GetConversationResponse {
+  Conversation conversation = 1;
+}
+
+message UpdateConversationRequest {
+  string conversation_id = 1;
+  optional string title = 2;
+}
+
+message UpdateConversationResponse {
+  Conversation conversation = 1;
+}
+
+message DeleteConversationRequest {
+  string conversation_id = 1;
+}
+
+message DeleteConversationResponse {
+  bool success = 1;
+}
+
+message ListMessagesRequest {
+  string conversation_id = 1;
+  int32 page_size = 2;
+  string page_token = 3;
+}
+
+message ListMessagesResponse {
+  repeated Message messages = 1;
+  string next_page_token = 2;
+}
+
+message ListUIBlocksRequest {
+  string conversation_id = 1;
+}
+
+message ListUIBlocksResponse {
+  repeated UIBlock ui_blocks = 1;
+}
+
+message SendMessageRequest {
+  string conversation_id = 1;
+  string content = 2;
+  bool use_web_search = 3;
+}
+
+message SendMessageResponse {
+  oneof event {
+    Delta delta = 1;
+    string status_update = 2;
+    ToolCallEvent tool_call = 3;
+    UIBlock ui_block = 4;
+  }
+}
+
+message Delta {
+  string block_id = 1;
+  string delta = 2;
+}
+
+message ToolCallEvent {
+  string tool_name = 1;
+  string arguments = 2;  // JSON string of tool arguments
+  string result = 3;     // Tool result (present when tool completes)
+  string error = 4;      // Error message if tool failed
+  // Tool state: "invoked" when starting, "completed" or "error" when done
+  string state = 5;
+}

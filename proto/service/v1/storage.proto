@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package service.v1;
+
+option go_package = "unblink/server/gen/service/v1;servicev1";
+
+import "google/protobuf/timestamp.proto";
+
+// StorageService provides access to stored items (frames, clips, etc.)
+service StorageService {
+  // List storage items for a service
+  rpc ListStorageItems(ListStorageItemsRequest) returns (ListStorageItemsResponse);
+
+  // Get storage item metadata
+  rpc GetStorageItem(GetStorageItemRequest) returns (GetStorageItemResponse);
+
+  // Delete old storage items (by time)
+  rpc DeleteOldStorageItems(DeleteOldStorageItemsRequest) returns (DeleteOldStorageItemsResponse);
+}
+
+// StorageItem metadata
+message StorageItem {
+  string id = 1;
+  string service_id = 2;
+  string type = 3;     // Type of storage item (e.g., "frame", "clip")
+  int64 size = 4;
+  google.protobuf.Timestamp timestamp = 5;
+}
+
+// List storage items for a service
+message ListStorageItemsRequest {
+  string service_id = 1;
+  string type = 2;     // Optional filter by type (empty = all types)
+  int64 limit = 3;     // Max items to return (default 100)
+  int64 offset = 4;    // For pagination
+}
+
+message ListStorageItemsResponse {
+  repeated StorageItem items = 1;
+  int64 total = 2;
+}
+
+// Get storage item metadata
+message GetStorageItemRequest {
+  string item_id = 1;
+}
+
+message GetStorageItemResponse {
+  StorageItem item = 1;
+}
+
+// Delete old storage items
+message DeleteOldStorageItemsRequest {
+  string service_id = 1;
+  int64 older_than_seconds = 2;  // Delete items older than this many seconds
+  string type = 3;                // Optional filter by type (empty = all types)
+}
+
+message DeleteOldStorageItemsResponse {
+  int64 deleted_count = 1;
+}

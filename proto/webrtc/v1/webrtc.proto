@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package webrtc.v1;
+
+option go_package = "unblink/server/gen/webrtc/v1;webrtcv1";
+
+// WebRTCService handles WebRTC session creation for streaming from nodes
+service WebRTCService {
+  // CreateWebRTCSession creates a new WebRTC session for a service on a node
+  rpc CreateWebRTCSession(CreateWebRTCSessionRequest) returns (CreateWebRTCSessionResponse);
+}
+
+message CreateWebRTCSessionRequest {
+  // Node ID where the service is running
+  string node_id = 1;
+
+  // Service ID to connect to
+  string service_id = 2;
+
+  // Service URL (e.g., rtsp://localhost:8554/stream)
+  string service_url = 3;
+
+  // SDP offer from the client
+  string sdp_offer = 4;
+}
+
+message CreateWebRTCSessionResponse {
+  // SDP answer to send back to the client
+  string sdp_answer = 1;
+
+  // Session ID for tracking
+  string session_id = 2;
+}

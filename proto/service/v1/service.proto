@@ -1,0 +1,83 @@
+syntax = "proto3";
+
+package service.v1;
+
+option go_package = "unblink/server/gen/service/v1;servicev1";
+
+import "google/protobuf/timestamp.proto";
+
+service ServiceService {
+  // Service management
+  rpc CreateService(CreateServiceRequest) returns (CreateServiceResponse);
+  rpc ListServicesByNodeId(ListServicesByNodeIdRequest) returns (ListServicesByNodeIdResponse);
+  rpc UpdateService(UpdateServiceRequest) returns (UpdateServiceResponse);
+  rpc DeleteService(DeleteServiceRequest) returns (DeleteServiceResponse);
+
+  // Node access management
+  rpc AssociateUserNode(AssociateUserNodeRequest) returns (AssociateUserNodeResponse);
+  rpc ListUserNodes(ListUserNodesRequest) returns (ListUserNodesResponse);
+}
+
+// Data structures
+
+message Service {
+  string id = 1;
+  string name = 2;
+  string url = 3;
+  string node_id = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+}
+
+// Request/Response messages
+
+message CreateServiceRequest {
+  string name = 1;
+  string url = 2;
+  string node_id = 3;
+}
+
+message CreateServiceResponse {
+  Service service = 1;
+}
+
+message ListServicesByNodeIdRequest {
+  string node_id = 1;
+}
+
+message ListServicesByNodeIdResponse {
+  repeated Service services = 1;
+}
+
+message UpdateServiceRequest {
+  string id = 1;
+  string name = 2;
+  string url = 3;
+}
+
+message UpdateServiceResponse {
+  Service service = 1;
+}
+
+message DeleteServiceRequest {
+  string service_id = 1;
+}
+
+message DeleteServiceResponse {
+  bool success = 1;
+}
+
+message AssociateUserNodeRequest {
+  string node_id = 1;
+}
+
+message AssociateUserNodeResponse {
+  bool success = 1;
+}
+
+message ListUserNodesRequest {}
+
+message ListUserNodesResponse {
+  repeated string node_ids = 1;
+}
+

@@ -1,0 +1,83 @@
+syntax = "proto3";
+
+package chat.v1.auth;
+
+option go_package = "unblink/server/gen/chat/v1/auth;authv1";
+
+import "google/protobuf/timestamp.proto";
+
+service AuthService {
+  // Create guest user (no auth required)
+  rpc CreateGuestUser(CreateGuestUserRequest) returns (CreateGuestUserResponse);
+
+  // Create account and link to user (Phase 2 - not implemented yet)
+  // For new users: creates user + account
+  // For guest users (with valid auth): links account to existing user
+  rpc CreateAndLinkAccount(CreateAndLinkAccountRequest) returns (CreateAndLinkAccountResponse);
+
+  // Login with email/password (Phase 2 - not implemented yet)
+  rpc Login(LoginRequest) returns (LoginResponse);
+
+  // Get current user info (requires auth)
+  rpc GetUser(GetUserRequest) returns (GetUserResponse);
+
+  // Update user profile (requires auth)
+  rpc UpdateUserProfile(UpdateUserProfileRequest) returns (UpdateUserProfileResponse);
+}
+
+message CreateGuestUserRequest {
+  optional string name = 1;
+}
+
+message CreateGuestUserResponse {
+  bool success = 1;
+  string token = 2;
+  User user = 3;
+}
+
+message CreateAndLinkAccountRequest {
+  string email = 1;
+  string password = 2;
+  optional string name = 3;
+}
+
+message CreateAndLinkAccountResponse {
+  bool success = 1;
+  string token = 2;
+  User user = 3;
+}
+
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message LoginResponse {
+  bool success = 1;
+  string token = 2;
+  User user = 3;
+}
+
+message GetUserRequest {}
+
+message GetUserResponse {
+  bool success = 1;
+  User user = 2;
+}
+
+message UpdateUserProfileRequest {
+  map<string, string> profile = 1;  // Profile fields to update (e.g., country, name)
+}
+
+message UpdateUserProfileResponse {
+  bool success = 1;
+  User user = 2;
+}
+
+message User {
+  string id = 1;
+  optional string email = 2;
+  map<string, string> profile = 3;  // Flexible profile data (name, country, etc.)
+  bool is_guest = 4;
+  google.protobuf.Timestamp created_at = 5;
+}
