@@ -160,7 +160,7 @@ func (s *RegisteringState) OnRegisterResponse(c *Conn, r *shared.RegisterRespons
 	}
 
 	if r.DashboardURL != "" {
-		printDashboardOutput(r.DashboardURL)
+		printDashboardOutput(c.configFile.Config.NodeID, r.DashboardURL)
 	}
 
 	return nil

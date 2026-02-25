@@ -1,11 +1,12 @@
 import { onMount, Show, Switch, Match } from 'solid-js'
-import { activeTab, fetchServices, permissionState, services } from '../shared'
+import { activeTab, fetchServices, permissionState } from '../shared'
 import { setAuthScreen } from '../signals/authSignals'
 import CameraView from './CameraView'
 import SideBar from './SideBar'
 import ChatView from './ChatView'
 import EventsView from './EventsView'
 import SettingsView from './SettingsView'
+import NodeRouteFallback from './NodeRouteFallback'
 
 interface MainProps {
   nodeId: string
@@ -14,20 +15,15 @@ interface MainProps {
 export default function Main(props: MainProps) {
   // Fetch services on mount - only runs after auth is complete
   onMount(() => {
-    fetchServices(props.nodeId)
+    if (props.nodeId) {
+      fetchServices(props.nodeId)
+    }
   })
 
   return (
     <Show
       when={props.nodeId}
-      fallback={
-        <div class="flex h-full items-center justify-center">
-          <div class="text-center">
-            <p class="text-gray-400">No node ID in URL</p>
-            <p class="text-sm text-gray-500 mt-2">Navigate to /node/YOUR_NODE_ID</p>
-          </div>
-        </div>
-      }
+      fallback={<NodeRouteFallback />}
     >
       {(() => {
         const state = permissionState()

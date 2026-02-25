@@ -11,10 +11,10 @@ The node runs locally and connects to the relay:
 
 ```bash
 # Install
-go install github.com/zapdos-labs/unblink-v2/cmd/node@latest
+go install github.com/zapdos-labs/unblink-v2/cmd/unblink-node@latest
 
 # Run
-node
+unblink-node
 ```
 
 On first run, authorize the node by opening the displayed URL in your browser.

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -227,7 +228,8 @@ func (nc *NodeConn) handleRegisterRequest(req *shared.RegisterRequest) error {
 
 	log.Printf("[NodeConn] Node %s registered successfully", req.NodeID)
 
-	dashboardURL := fmt.Sprintf("%s/node/%s", nc.server.config.DashboardURL, req.NodeID)
+	base := strings.TrimRight(nc.server.config.DashboardURL, "/")
+	dashboardURL := fmt.Sprintf("%s/%s", base, req.NodeID)
 	log.Printf("[NodeConn] Dashboard URL: %s", dashboardURL)
 
 	resp := &shared.RegisterResponse{
