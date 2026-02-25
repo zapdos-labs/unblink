@@ -1,5 +1,6 @@
 import { FiClock } from 'solid-icons/fi';
 import { Index, onMount, Show } from 'solid-js';
+import { formatDistanceToNow } from 'date-fns';
 import { useChat } from '../../hooks/useChat';
 import { activeConversationId } from '../../signals/chatSignals';
 import type { Conversation } from '../../../gen/chat/v1/chat_pb';
@@ -58,7 +59,7 @@ export const HistoryMenu = (props: HistoryMenuProps) => {
                         <div class="font-semibold truncate">{c().title || 'Untitled Chat'}</div>
                         {c().updatedAt && (
                           <div class="mt-0.5 text-neu-500 text-xs truncate">
-                            {new Date(Number((c().updatedAt?.seconds ?? 0n)) * 1000).toLocaleString()}
+                            {formatDistanceToNow(new Date(Number((c().updatedAt?.seconds ?? 0n)) * 1000), { addSuffix: true })}
                           </div>
                         )}
                       </div>

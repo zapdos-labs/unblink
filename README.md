@@ -4,6 +4,21 @@ AI-powered camera monitoring application with relay-node architecture and real-t
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/zapdos-labs/unblink-v2)
 
+## Getting Started
+
+The node runs locally and connects to the relay:
+
+
+```bash
+# Install
+go install github.com/zapdos-labs/unblink-v2/cmd/node@latest
+
+# Run
+node
+```
+
+On first run, authorize the node by opening the displayed URL in your browser.
+
 ## Features
 
 ### Relay-Node Architecture
@@ -78,20 +93,6 @@ make docker-run
 - **AI**: OpenAI API (GPT-4, GPT-4 Vision)
 - **Database**: PostgreSQL with pgx
 - **Video**: go2rtc for RTSP/WebRTC handling
-
-## Node Component
-
-The node runs locally and connects to the relay:
-
-```bash
-# Install
-go install github.com/zapdos-labs/unblink-v2/cmd/node@latest
-
-# Run
-node -config node.config.json
-```
-
-On first run, authorize the node by opening the displayed URL in your browser.
 
 ## License
 

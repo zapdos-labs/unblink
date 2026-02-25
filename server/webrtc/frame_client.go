@@ -9,8 +9,6 @@ import (
 
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/option"
-
-	"unblink/server/models"
 )
 
 // FrameClient handles communication with vLLM endpoints (OpenAI-compatible)
@@ -20,11 +18,10 @@ type FrameClient struct {
 	timeout     time.Duration
 	baseURL     string
 	instruction string // Static instruction for all requests
-	ModelCache  *models.Registry
 }
 
 // NewFrameClient creates a new frame client for vLLM communication
-func NewFrameClient(baseURL, Model, apiKey string, timeout time.Duration, instruction string, ModelCache *models.Registry) *FrameClient {
+func NewFrameClient(baseURL, Model, apiKey string, timeout time.Duration, instruction string) *FrameClient {
 	opts := []option.RequestOption{
 		option.WithAPIKey(apiKey),
 	}
@@ -41,7 +38,6 @@ func NewFrameClient(baseURL, Model, apiKey string, timeout time.Duration, instru
 		timeout:     timeout,
 		baseURL:     baseURL,
 		instruction: instruction,
-		ModelCache:  ModelCache,
 	}
 }
 

@@ -3,6 +3,7 @@ package chat
 import (
 	"context"
 	"fmt"
+	"sort"
 	"time"
 
 	"connectrpc.com/connect"
@@ -49,7 +50,12 @@ func (s *Service) CreateConversation(ctx context.Context, req *connect.Request[c
 		title = "New Chat"
 	}
 
-	err := s.db.CreateConversation(id, userID, title)
+	trait := DefaultTrait
+	if req.Msg.Trait != nil && *req.Msg.Trait != "" {
+		trait = *req.Msg.Trait
+	}
+
+	err := s.db.CreateConversation(id, userID, title, trait)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to create conversation: %w", err))
 	}
@@ -88,12 +94,20 @@ func (s *Service) UpdateConversation(ctx context.Context, req *connect.Request[c
 		return nil, err
 	}
 
-	if req.Msg.Title == nil {
-		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("title is required"))
+	if req.Msg.Title == nil && req.Msg.Trait == nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("at least one field is required"))
 	}
 
-	if err := s.db.UpdateConversation(req.Msg.ConversationId, *req.Msg.Title); err != nil {
-		return nil, connect.NewError(connect.CodeInternal, err)
+	if req.Msg.Title != nil {
+		if err := s.db.UpdateConversation(req.Msg.ConversationId, *req.Msg.Title); err != nil {
+			return nil, connect.NewError(connect.CodeInternal, err)
+		}
+	}
+
+	if req.Msg.Trait != nil {
+		if err := s.db.SetTrait(req.Msg.ConversationId, *req.Msg.Trait); err != nil {
+			return nil, connect.NewError(connect.CodeInternal, err)
+		}
 	}
 
 	conversation, err := s.db.GetConversation(req.Msg.ConversationId)
@@ -103,6 +117,28 @@ func (s *Service) UpdateConversation(ctx context.Context, req *connect.Request[c
 
 	return connect.NewResponse(&chatv1.UpdateConversationResponse{
 		Conversation: conversation,
+	}), nil
+}
+
+func (s *Service) GetInfo(_ context.Context, _ *connect.Request[chatv1.GetInfoRequest]) (*connect.Response[chatv1.GetInfoResponse], error) {
+	traitIDs := make([]string, 0, len(SystemPromptTraits))
+	for id := range SystemPromptTraits {
+		traitIDs = append(traitIDs, id)
+	}
+	sort.Strings(traitIDs)
+
+	traits := make([]*chatv1.TraitInfo, 0, len(traitIDs))
+	for _, id := range traitIDs {
+		trait := SystemPromptTraits[id]
+		traits = append(traits, &chatv1.TraitInfo{
+			Id:          id,
+			Description: trait.Description,
+		})
+	}
+
+	return connect.NewResponse(&chatv1.GetInfoResponse{
+		Traits:       traits,
+		DefaultTrait: DefaultTrait,
 	}), nil
 }
 

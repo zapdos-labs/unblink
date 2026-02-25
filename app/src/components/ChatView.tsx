@@ -1,4 +1,4 @@
-import MessageList from './chat/MessageList';
+import ContentList from './chat/ContentList';
 import ChatInput from './chat/ChatInput';
 import ChatHeaderAction from './chat/ChatHeaderAction';
 
@@ -10,8 +10,8 @@ export default function ChatView() {
         <ChatHeaderAction />
       </div>
 
-      {/* Message List */}
-      <MessageList />
+      {/* Content List */}
+      <ContentList />
 
       {/* Chat Input - Floating at bottom */}
       <div class="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-neu-900 via-neu-900 to-transparent">

@@ -147,11 +147,6 @@ func (s *RegisteringState) OnRegisterResponse(c *Conn, r *shared.RegisterRespons
 	}
 
 	log.Printf("[State] Registration successful, sending node_ready")
-
-	if r.DashboardURL != "" {
-		log.Printf("[Node] Dashboard URL: %s", r.DashboardURL)
-	}
-
 	c.setState(NewRegisteredState())
 
 	msg := &shared.NodeReadyMessage{
@@ -160,7 +155,15 @@ func (s *RegisteringState) OnRegisterResponse(c *Conn, r *shared.RegisterRespons
 			ID:   c.getMsgID(),
 		},
 	}
-	return c.transport.WriteMessage(msg)
+	if err := c.transport.WriteMessage(msg); err != nil {
+		return err
+	}
+
+	if r.DashboardURL != "" {
+		printDashboardOutput(r.DashboardURL)
+	}
+
+	return nil
 }
 
 // ============================================================

@@ -185,8 +185,16 @@ func (s *Service) getSystemPrompt(conversationID string) (string, error) {
 	return s.db.GetSystemPrompt(conversationID)
 }
 
-func (s *Service) getTrait(_ string) string {
-	return DefaultTrait
+func (s *Service) getTrait(conversationID string) string {
+	trait, err := s.db.GetTrait(conversationID)
+	if err != nil {
+		log.Printf("[ChatService] Failed to get trait for conversation %s: %v", conversationID, err)
+		return DefaultTrait
+	}
+	if trait == "" {
+		return DefaultTrait
+	}
+	return trait
 }
 
 // sendErrorUIBlock saves and streams an error UI block (best effort).
@@ -228,10 +236,7 @@ func (s *Service) maybeGenerateTitle(conversationID, userContent string) {
 
 	// Async improved title generation.
 	go func() {
-		client := s.fastOpenai
-		if client == nil {
-			client = s.openai
-		}
+		client := s.titleOpenai
 		if client == nil {
 			return
 		}
@@ -241,7 +246,7 @@ func (s *Service) maybeGenerateTitle(conversationID, userContent string) {
 
 		prompt := fmt.Sprintf("Generate a short title (<=10 words) for this first message. Return only the title.\n\n%s", userContent)
 		resp, err := client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
-			Model: openai.ChatModel(s.cfg.FastOpenAIModel),
+			Model: openai.ChatModel(s.cfg.VLMOpenAIModel),
 			Messages: []openai.ChatCompletionMessageParamUnion{
 				openai.UserMessage(prompt),
 			},

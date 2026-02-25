@@ -1,4 +1,4 @@
-import { createEffect, createSignal } from "solid-js";
+import { createSignal } from "solid-js";
 import { chatClient } from "@/src/lib/rpc";
 import type { Conversation, UIBlock as ProtoUIBlock } from "@/gen/chat/v1/chat_pb";
 import {
@@ -11,10 +11,13 @@ import {
   activeConversationId,
   setActiveConversationId,
   setChatInputState,
+  messageQueue,
+  setMessageQueue,
   type UIBlock,
   type UIBlockData,
   type UIRole,
-} from "../signals/chatSignals";
+} from "@/src/signals/chatSignals";
+import { selectedTrait } from "@/src/components/chat/TraitSettings";
 
 // Conversations list
 const [conversations, setConversations] = createSignal<Conversation[]>([]);
@@ -24,6 +27,12 @@ let firstChunkReceived = false;
 
 // Track UI blocks by ID for replacement (same ID = replace, different ID = new)
 const blockMap = new Map<string, UIBlock>();
+
+// Track queued block IDs so we can remove them when processed
+const queuedBlockIds: string[] = [];
+let queuedBlockCounter = 0;
+// Base timestamp for queued blocks to ensure they always appear at the end
+const QUEUED_BLOCK_BASE_TIME = Number.MAX_SAFE_INTEGER - 1000000;
 
 // Helper: Convert protobuf UIBlock to local UIBlock
 function protoToUIBlock(proto: ProtoUIBlock): UIBlock {
@@ -62,14 +71,56 @@ const upsertBlock = (block: UIBlock) => {
 export function useChat() {
   const [streamingContent, setStreamingContent] = createSignal("");
 
-  createEffect(() => {
-    const _ = activeConversationId();
-  })
+  // Process next message from queue
+  const processQueue = async () => {
+    const queue = messageQueue();
+    if (queue.length === 0) return;
+
+    const nextMessage = queue[0];
+    // Remove from queue
+    setMessageQueue(queue.slice(1));
+
+    // Remove the queued UI block
+    const queuedBlockId = queuedBlockIds.shift();
+    if (queuedBlockId) {
+      blockMap.delete(queuedBlockId);
+      setUIBlocks(Array.from(blockMap.values()).sort((a, b) =>
+        a.createdAt - b.createdAt
+      ));
+    }
+
+    // Send the queued message
+    await sendMessageInternal(nextMessage);
+  };
 
   const sendMessage = async () => {
     const message = inputValue().trim();
-    if (!message || isLoading()) return;
+    if (!message) return;
 
+    setInputValue("");
+
+    if (isLoading()) {
+      // Add to queue if already loading
+      setMessageQueue([...messageQueue(), message]);
+
+      // Create a queued UI block with a far-future timestamp to keep it at the end
+      const queuedBlockId = `queued-${queuedBlockCounter++}`;
+      queuedBlockIds.push(queuedBlockId);
+      const queuedBlock: UIBlock = {
+        id: queuedBlockId,
+        conversationId: activeConversationId() ?? "",
+        role: "queued",
+        data: { content: message },
+        createdAt: QUEUED_BLOCK_BASE_TIME + queuedBlockCounter,
+      };
+      upsertBlock(queuedBlock);
+      return;
+    }
+
+    await sendMessageInternal(message);
+  };
+
+  const sendMessageInternal = async (message: string) => {
     // Ensure we have an active conversation
     let currentId = activeConversationId();
     if (!currentId) {
@@ -81,10 +132,9 @@ export function useChat() {
       blockMap.clear();
     }
 
-    setInputValue("");
     setIsLoading(true);
     setStreamingContent("");
-    setChatInputState('user_sent');
+    setChatInputState("user_sent");
     firstChunkReceived = false;
 
     // Set up abort controller for this request
@@ -95,7 +145,6 @@ export function useChat() {
         {
           conversationId: currentId ?? undefined,
           content: message,
-          useWebSearch: false,
         },
         { signal: abortController.signal }
       );
@@ -106,14 +155,12 @@ export function useChat() {
           const blockId = deltaEvent.blockId;
           const delta = deltaEvent.delta;
 
-          console.log("[useChat] Delta event:", { blockId, delta });
-
           // Find the block by ID and append the delta to its content
           const existingBlock = blockMap.get(blockId);
           if (existingBlock) {
             // Set first chunk state on first delta
             if (!firstChunkReceived && existingBlock.role === "assistant") {
-              setChatInputState('first_chunk_arrived');
+              setChatInputState("first_chunk_arrived");
               firstChunkReceived = true;
             }
 
@@ -146,14 +193,25 @@ export function useChat() {
         }
       }
     } catch (error) {
-      console.error("Error sending message:", error);
+      // Server unreachable / connection dropped before stream established
+      const msg = error instanceof Error ? error.message : String(error);
+      upsertBlock({
+        id: `error-${Date.now()}`,
+        conversationId: currentId ?? "",
+        role: "error",
+        data: { message: msg },
+        createdAt: Date.now(),
+      });
     } finally {
       setIsLoading(false);
       setStreamingContent("");
-      setChatInputState('idle');
+      setChatInputState("idle");
       abortController = null;
       // Refresh conversations to update lastUpdated time
       await listConversations();
+
+      // Process next message from queue
+      await processQueue();
     }
   };
 
@@ -161,6 +219,7 @@ export function useChat() {
     try {
       const response = await chatClient.createConversation({
         title: "",
+        trait: selectedTrait(),
       });
       const conv = response.conversation;
       if (conv) {
@@ -230,7 +289,7 @@ export function useChat() {
     // Reset all streaming/loading states
     setIsLoading(false);
     setStreamingContent("");
-    setChatInputState('idle');
+    setChatInputState("idle");
     firstChunkReceived = false;
   };
 
@@ -246,9 +305,13 @@ export function useChat() {
     // Reset all streaming/loading states
     setIsLoading(false);
     setStreamingContent("");
-    setChatInputState('idle');
+    setChatInputState("idle");
     firstChunkReceived = false;
     setInputValue("");
+
+    // Clear queue and queued blocks
+    setMessageQueue([]);
+    queuedBlockIds.length = 0;
 
     // Switch conversation
     setActiveConversationId(id);
@@ -267,14 +330,33 @@ export function useChat() {
     // Reset all streaming/loading states
     setIsLoading(false);
     setStreamingContent("");
-    setChatInputState('idle');
+    setChatInputState("idle");
     firstChunkReceived = false;
     setInputValue("");
+
+    // Clear queue and queued blocks
+    setMessageQueue([]);
+    queuedBlockIds.length = 0;
 
     // Clear conversation
     setActiveConversationId(null);
     blockMap.clear();
     setUIBlocks([]);
+  };
+
+  const removeLatestQueuedMessage = () => {
+    const queue = messageQueue();
+    if (queue.length === 0) return;
+
+    setMessageQueue(queue.slice(0, -1));
+
+    const queuedBlockId = queuedBlockIds.pop();
+    if (queuedBlockId) {
+      blockMap.delete(queuedBlockId);
+      setUIBlocks(Array.from(blockMap.values()).sort((a, b) =>
+        a.createdAt - b.createdAt
+      ));
+    }
   };
 
   return {
@@ -287,6 +369,7 @@ export function useChat() {
     stopGeneration,
     handleSelectConversation,
     handleNewChat,
+    removeLatestQueuedMessage,
     streamingContent,
   };
 }

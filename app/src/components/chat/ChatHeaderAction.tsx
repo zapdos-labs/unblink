@@ -1,6 +1,7 @@
 import { FiPlus } from 'solid-icons/fi';
 import { useChat } from '../../hooks/useChat';
 import HistoryMenu from './HistoryMenu';
+import TraitSettings from './TraitSettings';
 
 export default function ChatHeaderAction() {
   const { handleNewChat } = useChat();
@@ -8,6 +9,7 @@ export default function ChatHeaderAction() {
   return (
     <div class="flex items-center gap-3">
       <HistoryMenu />
+      <TraitSettings />
       <button
         onClick={handleNewChat}
         class="p-2 text-neu-400 hover:text-neu-200 hover:bg-neu-800 rounded-lg transition-colors duration-150"

@@ -22,7 +22,6 @@ import (
 	"unblink/server/gen/chat/v1/chatv1connect"
 	"unblink/server/gen/service/v1/servicev1connect"
 	"unblink/server/gen/webrtc/v1/webrtcv1connect"
-	"unblink/server/models"
 	"unblink/server/service"
 	"unblink/server/webrtc"
 
@@ -66,43 +65,23 @@ func main() {
 		log.Fatalf("Failed to ensure schema: %v", err)
 	}
 
-	// Build model configs for shared registry (chat, fast, vlm)
-	modelConfigs := []models.ModelConfig{
-		{ModelID: config.ChatOpenAIModel, BaseURL: config.ChatOpenAIBaseURL, APIKey: config.ChatOpenAIAPIKey},
-		{ModelID: config.FastOpenAIModel, BaseURL: config.FastOpenAIBaseURL, APIKey: config.FastOpenAIAPIKey},
-		{ModelID: config.VLMOpenAIModel, BaseURL: config.VLMOpenAIBaseURL, APIKey: config.VLMOpenAIAPIKey},
-	}
-
-	// Create shared model registry (fetches all model info and probes dimensions in parallel)
-	modelRegistry := models.NewRegistry(modelConfigs)
-
 	// Initialize chat service
 	chatCfg := &chat.Config{
 		ChatOpenAIModel:         config.ChatOpenAIModel,
 		ChatOpenAIBaseURL:       config.ChatOpenAIBaseURL,
 		ChatOpenAIAPIKey:        config.ChatOpenAIAPIKey,
-		FastOpenAIModel:         config.FastOpenAIModel,
-		FastOpenAIBaseURL:       config.FastOpenAIBaseURL,
-		FastOpenAIAPIKey:        config.FastOpenAIAPIKey,
+		ChatMaxTokens:           config.ChatMaxTokens,
+		VLMOpenAIModel:          config.VLMOpenAIModel,
+		VLMOpenAIBaseURL:        config.VLMOpenAIBaseURL,
+		VLMOpenAIAPIKey:         config.VLMOpenAIAPIKey,
 		ContentTrimSafetyMargin: config.ContentTrimSafetyMargin,
-	}
-
-	// Default fast model to main model if not configured
-	if chatCfg.FastOpenAIModel == "" {
-		chatCfg.FastOpenAIModel = chatCfg.ChatOpenAIModel
-	}
-	if chatCfg.FastOpenAIBaseURL == "" {
-		chatCfg.FastOpenAIBaseURL = chatCfg.ChatOpenAIBaseURL
-	}
-	if chatCfg.FastOpenAIAPIKey == "" {
-		chatCfg.FastOpenAIAPIKey = chatCfg.ChatOpenAIAPIKey
 	}
 
 	// Default safety margin to 10% if not set
 	if chatCfg.ContentTrimSafetyMargin == 0 {
 		chatCfg.ContentTrimSafetyMargin = 10
 	}
-	chatService := chat.NewService(dbClient, chatCfg, modelRegistry)
+	chatService := chat.NewService(dbClient, chatCfg)
 
 	// Register video search tool
 	videoSearchTool := tools.NewVideoSearchTool(dbClient)
@@ -123,7 +102,7 @@ func main() {
 
 	// Create VLM frame client and batch manager (for VLM summarization)
 	vlmTimeout := time.Duration(config.VLMTimeoutSec) * time.Second
-	frameClient := webrtc.NewFrameClient(config.VLMOpenAIBaseURL, config.VLMOpenAIModel, config.VLMOpenAIAPIKey, vlmTimeout, "Summarize the video", modelRegistry)
+	frameClient := webrtc.NewFrameClient(config.VLMOpenAIBaseURL, config.VLMOpenAIModel, config.VLMOpenAIAPIKey, vlmTimeout, "Summarize the video")
 	batchManager := webrtc.NewBatchManager(frameClient, config.FrameBatchSize, storage, dbClient, eventService.GetBroadcaster())
 	log.Printf("[Main] Initialized VLM frame client: url=%s, model=%s, batchSize=%d, timeout=%vs", config.VLMOpenAIBaseURL, config.VLMOpenAIModel, config.FrameBatchSize, config.VLMTimeoutSec)
 

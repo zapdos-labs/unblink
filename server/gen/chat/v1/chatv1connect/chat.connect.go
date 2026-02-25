@@ -33,6 +33,8 @@ const (
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
+	// ChatServiceGetInfoProcedure is the fully-qualified name of the ChatService's GetInfo RPC.
+	ChatServiceGetInfoProcedure = "/chat.v1.ChatService/GetInfo"
 	// ChatServiceCreateConversationProcedure is the fully-qualified name of the ChatService's
 	// CreateConversation RPC.
 	ChatServiceCreateConversationProcedure = "/chat.v1.ChatService/CreateConversation"
@@ -60,6 +62,8 @@ const (
 
 // ChatServiceClient is a client for the chat.v1.ChatService service.
 type ChatServiceClient interface {
+	// Info
+	GetInfo(context.Context, *connect.Request[v1.GetInfoRequest]) (*connect.Response[v1.GetInfoResponse], error)
 	// Conversation management
 	CreateConversation(context.Context, *connect.Request[v1.CreateConversationRequest]) (*connect.Response[v1.CreateConversationResponse], error)
 	ListConversations(context.Context, *connect.Request[v1.ListConversationsRequest]) (*connect.Response[v1.ListConversationsResponse], error)
@@ -85,6 +89,12 @@ func NewChatServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 	baseURL = strings.TrimRight(baseURL, "/")
 	chatServiceMethods := v1.File_chat_v1_chat_proto.Services().ByName("ChatService").Methods()
 	return &chatServiceClient{
+		getInfo: connect.NewClient[v1.GetInfoRequest, v1.GetInfoResponse](
+			httpClient,
+			baseURL+ChatServiceGetInfoProcedure,
+			connect.WithSchema(chatServiceMethods.ByName("GetInfo")),
+			connect.WithClientOptions(opts...),
+		),
 		createConversation: connect.NewClient[v1.CreateConversationRequest, v1.CreateConversationResponse](
 			httpClient,
 			baseURL+ChatServiceCreateConversationProcedure,
@@ -138,6 +148,7 @@ func NewChatServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 
 // chatServiceClient implements ChatServiceClient.
 type chatServiceClient struct {
+	getInfo            *connect.Client[v1.GetInfoRequest, v1.GetInfoResponse]
 	createConversation *connect.Client[v1.CreateConversationRequest, v1.CreateConversationResponse]
 	listConversations  *connect.Client[v1.ListConversationsRequest, v1.ListConversationsResponse]
 	getConversation    *connect.Client[v1.GetConversationRequest, v1.GetConversationResponse]
@@ -146,6 +157,11 @@ type chatServiceClient struct {
 	listMessages       *connect.Client[v1.ListMessagesRequest, v1.ListMessagesResponse]
 	listUIBlocks       *connect.Client[v1.ListUIBlocksRequest, v1.ListUIBlocksResponse]
 	sendMessage        *connect.Client[v1.SendMessageRequest, v1.SendMessageResponse]
+}
+
+// GetInfo calls chat.v1.ChatService.GetInfo.
+func (c *chatServiceClient) GetInfo(ctx context.Context, req *connect.Request[v1.GetInfoRequest]) (*connect.Response[v1.GetInfoResponse], error) {
+	return c.getInfo.CallUnary(ctx, req)
 }
 
 // CreateConversation calls chat.v1.ChatService.CreateConversation.
@@ -190,6 +206,8 @@ func (c *chatServiceClient) SendMessage(ctx context.Context, req *connect.Reques
 
 // ChatServiceHandler is an implementation of the chat.v1.ChatService service.
 type ChatServiceHandler interface {
+	// Info
+	GetInfo(context.Context, *connect.Request[v1.GetInfoRequest]) (*connect.Response[v1.GetInfoResponse], error)
 	// Conversation management
 	CreateConversation(context.Context, *connect.Request[v1.CreateConversationRequest]) (*connect.Response[v1.CreateConversationResponse], error)
 	ListConversations(context.Context, *connect.Request[v1.ListConversationsRequest]) (*connect.Response[v1.ListConversationsResponse], error)
@@ -211,6 +229,12 @@ type ChatServiceHandler interface {
 // and JSON codecs. They also support gzip compression.
 func NewChatServiceHandler(svc ChatServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
 	chatServiceMethods := v1.File_chat_v1_chat_proto.Services().ByName("ChatService").Methods()
+	chatServiceGetInfoHandler := connect.NewUnaryHandler(
+		ChatServiceGetInfoProcedure,
+		svc.GetInfo,
+		connect.WithSchema(chatServiceMethods.ByName("GetInfo")),
+		connect.WithHandlerOptions(opts...),
+	)
 	chatServiceCreateConversationHandler := connect.NewUnaryHandler(
 		ChatServiceCreateConversationProcedure,
 		svc.CreateConversation,
@@ -261,6 +285,8 @@ func NewChatServiceHandler(svc ChatServiceHandler, opts ...connect.HandlerOption
 	)
 	return "/chat.v1.ChatService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
+		case ChatServiceGetInfoProcedure:
+			chatServiceGetInfoHandler.ServeHTTP(w, r)
 		case ChatServiceCreateConversationProcedure:
 			chatServiceCreateConversationHandler.ServeHTTP(w, r)
 		case ChatServiceListConversationsProcedure:
@@ -285,6 +311,10 @@ func NewChatServiceHandler(svc ChatServiceHandler, opts ...connect.HandlerOption
 
 // UnimplementedChatServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedChatServiceHandler struct{}
+
+func (UnimplementedChatServiceHandler) GetInfo(context.Context, *connect.Request[v1.GetInfoRequest]) (*connect.Response[v1.GetInfoResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("chat.v1.ChatService.GetInfo is not implemented"))
+}
 
 func (UnimplementedChatServiceHandler) CreateConversation(context.Context, *connect.Request[v1.CreateConversationRequest]) (*connect.Response[v1.CreateConversationResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("chat.v1.ChatService.CreateConversation is not implemented"))

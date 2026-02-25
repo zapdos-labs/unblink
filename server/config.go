@@ -30,13 +30,9 @@ type Config struct {
 	ChatOpenAIBaseURL string `json:"chat_openai_base_url"`
 	ChatOpenAIAPIKey  string `json:"chat_openai_api_key,omitempty"`
 
-	// Fast model for follow-ups
-	FastOpenAIModel   string `json:"fast_openai_model"`
-	FastOpenAIBaseURL string `json:"fast_openai_base_url"`
-	FastOpenAIAPIKey  string `json:"fast_openai_api_key,omitempty"`
-
 	// Content trimming safety margin (percentage)
 	ContentTrimSafetyMargin int `json:"content_trim_safety_margin"`
+	ChatMaxTokens           int `json:"chat_max_tokens"`
 
 	// Frame extraction settings
 	FrameIntervalSeconds float64 `json:"frame_interval_seconds"` // Extraction interval in seconds
@@ -60,6 +56,21 @@ type Config struct {
 
 	// Frame indexing settings
 	EnableIndexing bool `json:"enable_indexing"` // Enable frame indexing (default true). When true, batch manager is not created.
+}
+
+func (c *Config) applyModelFallbacks() {
+	if strings.TrimSpace(c.VLMOpenAIModel) == "" {
+		c.VLMOpenAIModel = c.ChatOpenAIModel
+	}
+	if strings.TrimSpace(c.VLMOpenAIBaseURL) == "" {
+		c.VLMOpenAIBaseURL = c.ChatOpenAIBaseURL
+	}
+	if strings.TrimSpace(c.VLMOpenAIAPIKey) == "" {
+		c.VLMOpenAIAPIKey = c.ChatOpenAIAPIKey
+	}
+	if c.ChatMaxTokens <= 0 {
+		c.ChatMaxTokens = 128000
+	}
 }
 
 // ConfigPath returns the default config file path
@@ -99,6 +110,8 @@ func LoadConfig(path string) (*Config, error) {
 		return nil, fmt.Errorf("parse config file %s: %w", path, err)
 	}
 
+	cfg.applyModelFallbacks()
+
 	// Validate all required fields
 	if err := cfg.Validate(); err != nil {
 		return nil, fmt.Errorf("invalid config in %s: %w", path, err)
@@ -108,7 +121,6 @@ func LoadConfig(path string) (*Config, error) {
 }
 
 // Validate checks that all required fields are present and valid
-// Note: Fast model fields are optional - if not set, they default to chat model settings
 func (c *Config) Validate() error {
 	var missing []string
 
@@ -130,7 +142,6 @@ func (c *Config) Validate() error {
 	if c.ChatOpenAIBaseURL == "" {
 		missing = append(missing, "chat_openai_base_url")
 	}
-	// Fast model is now optional - defaults to chat model
 	if c.VLMOpenAIModel == "" {
 		missing = append(missing, "vlm_openai_model")
 	}
@@ -142,6 +153,9 @@ func (c *Config) Validate() error {
 	}
 	if c.ContentTrimSafetyMargin <= 0 {
 		missing = append(missing, "content_trim_safety_margin")
+	}
+	if c.ChatMaxTokens <= 0 {
+		missing = append(missing, "chat_max_tokens")
 	}
 	if c.FrameIntervalSeconds <= 0 {
 		missing = append(missing, "frame_interval_seconds")
@@ -222,9 +236,10 @@ func (c *Config) Save(path string) error {
 //   - CHAT_OPENAI_MODEL: OpenAI model ID for chat
 //   - CHAT_OPENAI_BASE_URL: OpenAI API base URL for chat
 //   - CHAT_OPENAI_API_KEY: OpenAI API key for chat (optional)
-//   - VLM_OPENAI_MODEL: OpenAI model ID for vision
-//   - VLM_OPENAI_BASE_URL: OpenAI API base URL for vision
-//   - VLM_OPENAI_API_KEY: OpenAI API key for vision (optional)
+//   - CHAT_MAX_TOKENS: Chat model context length for trimming (default: 128000)
+//   - VLM_OPENAI_MODEL: OpenAI model ID for vision (falls back to CHAT_OPENAI_MODEL)
+//   - VLM_OPENAI_BASE_URL: OpenAI API base URL for vision (falls back to CHAT_OPENAI_BASE_URL)
+//   - VLM_OPENAI_API_KEY: OpenAI API key for vision (falls back to CHAT_OPENAI_API_KEY)
 //   - VLM_TIMEOUT_SEC: VLM request timeout in seconds (default: 120)
 //   - CONTENT_TRIM_SAFETY_MARGIN: Content trimming safety margin % (default: 10)
 //   - FRAME_INTERVAL_SECONDS: Frame extraction interval (default: 5.0)
@@ -255,16 +270,13 @@ func LoadConfigFromEnv() (*Config, error) {
 	cfg.ChatOpenAIModel = getEnv("CHAT_OPENAI_MODEL", "gpt-4o")
 	cfg.ChatOpenAIBaseURL = getEnv("CHAT_OPENAI_BASE_URL", "https://api.openai.com/v1")
 	cfg.ChatOpenAIAPIKey = os.Getenv("CHAT_OPENAI_API_KEY")
-
-	// Fast model settings - default to chat model settings
-	cfg.FastOpenAIModel = getEnv("FAST_OPENAI_MODEL", cfg.ChatOpenAIModel)
-	cfg.FastOpenAIBaseURL = getEnv("FAST_OPENAI_BASE_URL", cfg.ChatOpenAIBaseURL)
-	cfg.FastOpenAIAPIKey = getEnv("FAST_OPENAI_API_KEY", cfg.ChatOpenAIAPIKey)
+	cfg.ChatMaxTokens = getEnvInt("CHAT_MAX_TOKENS", 128000)
 
 	// VLM settings
-	cfg.VLMOpenAIModel = getEnv("VLM_OPENAI_MODEL", "gpt-4-vision-preview")
-	cfg.VLMOpenAIBaseURL = getEnv("VLM_OPENAI_BASE_URL", cfg.ChatOpenAIBaseURL)
-	cfg.VLMOpenAIAPIKey = getEnv("VLM_OPENAI_API_KEY", cfg.ChatOpenAIAPIKey)
+	cfg.VLMOpenAIModel = os.Getenv("VLM_OPENAI_MODEL")
+	cfg.VLMOpenAIBaseURL = os.Getenv("VLM_OPENAI_BASE_URL")
+	cfg.VLMOpenAIAPIKey = os.Getenv("VLM_OPENAI_API_KEY")
+	cfg.applyModelFallbacks()
 	cfg.VLMTimeoutSec = getEnvInt("VLM_TIMEOUT_SEC", 120)
 
 	// Content trimming

@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 
@@ -83,7 +84,12 @@ func main() {
 	}
 
 	// Log startup info
+	configAbsPath, err := filepath.Abs(configFile.Path)
+	if err != nil {
+		configAbsPath = configFile.Path
+	}
 	log.Printf("[Node] Starting node...")
+	log.Printf("[Node] Config: %s", configAbsPath)
 	log.Printf("[Node] Server: %s", configFile.Config.RelayAddress)
 	log.Printf("[Node] Node ID: %s", configFile.Config.NodeID)
 

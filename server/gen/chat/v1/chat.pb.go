@@ -292,6 +292,7 @@ func (x *UIBlock) GetCreatedAt() *timestamppb.Timestamp {
 type CreateConversationRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Title         string                 `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	Trait         *string                `protobuf:"bytes,2,opt,name=trait,proto3,oneof" json:"trait,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -329,6 +330,13 @@ func (*CreateConversationRequest) Descriptor() ([]byte, []int) {
 func (x *CreateConversationRequest) GetTitle() string {
 	if x != nil {
 		return x.Title
+	}
+	return ""
+}
+
+func (x *CreateConversationRequest) GetTrait() string {
+	if x != nil && x.Trait != nil {
+		return *x.Trait
 	}
 	return ""
 }
@@ -573,6 +581,7 @@ type UpdateConversationRequest struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	ConversationId string                 `protobuf:"bytes,1,opt,name=conversation_id,json=conversationId,proto3" json:"conversation_id,omitempty"`
 	Title          *string                `protobuf:"bytes,2,opt,name=title,proto3,oneof" json:"title,omitempty"`
+	Trait          *string                `protobuf:"bytes,3,opt,name=trait,proto3,oneof" json:"trait,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -617,6 +626,13 @@ func (x *UpdateConversationRequest) GetConversationId() string {
 func (x *UpdateConversationRequest) GetTitle() string {
 	if x != nil && x.Title != nil {
 		return *x.Title
+	}
+	return ""
+}
+
+func (x *UpdateConversationRequest) GetTrait() string {
+	if x != nil && x.Trait != nil {
+		return *x.Trait
 	}
 	return ""
 }
@@ -1256,6 +1272,146 @@ func (x *ToolCallEvent) GetState() string {
 	return ""
 }
 
+type GetInfoRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetInfoRequest) Reset() {
+	*x = GetInfoRequest{}
+	mi := &file_chat_v1_chat_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetInfoRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetInfoRequest) ProtoMessage() {}
+
+func (x *GetInfoRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_chat_v1_chat_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetInfoRequest.ProtoReflect.Descriptor instead.
+func (*GetInfoRequest) Descriptor() ([]byte, []int) {
+	return file_chat_v1_chat_proto_rawDescGZIP(), []int{21}
+}
+
+type TraitInfo struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Description   string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TraitInfo) Reset() {
+	*x = TraitInfo{}
+	mi := &file_chat_v1_chat_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TraitInfo) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TraitInfo) ProtoMessage() {}
+
+func (x *TraitInfo) ProtoReflect() protoreflect.Message {
+	mi := &file_chat_v1_chat_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TraitInfo.ProtoReflect.Descriptor instead.
+func (*TraitInfo) Descriptor() ([]byte, []int) {
+	return file_chat_v1_chat_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *TraitInfo) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *TraitInfo) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+type GetInfoResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Traits        []*TraitInfo           `protobuf:"bytes,1,rep,name=traits,proto3" json:"traits,omitempty"`
+	DefaultTrait  string                 `protobuf:"bytes,2,opt,name=default_trait,json=defaultTrait,proto3" json:"default_trait,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetInfoResponse) Reset() {
+	*x = GetInfoResponse{}
+	mi := &file_chat_v1_chat_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetInfoResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetInfoResponse) ProtoMessage() {}
+
+func (x *GetInfoResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_chat_v1_chat_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetInfoResponse.ProtoReflect.Descriptor instead.
+func (*GetInfoResponse) Descriptor() ([]byte, []int) {
+	return file_chat_v1_chat_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *GetInfoResponse) GetTraits() []*TraitInfo {
+	if x != nil {
+		return x.Traits
+	}
+	return nil
+}
+
+func (x *GetInfoResponse) GetDefaultTrait() string {
+	if x != nil {
+		return x.DefaultTrait
+	}
+	return ""
+}
+
 var File_chat_v1_chat_proto protoreflect.FileDescriptor
 
 const file_chat_v1_chat_proto_rawDesc = "" +
@@ -1280,9 +1436,11 @@ const file_chat_v1_chat_proto_rawDesc = "" +
 	"\x04role\x18\x03 \x01(\tR\x04role\x12\x12\n" +
 	"\x04data\x18\x04 \x01(\tR\x04data\x129\n" +
 	"\n" +
-	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"1\n" +
+	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"V\n" +
 	"\x19CreateConversationRequest\x12\x14\n" +
-	"\x05title\x18\x01 \x01(\tR\x05title\"W\n" +
+	"\x05title\x18\x01 \x01(\tR\x05title\x12\x19\n" +
+	"\x05trait\x18\x02 \x01(\tH\x00R\x05trait\x88\x01\x01B\b\n" +
+	"\x06_trait\"W\n" +
 	"\x1aCreateConversationResponse\x129\n" +
 	"\fconversation\x18\x01 \x01(\v2\x15.chat.v1.ConversationR\fconversation\"V\n" +
 	"\x18ListConversationsRequest\x12\x1b\n" +
@@ -1295,11 +1453,13 @@ const file_chat_v1_chat_proto_rawDesc = "" +
 	"\x16GetConversationRequest\x12'\n" +
 	"\x0fconversation_id\x18\x01 \x01(\tR\x0econversationId\"T\n" +
 	"\x17GetConversationResponse\x129\n" +
-	"\fconversation\x18\x01 \x01(\v2\x15.chat.v1.ConversationR\fconversation\"i\n" +
+	"\fconversation\x18\x01 \x01(\v2\x15.chat.v1.ConversationR\fconversation\"\x8e\x01\n" +
 	"\x19UpdateConversationRequest\x12'\n" +
 	"\x0fconversation_id\x18\x01 \x01(\tR\x0econversationId\x12\x19\n" +
-	"\x05title\x18\x02 \x01(\tH\x00R\x05title\x88\x01\x01B\b\n" +
-	"\x06_title\"W\n" +
+	"\x05title\x18\x02 \x01(\tH\x00R\x05title\x88\x01\x01\x12\x19\n" +
+	"\x05trait\x18\x03 \x01(\tH\x01R\x05trait\x88\x01\x01B\b\n" +
+	"\x06_titleB\b\n" +
+	"\x06_trait\"W\n" +
 	"\x1aUpdateConversationResponse\x129\n" +
 	"\fconversation\x18\x01 \x01(\v2\x15.chat.v1.ConversationR\fconversation\"D\n" +
 	"\x19DeleteConversationRequest\x12'\n" +
@@ -1336,15 +1496,23 @@ const file_chat_v1_chat_proto_rawDesc = "" +
 	"\targuments\x18\x02 \x01(\tR\targuments\x12\x16\n" +
 	"\x06result\x18\x03 \x01(\tR\x06result\x12\x14\n" +
 	"\x05error\x18\x04 \x01(\tR\x05error\x12\x14\n" +
-	"\x05state\x18\x05 \x01(\tR\x05state*^\n" +
+	"\x05state\x18\x05 \x01(\tR\x05state\"\x10\n" +
+	"\x0eGetInfoRequest\"=\n" +
+	"\tTraitInfo\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12 \n" +
+	"\vdescription\x18\x02 \x01(\tR\vdescription\"b\n" +
+	"\x0fGetInfoResponse\x12*\n" +
+	"\x06traits\x18\x01 \x03(\v2\x12.chat.v1.TraitInfoR\x06traits\x12#\n" +
+	"\rdefault_trait\x18\x02 \x01(\tR\fdefaultTrait*^\n" +
 	"\x04Role\x12\x14\n" +
 	"\x10ROLE_UNSPECIFIED\x10\x00\x12\r\n" +
 	"\tROLE_USER\x10\x01\x12\x0e\n" +
 	"\n" +
 	"ROLE_MODEL\x10\x02\x12\r\n" +
 	"\tROLE_TOOL\x10\x03\x12\x12\n" +
-	"\x0eROLE_REASONING\x10\x042\xc2\x05\n" +
-	"\vChatService\x12]\n" +
+	"\x0eROLE_REASONING\x10\x042\x80\x06\n" +
+	"\vChatService\x12<\n" +
+	"\aGetInfo\x12\x17.chat.v1.GetInfoRequest\x1a\x18.chat.v1.GetInfoResponse\x12]\n" +
 	"\x12CreateConversation\x12\".chat.v1.CreateConversationRequest\x1a#.chat.v1.CreateConversationResponse\x12Z\n" +
 	"\x11ListConversations\x12!.chat.v1.ListConversationsRequest\x1a\".chat.v1.ListConversationsResponse\x12T\n" +
 	"\x0fGetConversation\x12\x1f.chat.v1.GetConversationRequest\x1a .chat.v1.GetConversationResponse\x12]\n" +
@@ -1367,7 +1535,7 @@ func file_chat_v1_chat_proto_rawDescGZIP() []byte {
 }
 
 var file_chat_v1_chat_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_chat_v1_chat_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
+var file_chat_v1_chat_proto_msgTypes = make([]protoimpl.MessageInfo, 24)
 var file_chat_v1_chat_proto_goTypes = []any{
 	(Role)(0),                          // 0: chat.v1.Role
 	(*Conversation)(nil),               // 1: chat.v1.Conversation
@@ -1391,13 +1559,16 @@ var file_chat_v1_chat_proto_goTypes = []any{
 	(*SendMessageResponse)(nil),        // 19: chat.v1.SendMessageResponse
 	(*Delta)(nil),                      // 20: chat.v1.Delta
 	(*ToolCallEvent)(nil),              // 21: chat.v1.ToolCallEvent
-	(*timestamppb.Timestamp)(nil),      // 22: google.protobuf.Timestamp
+	(*GetInfoRequest)(nil),             // 22: chat.v1.GetInfoRequest
+	(*TraitInfo)(nil),                  // 23: chat.v1.TraitInfo
+	(*GetInfoResponse)(nil),            // 24: chat.v1.GetInfoResponse
+	(*timestamppb.Timestamp)(nil),      // 25: google.protobuf.Timestamp
 }
 var file_chat_v1_chat_proto_depIdxs = []int32{
-	22, // 0: chat.v1.Conversation.created_at:type_name -> google.protobuf.Timestamp
-	22, // 1: chat.v1.Conversation.updated_at:type_name -> google.protobuf.Timestamp
-	22, // 2: chat.v1.Message.created_at:type_name -> google.protobuf.Timestamp
-	22, // 3: chat.v1.UIBlock.created_at:type_name -> google.protobuf.Timestamp
+	25, // 0: chat.v1.Conversation.created_at:type_name -> google.protobuf.Timestamp
+	25, // 1: chat.v1.Conversation.updated_at:type_name -> google.protobuf.Timestamp
+	25, // 2: chat.v1.Message.created_at:type_name -> google.protobuf.Timestamp
+	25, // 3: chat.v1.UIBlock.created_at:type_name -> google.protobuf.Timestamp
 	1,  // 4: chat.v1.CreateConversationResponse.conversation:type_name -> chat.v1.Conversation
 	1,  // 5: chat.v1.ListConversationsResponse.conversations:type_name -> chat.v1.Conversation
 	1,  // 6: chat.v1.GetConversationResponse.conversation:type_name -> chat.v1.Conversation
@@ -1407,27 +1578,30 @@ var file_chat_v1_chat_proto_depIdxs = []int32{
 	20, // 10: chat.v1.SendMessageResponse.delta:type_name -> chat.v1.Delta
 	21, // 11: chat.v1.SendMessageResponse.tool_call:type_name -> chat.v1.ToolCallEvent
 	3,  // 12: chat.v1.SendMessageResponse.ui_block:type_name -> chat.v1.UIBlock
-	4,  // 13: chat.v1.ChatService.CreateConversation:input_type -> chat.v1.CreateConversationRequest
-	6,  // 14: chat.v1.ChatService.ListConversations:input_type -> chat.v1.ListConversationsRequest
-	8,  // 15: chat.v1.ChatService.GetConversation:input_type -> chat.v1.GetConversationRequest
-	10, // 16: chat.v1.ChatService.UpdateConversation:input_type -> chat.v1.UpdateConversationRequest
-	12, // 17: chat.v1.ChatService.DeleteConversation:input_type -> chat.v1.DeleteConversationRequest
-	14, // 18: chat.v1.ChatService.ListMessages:input_type -> chat.v1.ListMessagesRequest
-	16, // 19: chat.v1.ChatService.ListUIBlocks:input_type -> chat.v1.ListUIBlocksRequest
-	18, // 20: chat.v1.ChatService.SendMessage:input_type -> chat.v1.SendMessageRequest
-	5,  // 21: chat.v1.ChatService.CreateConversation:output_type -> chat.v1.CreateConversationResponse
-	7,  // 22: chat.v1.ChatService.ListConversations:output_type -> chat.v1.ListConversationsResponse
-	9,  // 23: chat.v1.ChatService.GetConversation:output_type -> chat.v1.GetConversationResponse
-	11, // 24: chat.v1.ChatService.UpdateConversation:output_type -> chat.v1.UpdateConversationResponse
-	13, // 25: chat.v1.ChatService.DeleteConversation:output_type -> chat.v1.DeleteConversationResponse
-	15, // 26: chat.v1.ChatService.ListMessages:output_type -> chat.v1.ListMessagesResponse
-	17, // 27: chat.v1.ChatService.ListUIBlocks:output_type -> chat.v1.ListUIBlocksResponse
-	19, // 28: chat.v1.ChatService.SendMessage:output_type -> chat.v1.SendMessageResponse
-	21, // [21:29] is the sub-list for method output_type
-	13, // [13:21] is the sub-list for method input_type
-	13, // [13:13] is the sub-list for extension type_name
-	13, // [13:13] is the sub-list for extension extendee
-	0,  // [0:13] is the sub-list for field type_name
+	23, // 13: chat.v1.GetInfoResponse.traits:type_name -> chat.v1.TraitInfo
+	22, // 14: chat.v1.ChatService.GetInfo:input_type -> chat.v1.GetInfoRequest
+	4,  // 15: chat.v1.ChatService.CreateConversation:input_type -> chat.v1.CreateConversationRequest
+	6,  // 16: chat.v1.ChatService.ListConversations:input_type -> chat.v1.ListConversationsRequest
+	8,  // 17: chat.v1.ChatService.GetConversation:input_type -> chat.v1.GetConversationRequest
+	10, // 18: chat.v1.ChatService.UpdateConversation:input_type -> chat.v1.UpdateConversationRequest
+	12, // 19: chat.v1.ChatService.DeleteConversation:input_type -> chat.v1.DeleteConversationRequest
+	14, // 20: chat.v1.ChatService.ListMessages:input_type -> chat.v1.ListMessagesRequest
+	16, // 21: chat.v1.ChatService.ListUIBlocks:input_type -> chat.v1.ListUIBlocksRequest
+	18, // 22: chat.v1.ChatService.SendMessage:input_type -> chat.v1.SendMessageRequest
+	24, // 23: chat.v1.ChatService.GetInfo:output_type -> chat.v1.GetInfoResponse
+	5,  // 24: chat.v1.ChatService.CreateConversation:output_type -> chat.v1.CreateConversationResponse
+	7,  // 25: chat.v1.ChatService.ListConversations:output_type -> chat.v1.ListConversationsResponse
+	9,  // 26: chat.v1.ChatService.GetConversation:output_type -> chat.v1.GetConversationResponse
+	11, // 27: chat.v1.ChatService.UpdateConversation:output_type -> chat.v1.UpdateConversationResponse
+	13, // 28: chat.v1.ChatService.DeleteConversation:output_type -> chat.v1.DeleteConversationResponse
+	15, // 29: chat.v1.ChatService.ListMessages:output_type -> chat.v1.ListMessagesResponse
+	17, // 30: chat.v1.ChatService.ListUIBlocks:output_type -> chat.v1.ListUIBlocksResponse
+	19, // 31: chat.v1.ChatService.SendMessage:output_type -> chat.v1.SendMessageResponse
+	23, // [23:32] is the sub-list for method output_type
+	14, // [14:23] is the sub-list for method input_type
+	14, // [14:14] is the sub-list for extension type_name
+	14, // [14:14] is the sub-list for extension extendee
+	0,  // [0:14] is the sub-list for field type_name
 }
 
 func init() { file_chat_v1_chat_proto_init() }
@@ -1435,6 +1609,7 @@ func file_chat_v1_chat_proto_init() {
 	if File_chat_v1_chat_proto != nil {
 		return
 	}
+	file_chat_v1_chat_proto_msgTypes[3].OneofWrappers = []any{}
 	file_chat_v1_chat_proto_msgTypes[9].OneofWrappers = []any{}
 	file_chat_v1_chat_proto_msgTypes[18].OneofWrappers = []any{
 		(*SendMessageResponse_Delta)(nil),
@@ -1448,7 +1623,7 @@ func file_chat_v1_chat_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_chat_v1_chat_proto_rawDesc), len(file_chat_v1_chat_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   21,
+			NumMessages:   24,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

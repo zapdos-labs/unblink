@@ -7,6 +7,9 @@ option go_package = "unblink/server/gen/chat/v1;chatv1";
 import "google/protobuf/timestamp.proto";
 
 service ChatService {
+  // Info
+  rpc GetInfo(GetInfoRequest) returns (GetInfoResponse);
+
   // Conversation management
   rpc CreateConversation(CreateConversationRequest) returns (CreateConversationResponse);
   rpc ListConversations(ListConversationsRequest) returns (ListConversationsResponse);
@@ -60,6 +63,7 @@ message UIBlock {
 
 message CreateConversationRequest {
   string title = 1;
+  optional string trait = 2;
 }
 
 message CreateConversationResponse {
@@ -87,6 +91,7 @@ message GetConversationResponse {
 message UpdateConversationRequest {
   string conversation_id = 1;
   optional string title = 2;
+  optional string trait = 3;
 }
 
 message UpdateConversationResponse {
@@ -147,4 +152,16 @@ message ToolCallEvent {
   string error = 4;      // Error message if tool failed
   // Tool state: "invoked" when starting, "completed" or "error" when done
   string state = 5;
+}
+
+message GetInfoRequest {}
+
+message TraitInfo {
+  string id = 1;
+  string description = 2;
+}
+
+message GetInfoResponse {
+  repeated TraitInfo traits = 1;
+  string default_trait = 2;
 }

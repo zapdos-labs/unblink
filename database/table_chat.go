@@ -52,7 +52,11 @@ const (
 )
 
 // CreateConversation creates a new conversation
-func (c *Client) CreateConversation(id, userID, title string) error {
+func (c *Client) CreateConversation(id, userID, title, trait string) error {
+	if trait == "" {
+		trait = "monitoring"
+	}
+
 	// Always use DefaultSystemPrompt from chat package
 	insertSQL := `
 		INSERT INTO conversations (id, user_id, title, system_prompt, trait)
@@ -65,7 +69,7 @@ func (c *Client) CreateConversation(id, userID, title string) error {
 			updated_at = CURRENT_TIMESTAMP
 	`
 
-	_, err := c.db.Exec(insertSQL, id, userID, title, DefaultSystemPrompt, "monitoring")
+	_, err := c.db.Exec(insertSQL, id, userID, title, DefaultSystemPrompt, trait)
 	if err != nil {
 		return fmt.Errorf("failed to create conversation: %w", err)
 	}

@@ -48,10 +48,9 @@ func sanitizeForPostgres(s string) string {
 type Service struct {
 	db             Database
 	openai         *openai.Client
-	fastOpenai     *openai.Client
+	titleOpenai    *openai.Client
 	cfg            *Config
 	tools          *ToolRegistry
-	modelRegistry  *models.Registry
 	contentTrimmer *models.Trimmer
 }
 
@@ -61,11 +60,12 @@ type Config struct {
 	ChatOpenAIModel   string
 	ChatOpenAIBaseURL string
 	ChatOpenAIAPIKey  string
+	ChatMaxTokens     int
 
-	// Fast model (for follow-up suggestions, etc.)
-	FastOpenAIModel   string
-	FastOpenAIBaseURL string
-	FastOpenAIAPIKey  string
+	// Vision model (used for title generation to match web-agent pattern)
+	VLMOpenAIModel   string
+	VLMOpenAIBaseURL string
+	VLMOpenAIAPIKey  string
 
 	// Content trimming
 	ContentTrimSafetyMargin int // Percentage (0-100)
@@ -73,7 +73,7 @@ type Config struct {
 
 // Database defines the interface for chat database operations
 type Database interface {
-	CreateConversation(id, userID, title string) error
+	CreateConversation(id, userID, title, trait string) error
 	GetConversation(id string) (*chatv1.Conversation, error)
 	GetConversationOwner(conversationID string) (string, error)
 	ListConversations(userID string) ([]*chatv1.Conversation, error)
@@ -85,19 +85,23 @@ type Database interface {
 	ListUIBlocks(conversationID string) ([]*chatv1.UIBlock, error)
 	GetSystemPrompt(conversationID string) (string, error)
 	SetSystemPrompt(conversationID, prompt string) error
+	GetTrait(conversationID string) (string, error)
+	SetTrait(conversationID, trait string) error
 	GetMessagesBody(conversationID string) ([]string, error)
 }
 
-func NewService(db Database, cfg *Config, modelRegistry *models.Registry) *Service {
+func NewService(db Database, cfg *Config) *Service {
 	if cfg.ChatOpenAIModel == "" {
 		cfg.ChatOpenAIModel = "gpt-4o-mini"
 	}
+	if cfg.ChatMaxTokens <= 0 {
+		cfg.ChatMaxTokens = 128000
+	}
 
 	service := &Service{
-		db:            db,
-		cfg:           cfg,
-		tools:         NewToolRegistry(),
-		modelRegistry: modelRegistry,
+		db:    db,
+		cfg:   cfg,
+		tools: NewToolRegistry(),
 	}
 
 	if cfg.ChatOpenAIAPIKey == "" {
@@ -105,41 +109,28 @@ func NewService(db Database, cfg *Config, modelRegistry *models.Registry) *Servi
 		return service
 	}
 
-	// Create main chat client from registry config
-	mainCfg, err := modelRegistry.GetConfig(cfg.ChatOpenAIModel)
-	if err != nil {
-		log.Printf("[ChatService] Main model config not found: %v", err)
-		return service
-	}
-	opts := []option.RequestOption{option.WithAPIKey(mainCfg.APIKey)}
-	if mainCfg.BaseURL != "" {
-		opts = append(opts, option.WithBaseURL(mainCfg.BaseURL))
-		log.Printf("[ChatService] Using custom base URL: %s", mainCfg.BaseURL)
+	// Create main chat client from direct chat config.
+	opts := []option.RequestOption{option.WithAPIKey(cfg.ChatOpenAIAPIKey)}
+	if cfg.ChatOpenAIBaseURL != "" {
+		opts = append(opts, option.WithBaseURL(cfg.ChatOpenAIBaseURL))
+		log.Printf("[ChatService] Using custom base URL: %s", cfg.ChatOpenAIBaseURL)
 	}
 	client := openai.NewClient(opts...)
 	service.openai = &client
 
-	// Create fast client from registry config (if available)
-	if fastCfg, err := modelRegistry.GetConfig(cfg.FastOpenAIModel); err == nil {
-		fastOpts := []option.RequestOption{option.WithAPIKey(fastCfg.APIKey)}
-		if fastCfg.BaseURL != "" {
-			fastOpts = append(fastOpts, option.WithBaseURL(fastCfg.BaseURL))
-		}
-		fastClient := openai.NewClient(fastOpts...)
-		service.fastOpenai = &fastClient
-		log.Printf("[ChatService] Fast OpenAI client initialized with model: %s", cfg.FastOpenAIModel)
+	// Create title-generation client from VLM settings (fallbacks normalized in config load).
+	titleOpts := []option.RequestOption{option.WithAPIKey(cfg.VLMOpenAIAPIKey)}
+	if cfg.VLMOpenAIBaseURL != "" {
+		titleOpts = append(titleOpts, option.WithBaseURL(cfg.VLMOpenAIBaseURL))
 	}
+	titleClient := openai.NewClient(titleOpts...)
+	service.titleOpenai = &titleClient
+	log.Printf("[ChatService] Title OpenAI client initialized with model: %s", cfg.VLMOpenAIModel)
 
-	// Create trimmer for main chat model
-	log.Printf("Calling modelRegistry.GetMaxTokensOr for model %s", cfg.ChatOpenAIModel)
-	maxTokens, err := modelRegistry.GetMaxTokens(cfg.ChatOpenAIModel)
-	if err != nil {
-		log.Printf("[ChatService] Warning: failed to get max tokens for model %s: %v", cfg.ChatOpenAIModel, err)
-		maxTokens = 32000 // fallback
-	}
-	service.contentTrimmer = models.NewTrimmer(maxTokens, cfg.ContentTrimSafetyMargin)
+	// Create trimmer for main chat model from config.
+	service.contentTrimmer = models.NewTrimmer(cfg.ChatMaxTokens, cfg.ContentTrimSafetyMargin)
 	log.Printf("[ChatService] Main model %s: max_tokens=%d, margin=%d%%",
-		cfg.ChatOpenAIModel, maxTokens, cfg.ContentTrimSafetyMargin)
+		cfg.ChatOpenAIModel, cfg.ChatMaxTokens, cfg.ContentTrimSafetyMargin)
 
 	return service
 }
