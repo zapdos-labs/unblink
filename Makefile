@@ -38,14 +38,9 @@ docker-build:
 	docker build -t unblink:local .
 
 docker-run: docker-build
-	docker run -p 8080:8080 \
-		-e DATABASE_URL="$(DATABASE_URL)" \
-		-e JWT_SECRET="$(JWT_SECRET)" \
-		-e DASHBOARD_URL="http://localhost:8080" \
-		-e CHAT_OPENAI_MODEL="$(CHAT_OPENAI_MODEL)" \
-		-e CHAT_OPENAI_BASE_URL="$(CHAT_OPENAI_BASE_URL)" \
-		-e CHAT_OPENAI_API_KEY="$(CHAT_OPENAI_API_KEY)" \
-		-e VLM_OPENAI_MODEL="$(VLM_OPENAI_MODEL)" \
-		-e VLM_OPENAI_BASE_URL="$(VLM_OPENAI_BASE_URL)" \
-		-e VLM_OPENAI_API_KEY="$(VLM_OPENAI_API_KEY)" \
-		unblink:local
+	env -i PATH="$$PATH" HOME="$$HOME" bash -lc 'set -a; source ./.env; set +a; \
+		port="$${VITE_SERVER_API_PORT:-8080}"; \
+		docker run --env-file <(env) \
+			-p "$$port:$$port" \
+			-e "DASHBOARD_URL=http://localhost:$$port" \
+			unblink:local'
