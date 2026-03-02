@@ -45,7 +45,7 @@ On first run, authorize the node by opening the displayed URL in your browser.
 - **Node**: Private proxy that runs in your network and forwards traffic to local cameras (RTSP, MJPEG)
 
 ### AI-Powered Monitoring
-- **Vision Language Model**: GPT-4 Vision for frame analysis and summarization
+- **Vision Language Model**: Qwen3-VL for frame analysis and summarization
 - **Chat Interface**: Natural language interaction with your camera feeds
 - **Video Search**: Search through recorded frames using natural language
 
@@ -55,9 +55,8 @@ On first run, authorize the node by opening the displayed URL in your browser.
 - Automatic frame storage and indexing
 
 ### Real-time Communication
-- WebSocket connections for live video streams
+- WebSocket / WebRTC connections for live video streams
 - Connect RPC for type-safe API communication
-- Server-Sent Events for real-time updates
 
 ## Development
 
@@ -109,9 +108,8 @@ make docker-run
 
 ## Architecture
 
-- **Backend**: Go 1.25 with Connect RPC (protobuf-based)
+- **Backend**: Go
 - **Frontend**: SolidJS with TypeScript, Vite, and Ark UI components
-- **AI**: OpenAI API (GPT-4, GPT-4 Vision)
 - **Database**: PostgreSQL with pgx
 - **Video**: go2rtc for RTSP/WebRTC handling
 
