@@ -29,7 +29,7 @@ FROM alpine:3.19
 
 WORKDIR /usr/src/app
 
-RUN apk add --no-cache gosu ca-certificates
+RUN apk add --no-cache su-exec ca-certificates
 
 RUN adduser -D -s /bin/sh appuser
 
