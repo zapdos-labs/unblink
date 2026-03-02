@@ -58,3 +58,4 @@ unb-server
 
 # Air hot reload
 tmp/server
+.env.prod
