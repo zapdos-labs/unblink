@@ -7,10 +7,10 @@ import (
 
 	"connectrpc.com/connect"
 
-	"unblink/database"
-	"unblink/server"
-	"unblink/server/internal/ctxutil"
-	webrtcv1 "unblink/server/gen/webrtc/v1"
+	"github.com/zapdos-labs/unblink/database"
+	"github.com/zapdos-labs/unblink/server"
+	webrtcv1 "github.com/zapdos-labs/unblink/server/gen/webrtc/v1"
+	"github.com/zapdos-labs/unblink/server/internal/ctxutil"
 )
 
 // Service implements the WebRTC gRPC/Connect service

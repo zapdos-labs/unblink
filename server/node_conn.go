@@ -12,7 +12,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 
-	"unblink/shared"
+	"github.com/zapdos-labs/unblink/shared"
 )
 
 // Bridge represents an active bridge connection

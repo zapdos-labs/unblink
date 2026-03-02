@@ -1,0 +1,164 @@
+name: Node Artifacts
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/node-artifacts.yml"
+      - "cmd/unblink-node/**"
+      - "node/**"
+      - "shared/**"
+      - "go.mod"
+      - "go.sum"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/node-artifacts.yml"
+      - "cmd/unblink-node/**"
+      - "node/**"
+      - "shared/**"
+      - "go.mod"
+      - "go.sum"
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Run tests
+        run: go test ./...
+
+  build-node:
+    needs: test
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+            archive_ext: tar.gz
+            bin_ext: ""
+          - goos: linux
+            goarch: arm64
+            archive_ext: tar.gz
+            bin_ext: ""
+          - goos: windows
+            goarch: amd64
+            archive_ext: zip
+            bin_ext: .exe
+          - goos: windows
+            goarch: arm64
+            archive_ext: zip
+            bin_ext: .exe
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Build archive names
+        id: vars
+        run: |
+          echo "binary=unblink-node${{ matrix.bin_ext }}" >> "$GITHUB_OUTPUT"
+          echo "archive=unblink-node_${{ matrix.goos }}_${{ matrix.goarch }}.${{ matrix.archive_ext }}" >> "$GITHUB_OUTPUT"
+
+      - name: Build unblink-node
+        env:
+          CGO_ENABLED: "0"
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          mkdir -p dist
+          go build -trimpath -ldflags="-s -w" -o "dist/${{ steps.vars.outputs.binary }}" ./cmd/unblink-node
+
+      - name: Package artifact
+        run: |
+          cd dist
+          if [ "${{ matrix.archive_ext }}" = "zip" ]; then
+            zip "${{ steps.vars.outputs.archive }}" "${{ steps.vars.outputs.binary }}"
+          else
+            tar -czf "${{ steps.vars.outputs.archive }}" "${{ steps.vars.outputs.binary }}"
+          fi
+          sha256sum "${{ steps.vars.outputs.archive }}" > "${{ steps.vars.outputs.archive }}.sha256"
+          rm "${{ steps.vars.outputs.binary }}"
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.vars.outputs.archive }}
+          path: |
+            dist/${{ steps.vars.outputs.archive }}
+            dist/${{ steps.vars.outputs.archive }}.sha256
+
+  release-main:
+    if: github.ref == 'refs/heads/main'
+    needs: build-node
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download packaged artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+          merge-multiple: true
+
+      - name: Publish rolling main release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -fa main-build -m "Latest main build" "${GITHUB_SHA}"
+          git push origin refs/tags/main-build --force
+
+          NOTES_FILE="$(mktemp)"
+          {
+            echo "Latest successful build from \`main\`."
+            echo
+            echo "Commit: \`${GITHUB_SHA}\`"
+          } > "${NOTES_FILE}"
+
+          if gh release view main-build >/dev/null 2>&1; then
+            gh release upload main-build release-artifacts/* --clobber
+            gh release edit main-build --title "main-build" --notes-file "${NOTES_FILE}" --prerelease --latest=false
+          else
+            gh release create main-build release-artifacts/* --title "main-build" --notes-file "${NOTES_FILE}" --prerelease --latest=false
+          fi
+
+  release-tag:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build-node
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download packaged artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+          merge-multiple: true
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${GITHUB_REF_NAME}" release-artifacts/* --generate-notes --verify-tag

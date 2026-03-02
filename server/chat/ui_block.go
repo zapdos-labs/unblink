@@ -5,7 +5,7 @@ import (
 
 	"connectrpc.com/connect"
 
-	chatv1 "unblink/server/gen/chat/v1"
+	chatv1 "github.com/zapdos-labs/unblink/server/gen/chat/v1"
 )
 
 func (s *Service) ListUIBlocks(ctx context.Context, req *connect.Request[chatv1.ListUIBlocksRequest]) (*connect.Response[chatv1.ListUIBlocksResponse], error) {

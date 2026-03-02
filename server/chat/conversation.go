@@ -9,8 +9,8 @@ import (
 	"connectrpc.com/connect"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"unblink/server/internal/ctxutil"
-	chatv1 "unblink/server/gen/chat/v1"
+	chatv1 "github.com/zapdos-labs/unblink/server/gen/chat/v1"
+	"github.com/zapdos-labs/unblink/server/internal/ctxutil"
 )
 
 // verifyConversationOwnership checks if the user owns the conversation

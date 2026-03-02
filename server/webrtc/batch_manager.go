@@ -9,11 +9,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/zapdos-labs/unblink/database"
+	servicev1 "github.com/zapdos-labs/unblink/server/gen/service/v1"
+	"github.com/zapdos-labs/unblink/server/internal/timeutil"
 	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	servicev1 "unblink/server/gen/service/v1"
-	"unblink/database"
-	"unblink/server/internal/timeutil"
 )
 
 // EventBroadcaster interface for broadcasting events (avoid circular dependency)
@@ -31,16 +31,16 @@ type rollingContext struct {
 // BatchManager accumulates frames and sends them in batches to vLLM
 // It maintains rolling context per service, asking the model to describe only what's new
 type BatchManager struct {
-	client            *FrameClient
-	batchSize         int
-	frameBuffers      map[string][]*Frame        // serviceID -> buffer of frames (max size = batchSize)
-	rollingContexts   map[string]*rollingContext // serviceID -> rolling state
-	processingLocks   map[string]bool            // serviceID -> is currently processing
-	baseInstruction   string                     // Base instruction
-	storage           *Storage                   // Storage for saving annotated frames
-	db                *database.Client           // Database for events
-	eventBroadcaster  EventBroadcaster           // For broadcasting events to subscribers
-	mu                sync.Mutex
+	client           *FrameClient
+	batchSize        int
+	frameBuffers     map[string][]*Frame        // serviceID -> buffer of frames (max size = batchSize)
+	rollingContexts  map[string]*rollingContext // serviceID -> rolling state
+	processingLocks  map[string]bool            // serviceID -> is currently processing
+	baseInstruction  string                     // Base instruction
+	storage          *Storage                   // Storage for saving annotated frames
+	db               *database.Client           // Database for events
+	eventBroadcaster EventBroadcaster           // For broadcasting events to subscribers
+	mu               sync.Mutex
 }
 
 // NewBatchManager creates a new batch manager
@@ -205,11 +205,11 @@ func (m *BatchManager) sendBatch(serviceID string, frames []*Frame, previousResp
 				granularity := timeutil.CalculateGranularity(int64(duration.Seconds()))
 
 				payload, err := structpb.NewStruct(map[string]any{
-					"type":       "vlm-indexing",
+					"type":        "vlm-indexing",
 					"granularity": string(granularity),
-					"from_iso":   timeutil.FormatToISO(firstFrame.Timestamp),
-					"to_iso":     timeutil.FormatToISO(lastFrame.Timestamp),
-					"response":   responseMap,
+					"from_iso":    timeutil.FormatToISO(firstFrame.Timestamp),
+					"to_iso":      timeutil.FormatToISO(lastFrame.Timestamp),
+					"response":    responseMap,
 				})
 				if err != nil {
 					log.Printf("[BatchManager] Failed to create event payload: %v", err)

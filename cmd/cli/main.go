@@ -7,8 +7,8 @@ import (
 	"os"
 	"strings"
 
-	"unblink/database"
-	"unblink/server"
+	"github.com/zapdos-labs/unblink/database"
+	"github.com/zapdos-labs/unblink/server"
 )
 
 func main() {

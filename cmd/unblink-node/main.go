@@ -11,7 +11,7 @@ import (
 	"syscall"
 	"time"
 
-	"unblink/node"
+	"github.com/zapdos-labs/unblink/node"
 )
 
 var configPath string
@@ -159,7 +159,7 @@ func runNode(configFile *node.ConfigFile) {
 
 func handleConfigCommand() {
 	if len(os.Args) < 3 {
-		fmt.Println("Usage: node config <command>")
+		fmt.Println("Usage: unblink-node config <command>")
 		fmt.Println("Commands:")
 		fmt.Println("  show    Show the config file path")
 		fmt.Println("  delete  Delete the config file")
@@ -188,7 +188,7 @@ func handleConfigCommand() {
 }
 
 func printUsage() {
-	fmt.Println("Usage: node [command] [options]")
+	fmt.Println("Usage: unblink-node [command] [options]")
 	fmt.Println()
 	fmt.Println("Commands:")
 	fmt.Println("  config show    Show the config file path and contents")
@@ -205,11 +205,11 @@ func printUsage() {
 	fmt.Println("  -h, --help                Show this help message")
 	fmt.Println()
 	fmt.Println("Examples:")
-	fmt.Println("  node                    # Start node (default config)")
-	fmt.Println("  node -discover          # Scan local network for camera endpoints")
-	fmt.Println("  node -discover -discover-iface eth0")
-	fmt.Println("  node config show         # Show config")
-	fmt.Println("  node config delete       # Delete config (will regenerate with UUID)")
-	fmt.Println("  node -config ./my-config # Use custom config file")
+	fmt.Println("  unblink-node                    # Start node (default config)")
+	fmt.Println("  unblink-node -discover          # Scan local network for camera endpoints")
+	fmt.Println("  unblink-node -discover -discover-iface eth0")
+	fmt.Println("  unblink-node config show         # Show config")
+	fmt.Println("  unblink-node config delete       # Delete config (will regenerate with UUID)")
+	fmt.Println("  unblink-node -config ./my-config # Use custom config file")
 	fmt.Println()
 }

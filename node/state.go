@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/gorilla/websocket"
-	"unblink/shared"
+	"github.com/zapdos-labs/unblink/shared"
 )
 
 // ConnState interface defines all possible operations

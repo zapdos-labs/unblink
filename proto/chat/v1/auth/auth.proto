@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package chat.v1.auth;
 
-option go_package = "unblink/server/gen/chat/v1/auth;authv1";
+option go_package = "github.com/zapdos-labs/unblink/server/gen/chat/v1/auth;authv1";
 
 import "google/protobuf/timestamp.proto";
 

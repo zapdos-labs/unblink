@@ -12,7 +12,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/pion/webrtc/v4"
 
-	"unblink/server"
+	"github.com/zapdos-labs/unblink/server"
 )
 
 // Session represents an active WebRTC session
@@ -282,7 +282,7 @@ func NewSession(
 		log.Printf("[WebRTC Session %s] Starting %s Handle() for session %s", sessionID, sourceTypeFromURL(serviceURL), sessionID)
 		if err := producer.Start(); err != nil {
 			log.Printf("[WebRTC Session %s] %s Handle error for session %s: %v", sessionID, sourceTypeFromURL(serviceURL), sessionID, err)
-	}
+		}
 		log.Printf("[WebRTC Session %s] %s Handle() ended for session %s, closing session", sessionID, sourceTypeFromURL(serviceURL), sessionID)
 		session.Close()
 	}()

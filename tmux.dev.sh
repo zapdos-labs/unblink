@@ -22,7 +22,7 @@ if ! tmux has-session -t "=$SESSION_NAME" 2>/dev/null; then
 
   tmux_create_window "$SESSION_NAME" "app"     "$PROJECT_DIR" "cd app && bun run dev" "$ENV_FILE"
   tmux_create_window "$SESSION_NAME" "backend" "$PROJECT_DIR" "$BACKEND_CMD"          "$ENV_FILE"
-  tmux_create_window "$SESSION_NAME" "node"    "$PROJECT_DIR" "sleep 8 && go run ./cmd/node/main.go -config node.dev.json" "$ENV_FILE"
+  tmux_create_window "$SESSION_NAME" "node"    "$PROJECT_DIR" "sleep 8 && go run ./cmd/unblink-node/main.go -config node.dev.json" "$ENV_FILE"
 
   tmux_session_attach "$SESSION_NAME" "app"
 else

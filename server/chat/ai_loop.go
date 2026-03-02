@@ -10,8 +10,8 @@ import (
 	"github.com/openai/openai-go/v3"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	chatv1 "unblink/server/gen/chat/v1"
-	"unblink/server/models"
+	chatv1 "github.com/zapdos-labs/unblink/server/gen/chat/v1"
+	"github.com/zapdos-labs/unblink/server/models"
 )
 
 // ResponseSender is the interface for sending events to the client stream.

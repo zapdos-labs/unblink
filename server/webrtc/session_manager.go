@@ -7,7 +7,7 @@ import (
 
 // SessionManager manages all active WebRTC sessions
 type SessionManager struct {
-	sessions map[string]*Session // sessionID -> Session
+	sessions   map[string]*Session // sessionID -> Session
 	sessionsMu sync.RWMutex
 }
 

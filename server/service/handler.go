@@ -8,8 +8,8 @@ import (
 
 	"github.com/AlexxIT/go2rtc/pkg/core"
 
-	"unblink/server"
-	"unblink/server/webrtc"
+	"github.com/zapdos-labs/unblink/server"
+	"github.com/zapdos-labs/unblink/server/webrtc"
 )
 
 // ServiceHandler encapsulates all components needed to handle an active service
@@ -23,8 +23,8 @@ type ServiceHandler struct {
 	bridgeConn   *server.BridgeConn
 	mediaSource  webrtc.MediaSource
 	extractor    *webrtc.FrameExtractor
-	producer     core.Producer  // Track producer for cleanup
-	producerDone chan struct{}  // Signal when producer goroutine exits
+	producer     core.Producer // Track producer for cleanup
+	producerDone chan struct{} // Signal when producer goroutine exits
 
 	// Shared infrastructure (injected)
 	storage      *webrtc.Storage

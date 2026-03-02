@@ -8,12 +8,33 @@ AI-powered camera monitoring application with relay-node architecture and real-t
 
 The node runs locally and connects to the relay:
 
+### Without Go Toolchain
+
+Download the prebuilt `unblink-node` archive for your platform from GitHub Releases:
+
+- Linux x86_64: `unblink-node_linux_amd64.tar.gz`
+- Linux ARM64: `unblink-node_linux_arm64.tar.gz`
+- Windows x86_64: `unblink-node_windows_amd64.zip`
+- Windows ARM64: `unblink-node_windows_arm64.zip`
+
+Extract the archive and run:
 
 ```bash
-# Install
-go install github.com/zapdos-labs/unblink/cmd/unblink-node@latest
+unblink-node
+```
 
-# Run
+On Windows, run:
+
+```powershell
+.\unblink-node.exe
+```
+
+### With Go Toolchain
+
+Install from source:
+
+```bash
+go install github.com/zapdos-labs/unblink/cmd/unblink-node@latest
 unblink-node
 ```
 

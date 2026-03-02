@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package service.v1;
 
-option go_package = "unblink/server/gen/service/v1;servicev1";
+option go_package = "github.com/zapdos-labs/unblink/server/gen/service/v1;servicev1";
 
 import "google/protobuf/timestamp.proto";
 

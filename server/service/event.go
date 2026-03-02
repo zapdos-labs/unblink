@@ -8,9 +8,9 @@ import (
 
 	"connectrpc.com/connect"
 
-	servicev1 "unblink/server/gen/service/v1"
-	"unblink/server/gen/service/v1/servicev1connect"
-	"unblink/server/internal/ctxutil"
+	servicev1 "github.com/zapdos-labs/unblink/server/gen/service/v1"
+	"github.com/zapdos-labs/unblink/server/gen/service/v1/servicev1connect"
+	"github.com/zapdos-labs/unblink/server/internal/ctxutil"
 )
 
 // EventDatabase defines the interface for event database operations
@@ -22,7 +22,7 @@ type EventDatabase interface {
 }
 
 type EventService struct {
-	db         EventDatabase
+	db          EventDatabase
 	broadcaster *EventBroadcaster
 }
 

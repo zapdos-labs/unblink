@@ -11,7 +11,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"unblink/shared"
+	"github.com/zapdos-labs/unblink/shared"
 )
 
 const MaxMessageSize = 16 * 1024 * 1024 // 16 MB

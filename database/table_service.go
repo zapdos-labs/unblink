@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	servicev1 "unblink/server/gen/service/v1"
+	servicev1 "github.com/zapdos-labs/unblink/server/gen/service/v1"
 )
 
 const (

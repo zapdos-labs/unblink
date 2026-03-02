@@ -5,7 +5,7 @@ import (
 	"log"
 	"sync"
 
-	servicev1 "unblink/server/gen/service/v1"
+	servicev1 "github.com/zapdos-labs/unblink/server/gen/service/v1"
 )
 
 // EventSubscription represents a client's subscription to events
@@ -20,7 +20,7 @@ type EventSubscription struct {
 type EventBroadcaster struct {
 	mu            sync.RWMutex
 	subscriptions map[string][]*EventSubscription // nodeID -> subscriptions
-	allSubs       map[*EventSubscription]string    // reverse lookup: sub -> nodeID
+	allSubs       map[*EventSubscription]string   // reverse lookup: sub -> nodeID
 }
 
 // NewEventBroadcaster creates a new event broadcaster

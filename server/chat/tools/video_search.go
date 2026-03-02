@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"unblink/database"
+	"github.com/zapdos-labs/unblink/database"
 )
 
 // VideoSearchTool is a tool for searching videos

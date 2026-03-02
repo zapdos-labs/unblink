@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"unblink/database"
-	"unblink/server/internal/ctxutil"
+	"github.com/zapdos-labs/unblink/database"
+	"github.com/zapdos-labs/unblink/server/internal/ctxutil"
 
 	connect "connectrpc.com/connect"
 )

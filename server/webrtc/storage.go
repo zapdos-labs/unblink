@@ -11,7 +11,7 @@ import (
 
 // Storage handles saving frames to disk
 type Storage struct {
-	baseDir string // Base directory for frame storage (empty = no storage)
+	baseDir string                                                                                 // Base directory for frame storage (empty = no storage)
 	onSaved func(serviceID, frameID string, framePath string, timestamp time.Time, fileSize int64) // Callback after frame is saved
 }
 

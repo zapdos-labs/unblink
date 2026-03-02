@@ -7,7 +7,7 @@ import (
 
 	"github.com/gorilla/websocket"
 
-	"unblink/shared"
+	"github.com/zapdos-labs/unblink/shared"
 )
 
 // WebSocketConn wraps a WebSocket connection with the message interface

@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package webrtc.v1;
 
-option go_package = "unblink/server/gen/webrtc/v1;webrtcv1";
+option go_package = "github.com/zapdos-labs/unblink/server/gen/webrtc/v1;webrtcv1";
 
 // WebRTCService handles WebRTC session creation for streaming from nodes
 service WebRTCService {

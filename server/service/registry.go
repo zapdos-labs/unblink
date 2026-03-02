@@ -6,10 +6,10 @@ import (
 	"sync"
 	"time"
 
-	"unblink/database"
-	"unblink/server"
-	servicev1 "unblink/server/gen/service/v1"
-	"unblink/server/webrtc"
+	"github.com/zapdos-labs/unblink/database"
+	"github.com/zapdos-labs/unblink/server"
+	servicev1 "github.com/zapdos-labs/unblink/server/gen/service/v1"
+	"github.com/zapdos-labs/unblink/server/webrtc"
 )
 
 // ServiceState tracks the state of a service

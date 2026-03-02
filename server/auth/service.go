@@ -6,10 +6,10 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	"github.com/zapdos-labs/unblink/database"
+	authv1 "github.com/zapdos-labs/unblink/server/gen/chat/v1/auth"
+	"github.com/zapdos-labs/unblink/server/internal/ctxutil"
 	"golang.org/x/crypto/bcrypt"
-	"unblink/database"
-	authv1 "unblink/server/gen/chat/v1/auth"
-	"unblink/server/internal/ctxutil"
 
 	"connectrpc.com/connect"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -84,8 +84,8 @@ func (s *Service) CreateGuestUser(ctx context.Context, req *connect.Request[auth
 
 	return connect.NewResponse(&authv1.CreateGuestUserResponse{
 		Success: true,
-		Token:    token,
-		User:     protoUser,
+		Token:   token,
+		User:    protoUser,
 	}), nil
 }
 
@@ -139,7 +139,7 @@ func (s *Service) GetUser(ctx context.Context, req *connect.Request[authv1.GetUs
 
 	return connect.NewResponse(&authv1.GetUserResponse{
 		Success: true,
-		User:     protoUser,
+		User:    protoUser,
 	}), nil
 }
 
@@ -231,17 +231,17 @@ func (s *Service) CreateAndLinkAccount(ctx context.Context, req *connect.Request
 
 	// Build response
 	protoUser := &authv1.User{
-		Id:      user.ID,
-		Profile: user.Profile,
-		IsGuest: false,
-		Email:   &email,
+		Id:        user.ID,
+		Profile:   user.Profile,
+		IsGuest:   false,
+		Email:     &email,
 		CreatedAt: timestamppb.New(user.CreatedAt),
 	}
 
 	return connect.NewResponse(&authv1.CreateAndLinkAccountResponse{
 		Success: true,
-		Token:    token,
-		User:     protoUser,
+		Token:   token,
+		User:    protoUser,
 	}), nil
 }
 
@@ -303,8 +303,8 @@ func (s *Service) Login(ctx context.Context, req *connect.Request[authv1.LoginRe
 
 	return connect.NewResponse(&authv1.LoginResponse{
 		Success: true,
-		Token:    token,
-		User:     protoUser,
+		Token:   token,
+		User:    protoUser,
 	}), nil
 }
 
@@ -366,4 +366,3 @@ func (s *Service) UpdateUserProfile(ctx context.Context, req *connect.Request[au
 		User:    protoUser,
 	}), nil
 }
-
