@@ -34,6 +34,7 @@ RUN apk add --no-cache su-exec ca-certificates
 RUN adduser -D -s /bin/sh appuser
 
 COPY --from=go-builder /usr/src/app/server /usr/local/bin/server
+RUN chmod +x /usr/local/bin/server && chown appuser:appuser /usr/local/bin/server
 COPY --from=web-builder /usr/src/app/dist ./dist
 
 RUN mkdir -p /data/unblink && chown -R appuser:appuser /data/unblink
@@ -47,4 +48,4 @@ ENV DIST_PATH=/usr/src/app/dist
 EXPOSE 8080
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-CMD ["server"]
+CMD ["/usr/local/bin/server"]
