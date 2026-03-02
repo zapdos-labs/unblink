@@ -1,0 +1,15 @@
+services:
+  unblink:
+    container_name: unblink-app
+    build:
+      context: .
+    image: unblink:local
+    network_mode: host
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - unblink-data:/home/appuser/.unblink
+
+volumes:
+  unblink-data:
