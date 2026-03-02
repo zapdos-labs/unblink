@@ -85,7 +85,3 @@ cp .env.example .env
 - **Frontend**: SolidJS with TypeScript, Vite, and Ark UI components
 - **Database**: PostgreSQL with pgx
 - **Video**: go2rtc for RTSP/WebRTC handling
-
-## License
-
-MIT
