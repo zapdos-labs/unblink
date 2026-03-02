@@ -51,4 +51,4 @@ ENV DIST_PATH=/usr/src/app/dist
 EXPOSE 8080
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-CMD ["server"]
+CMD ["/usr/local/bin/server"]
