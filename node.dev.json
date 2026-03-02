@@ -1,7 +1,7 @@
 {
   "relay_address": "ws://localhost:8080/node/connect",
   "node_id": "dev-node-0000",
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub2RlX2lkIjoiZGV2LW5vZGUtMDAwMCIsImlhdCI6MTc3MTk1NzU3Nn0.o_5SrlGQB6r2ojMCVr2fnjTiSqdhBKGOEFOuZSbu1QU",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub2RlX2lkIjoiZGV2LW5vZGUtMDAwMCIsImlhdCI6MTc3MjQ1NjU5N30.11qBk6tqIkx1bpm0wApGHzuUENUc71dDhUvk8vFcWKc",
   "reconnect": {
     "enabled": true
   }

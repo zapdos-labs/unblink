@@ -64,7 +64,7 @@ export default function NodeRouteFallback() {
                   <For each={nodeIds()}>
                     {(id) => (
                       <a
-                        href={`/${id}`}
+                        href={`/node/${id}`}
                         class="rounded-lg border border-neu-750 bg-neu-800 px-3 py-1.5 text-neu-100 hover:bg-neu-750 transition-colors"
                       >
                         {id}

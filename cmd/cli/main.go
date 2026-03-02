@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -13,27 +12,17 @@ import (
 )
 
 func main() {
-	// Define flags
-	configPath := flag.String("config", "", "Path to config file (default: ~/.unblink/server.config.json)")
-
-	// Parse flags
-	flag.Parse()
-
-	if flag.NArg() < 1 {
-		fmt.Println("Usage: cli [flags] [command]")
-		fmt.Println("Flags:")
-		fmt.Println("  -config string")
-		fmt.Println("        Path to config file (default: ~/.unblink/server.config.json)")
+	if len(os.Args) < 2 {
+		fmt.Println("Usage: cli [command]")
 		fmt.Println("Commands:")
 		fmt.Println("  delete-app-dir   Delete the application directory")
 		fmt.Println("  drop             Drop the database schema")
 		os.Exit(1)
 	}
 
-	// Load configuration
-	config, err := server.LoadConfig(*configPath)
+	config, err := server.LoadConfig()
 	if err != nil {
-		log.Fatalf("Failed to load config: %v", err)
+		log.Fatalf("Failed to load config from environment: %v", err)
 	}
 
 	// Initialize database client
@@ -44,7 +33,7 @@ func main() {
 	defer dbClient.Close()
 
 	// Handle the command
-	command := flag.Arg(0)
+	command := os.Args[1]
 	switch command {
 	case "delete-app-dir":
 		handleDeleteAppDir(config)

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -29,28 +28,10 @@ import (
 )
 
 func main() {
-	// Define flags
-	configPath := flag.String("config", "", "Path to config file (default: ~/.unblink/server.config.json)")
-
-	// Parse flags
-	flag.Parse()
-
-	var config *server.Config
-	var err error
-
-	// Prefer environment variables if DATABASE_URL is set (Docker/Render deployment)
-	if os.Getenv("DATABASE_URL") != "" {
-		log.Printf("Loading configuration from environment variables")
-		config, err = server.LoadConfigFromEnv()
-		if err != nil {
-			log.Fatalf("Failed to load config from environment: %v", err)
-		}
-	} else {
-		// Load configuration from file (all fields required)
-		config, err = server.LoadConfig(*configPath)
-		if err != nil {
-			log.Fatalf("Failed to load config: %v", err)
-		}
+	log.Printf("Loading configuration from environment variables")
+	config, err := server.LoadConfig()
+	if err != nil {
+		log.Fatalf("Failed to load config from environment: %v", err)
 	}
 
 	// Initialize database
@@ -196,9 +177,6 @@ func main() {
 	// Add CORS middleware
 	apiHandler := withCORS(mux)
 
-	// Get node server handler (includes /node/connect endpoint)
-	nodeHandler := nodeServer.GetHTTPHandler()
-
 	// Create root mux for routing
 	rootMux := http.NewServeMux()
 
@@ -206,7 +184,7 @@ func main() {
 	rootMux.Handle("/api/", http.StripPrefix("/api", apiHandler))
 
 	// Node WebSocket endpoint (stay at root level for external connections)
-	rootMux.Handle("/node/", nodeHandler)
+	rootMux.HandleFunc("/node/connect", nodeServer.HandleNodeConnect)
 
 	// Health check endpoint (stay at root level)
 	rootMux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
@@ -221,7 +199,7 @@ func main() {
 	if config.DistPath != "" {
 		fs := http.FileServer(http.Dir(config.DistPath))
 		rootMux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path == "/" || r.URL.Path == "/index.html" {
+			if r.URL.Path == "/" || r.URL.Path == "/index.html" || r.URL.Path == "/node" || strings.HasPrefix(r.URL.Path, "/node/") {
 				serveInjectedIndex(w, config.DistPath)
 				return
 			}

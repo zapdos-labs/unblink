@@ -70,6 +70,8 @@ Required variables:
 - `CHAT_OPENAI_API_KEY` - OpenAI API key for chat
 - `VLM_OPENAI_API_KEY` - OpenAI API key for vision
 
+Server and CLI commands are env-only. `server.config.json` is no longer supported.
+
 ## Deployment
 
 ### Docker

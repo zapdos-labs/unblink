@@ -4,20 +4,11 @@ import Main from './components/Main'
 import ArkToast from './ark/ArkToast'
 
 function App() {
-  // Parse node ID from URL path: /{nodeId}
+  // Parse node ID from URL path: /node/{nodeId}
   const getNodeIdFromPath = () => {
     const path = window.location.pathname
-    const legacyMatch = path.match(/^\/node\/([^/]+)/)
-    if (legacyMatch) return legacyMatch[1]
-
-    const match = path.match(/^\/([^/]+)/)
-    if (!match) return null
-
-    const segment = match[1]
-    if (["api", "health", "storage", "node"].includes(segment)) {
-      return null
-    }
-    return segment
+    const match = path.match(/^\/node\/([^/]+)/)
+    return match ? match[1] : null
   }
 
   const nodeId = getNodeIdFromPath()

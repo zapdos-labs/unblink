@@ -60,7 +60,7 @@ func Load(customPath string) (*ConfigFile, error) {
 
 		// File doesn't exist - create default config
 		cfg := &Config{
-			RelayAddress: "ws://localhost:8080/node/connect",
+			RelayAddress: "wss://app.zapdoslabs.com/node/connect",
 			NodeID:       uuid.New().String(),
 			Token:        "",
 			Reconnect: ReconnectConf{

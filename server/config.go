@@ -1,7 +1,6 @@
 package server
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -71,53 +70,6 @@ func (c *Config) applyModelFallbacks() {
 	if c.ChatMaxTokens <= 0 {
 		c.ChatMaxTokens = 128000
 	}
-}
-
-// ConfigPath returns the default config file path
-func ConfigPath() (string, error) {
-	// Check for server.config.json in current directory first
-	localPath := "server.config.json"
-	if _, err := os.Stat(localPath); err == nil {
-		return localPath, nil
-	}
-
-	// Fall back to home directory
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		return "", fmt.Errorf("get home dir: %w", err)
-	}
-	return filepath.Join(homeDir, ".unblink", "server.config.json"), nil
-}
-
-// LoadConfig reads and validates the server configuration from a JSON file
-// It enforces that all required fields must be present
-func LoadConfig(path string) (*Config, error) {
-	if path == "" {
-		var err error
-		path, err = ConfigPath()
-		if err != nil {
-			return nil, fmt.Errorf("get config path: %w", err)
-		}
-	}
-
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, fmt.Errorf("read config file %s: %w", path, err)
-	}
-
-	var cfg Config
-	if err := json.Unmarshal(data, &cfg); err != nil {
-		return nil, fmt.Errorf("parse config file %s: %w", path, err)
-	}
-
-	cfg.applyModelFallbacks()
-
-	// Validate all required fields
-	if err := cfg.Validate(); err != nil {
-		return nil, fmt.Errorf("invalid config in %s: %w", path, err)
-	}
-
-	return &cfg, nil
 }
 
 // Validate checks that all required fields are present and valid
@@ -203,31 +155,7 @@ func (c *Config) FramesDir(serviceID string) string {
 	return filepath.Join(c.AppDir, "storage", "frames", serviceID)
 }
 
-// Save writes the config to a file
-func (c *Config) Save(path string) error {
-	// Validate before saving
-	if err := c.Validate(); err != nil {
-		return fmt.Errorf("invalid config: %w", err)
-	}
-
-	configDir := filepath.Dir(path)
-	if err := os.MkdirAll(configDir, 0755); err != nil {
-		return fmt.Errorf("create config dir: %w", err)
-	}
-
-	data, err := json.MarshalIndent(c, "", "  ")
-	if err != nil {
-		return fmt.Errorf("marshal config: %w", err)
-	}
-
-	if err := os.WriteFile(path, data, 0600); err != nil {
-		return fmt.Errorf("write config: %w", err)
-	}
-
-	return nil
-}
-
-// LoadConfigFromEnv loads configuration from environment variables
+// LoadConfig loads server configuration from environment variables.
 // Environment variables:
 //   - VITE_SERVER_API_PORT: Server listen address (default: :8080)
 //   - DATABASE_URL: PostgreSQL connection string
@@ -248,7 +176,7 @@ func (c *Config) Save(path string) error {
 //   - BRIDGE_MAX_RETRIES: Bridge max retries (default: 3)
 //   - ENABLE_INDEXING: Enable frame indexing (default: true)
 //   - CONFIG_DIR: Application storage directory (default: ~/.unblink)
-func LoadConfigFromEnv() (*Config, error) {
+func LoadConfig() (*Config, error) {
 	cfg := &Config{}
 
 	// Server settings (web-agent style: single source of truth)
@@ -298,6 +226,10 @@ func LoadConfigFromEnv() (*Config, error) {
 
 	// Frontend dist directory (optional - if not set, frontend is not served)
 	cfg.DistPath = os.Getenv("DIST_PATH")
+
+	if err := cfg.Validate(); err != nil {
+		return nil, fmt.Errorf("invalid environment config: %w", err)
+	}
 
 	return cfg, nil
 }

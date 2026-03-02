@@ -19,7 +19,7 @@ proto:
 
 # Drop database schema
 drop:
-	go run cmd/cli/main.go drop
+	bash -lc 'set -a; source ./.env; set +a; go run cmd/cli/main.go drop'
 
 # Typecheck (ts and go)
 typecheck:
@@ -31,7 +31,7 @@ dev:
 	./tmux.dev.sh
 
 delete-app-dir:
-	go run cmd/cli/main.go delete-app-dir
+	bash -lc 'set -a; source ./.env; set +a; go run cmd/cli/main.go delete-app-dir'
 
 # Docker commands for deployment
 docker-build:
