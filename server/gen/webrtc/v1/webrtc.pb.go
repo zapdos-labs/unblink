@@ -165,7 +165,7 @@ const file_webrtc_v1_webrtc_proto_rawDesc = "" +
 	"\n" +
 	"session_id\x18\x02 \x01(\tR\tsessionId2u\n" +
 	"\rWebRTCService\x12d\n" +
-	"\x13CreateWebRTCSession\x12%.webrtc.v1.CreateWebRTCSessionRequest\x1a&.webrtc.v1.CreateWebRTCSessionResponseB'Z%unblink/server/gen/webrtc/v1;webrtcv1b\x06proto3"
+	"\x13CreateWebRTCSession\x12%.webrtc.v1.CreateWebRTCSessionRequest\x1a&.webrtc.v1.CreateWebRTCSessionResponseB>Z<github.com/zapdos-labs/unblink/server/gen/webrtc/v1;webrtcv1b\x06proto3"
 
 var (
 	file_webrtc_v1_webrtc_proto_rawDescOnce sync.Once

@@ -11,10 +11,18 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/gorilla/websocket"
+
 	"github.com/zapdos-labs/unblink/shared"
 )
 
 const MaxMessageSize = 16 * 1024 * 1024 // 16 MB
+
+const (
+	wsPongWait     = 60 * time.Second
+	wsPingInterval = 25 * time.Second
+	wsWriteWait    = 10 * time.Second
+)
 
 // MessageTransport defines the interface for reading/writing messages
 type MessageTransport interface {
@@ -26,7 +34,7 @@ type MessageTransport interface {
 // Conn manages the connection to the server
 type Conn struct {
 	configFile *ConfigFile // Config with its path
-	wsConn     any         // *websocket.Conn
+	wsConn     *websocket.Conn
 
 	// Transport
 	transport MessageTransport
@@ -143,6 +151,43 @@ func (c *Conn) messageLoop() {
 
 		if err := c.handleMessage(msg); err != nil {
 			log.Printf("[Conn] Error handling message: %v", err)
+		}
+	}
+}
+
+func (c *Conn) configureHeartbeat() {
+	if c.wsConn == nil {
+		return
+	}
+
+	_ = c.wsConn.SetReadDeadline(time.Now().Add(wsPongWait))
+	c.wsConn.SetPongHandler(func(string) error {
+		return c.wsConn.SetReadDeadline(time.Now().Add(wsPongWait))
+	})
+}
+
+func (c *Conn) heartbeatLoop() {
+	if c.wsConn == nil {
+		return
+	}
+
+	ticker := time.NewTicker(wsPingInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-c.shutdown:
+			return
+		case <-ticker.C:
+			if err := c.wsConn.WriteControl(websocket.PingMessage, []byte("hb"), time.Now().Add(wsWriteWait)); err != nil {
+				if c.isShuttingDown() {
+					return
+				}
+				c.setRunError(fmt.Errorf("heartbeat ping: %w", err))
+				log.Printf("[Conn] Heartbeat ping failed: %v", err)
+				_ = c.Close()
+				return
+			}
 		}
 	}
 }

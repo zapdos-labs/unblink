@@ -64,8 +64,10 @@ func (s *DisconnectedState) Connect(c *Conn) error {
 
 	c.wsConn = wsConn
 	c.transport = &WebSocketConn{conn: wsConn}
+	c.configureHeartbeat()
 
 	go c.messageLoop()
+	go c.heartbeatLoop()
 
 	// Check if we have an existing token
 	if c.configFile.Config.Token != "" {

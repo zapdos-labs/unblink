@@ -7,7 +7,7 @@ import { ArkCollapsible } from "../../ark/ArkCollapsible";
 
 interface ToolCallItemProps {
   toolName: string;
-  displayName?: string;
+  name?: string;
   state: "invoked" | "completed" | "error";
   displayMessage?: string;
   error?: string;
@@ -17,7 +17,7 @@ function ToolCallItem(props: ToolCallItemProps) {
   return (
     <div class="flex flex-col gap-2 mt-2">
       <div class="text-xs text-neutral-500 whitespace-pre-wrap">
-        {props.displayMessage ?? props.toolName.replace(/_/g, " ")}
+        {props.displayMessage ?? props.name ?? props.toolName.replace(/_/g, " ")}
       </div>
       {props.error && (
         <span class="text-xs text-red-400">{props.error}</span>
@@ -90,14 +90,14 @@ export default function UIBlockList(props: UIBlockListProps) {
                               <FaSolidCircleCheck size={14} class="text-neu-500" />
                             </Match>
                           </Switch>
-                          <span class="text-neu-300">{(block.data as any).displayName ?? (block.data as any).toolName}</span>
+                          <span class="text-neu-300">{(block.data as any).name ?? (block.data as any).toolName}</span>
                         </div>
                       }
                       defaultOpen={false}
                     >
                       <ToolCallItem
                         toolName={(block.data as any).toolName}
-                        displayName={(block.data as any).displayName}
+                        name={(block.data as any).name}
                         state={(block.data as any).state}
                         displayMessage={(block.data as any).displayMessage}
                         error={(block.data as any).error}

@@ -14,6 +14,7 @@ type Reconnector struct {
 	initialDelay      time.Duration
 	backoffMultiplier float64
 	jitterFactor      float64
+	stableThreshold   time.Duration
 	shutdown          chan struct{}
 }
 
@@ -24,6 +25,7 @@ func NewReconnector(configFile *ConfigFile) *Reconnector {
 		initialDelay:      10 * time.Second,
 		backoffMultiplier: 2.0,
 		jitterFactor:      0.1,
+		stableThreshold:   time.Minute,
 		shutdown:          make(chan struct{}),
 	}
 }
@@ -48,7 +50,9 @@ func (r *Reconnector) Run(createConn func() *Conn) {
 		}
 
 		conn := createConn()
+		connectedAt := time.Now()
 		err := conn.Run()
+		connectedFor := time.Since(connectedAt)
 
 		// Check if we received shutdown signal FIRST (before processing error)
 		select {
@@ -76,11 +80,18 @@ func (r *Reconnector) Run(createConn func() *Conn) {
 			log.Fatalf("[Node] Non-retryable error: %v", err)
 		}
 
+		attemptForDelay := attempt
+		if r.shouldResetBackoff(connectedFor) {
+			log.Printf("[Node] Connection was healthy for %v, resetting reconnect backoff", connectedFor.Round(time.Second))
+			attempt = 0
+			attemptForDelay = 1
+		}
+
 		log.Printf("[Node] Error is retryable, will attempt reconnection")
 
 		// Calculate backoff delay
-		delay := r.calculateDelay(attempt)
-		log.Printf("[Node] Connection failed: %v. Reconnecting in %v (attempt %d)...", err, delay, attempt)
+		delay := r.calculateDelay(attemptForDelay)
+		log.Printf("[Node] Connection failed: %v. Reconnecting in %v (attempt %d)...", err, delay, attemptForDelay)
 
 		// Wait for delay or shutdown
 		select {
@@ -91,6 +102,10 @@ func (r *Reconnector) Run(createConn func() *Conn) {
 			return
 		}
 	}
+}
+
+func (r *Reconnector) shouldResetBackoff(connectedFor time.Duration) bool {
+	return connectedFor >= r.stableThreshold
 }
 
 // calculateDelay calculates the backoff delay

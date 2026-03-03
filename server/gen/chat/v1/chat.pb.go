@@ -1520,7 +1520,7 @@ const file_chat_v1_chat_proto_rawDesc = "" +
 	"\x12DeleteConversation\x12\".chat.v1.DeleteConversationRequest\x1a#.chat.v1.DeleteConversationResponse\x12K\n" +
 	"\fListMessages\x12\x1c.chat.v1.ListMessagesRequest\x1a\x1d.chat.v1.ListMessagesResponse\x12K\n" +
 	"\fListUIBlocks\x12\x1c.chat.v1.ListUIBlocksRequest\x1a\x1d.chat.v1.ListUIBlocksResponse\x12J\n" +
-	"\vSendMessage\x12\x1b.chat.v1.SendMessageRequest\x1a\x1c.chat.v1.SendMessageResponse0\x01B#Z!unblink/server/gen/chat/v1;chatv1b\x06proto3"
+	"\vSendMessage\x12\x1b.chat.v1.SendMessageRequest\x1a\x1c.chat.v1.SendMessageResponse0\x01B:Z8github.com/zapdos-labs/unblink/server/gen/chat/v1;chatv1b\x06proto3"
 
 var (
 	file_chat_v1_chat_proto_rawDescOnce sync.Once

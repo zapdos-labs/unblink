@@ -47,6 +47,7 @@ message ListServicesByNodeIdRequest {
 
 message ListServicesByNodeIdResponse {
   repeated Service services = 1;
+  bool node_online = 2;
 }
 
 message UpdateServiceRequest {
@@ -80,4 +81,3 @@ message ListUserNodesRequest {}
 message ListUserNodesResponse {
   repeated string node_ids = 1;
 }
-

@@ -462,7 +462,7 @@ const file_service_v1_event_proto_rawDesc = "" +
 	"\fEventService\x12c\n" +
 	"\x12ListEventsByNodeId\x12%.service.v1.ListEventsByNodeIdRequest\x1a&.service.v1.ListEventsByNodeIdResponse\x12c\n" +
 	"\x12CountEventsForUser\x12%.service.v1.CountEventsForUserRequest\x1a&.service.v1.CountEventsForUserResponse\x12k\n" +
-	"\x14StreamEventsByNodeId\x12'.service.v1.StreamEventsByNodeIdRequest\x1a(.service.v1.StreamEventsByNodeIdResponse0\x01B)Z'unblink/server/gen/service/v1;servicev1b\x06proto3"
+	"\x14StreamEventsByNodeId\x12'.service.v1.StreamEventsByNodeIdRequest\x1a(.service.v1.StreamEventsByNodeIdResponse0\x01B@Z>github.com/zapdos-labs/unblink/server/gen/service/v1;servicev1b\x06proto3"
 
 var (
 	file_service_v1_event_proto_rawDescOnce sync.Once

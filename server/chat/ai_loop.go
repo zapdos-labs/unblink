@@ -364,15 +364,19 @@ func RunAILoop(
 			// Get the tool to extract display message
 			tool, ok := cfg.Tools.Get(toolCall.Name)
 			var displayMessage string
+			var name string
 			if ok {
 				displayMessage = GetDisplayMessage(tool, toolCall.Arguments)
+				name = tool.Name()
 			} else {
 				displayMessage = fmt.Sprintf("Running %s", toolCall.Name)
+				name = toolCall.Name
 			}
 
 			// Send and save UI block for tool invoked state
 			toolInvokedData, _ := json.Marshal(map[string]any{
 				"toolName":       toolCall.Name,
+				"name":           name,
 				"state":          "invoked",
 				"displayMessage": displayMessage,
 			})
@@ -411,6 +415,7 @@ func RunAILoop(
 			// Try to save UI block for tool completed state
 			toolCompletedData, _ := json.Marshal(map[string]any{
 				"toolName":       toolCall.Name,
+				"name":           name,
 				"state":          "completed",
 				"displayMessage": displayMessage,
 				"content":        result,
@@ -454,6 +459,7 @@ func RunAILoop(
 				// Send error UI block to client (no database save, just stream it)
 				errorUIBlockData, _ := json.Marshal(map[string]any{
 					"toolName":       toolCall.Name,
+					"name":           name,
 					"state":          "error",
 					"displayMessage": displayMessage,
 					"content":        result,

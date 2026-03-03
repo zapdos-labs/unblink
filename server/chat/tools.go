@@ -9,7 +9,9 @@ import (
 
 // Tool defines the interface for tools that can be executed by the chat service
 type Tool interface {
-	// Name returns the tool name (unique identifier)
+	// Id returns the stable unique identifier used for tool calls.
+	Id() string
+	// Name returns the human-friendly tool label for the UI.
 	Name() string
 	// Description returns a description of what the tool does
 	Description() string
@@ -49,18 +51,18 @@ func NewToolRegistry() *ToolRegistry {
 
 // Register adds a tool to the registry
 func (r *ToolRegistry) Register(tool Tool) {
-	r.tools[tool.Name()] = tool
+	r.tools[tool.Id()] = tool
 }
 
-// Get returns a tool by name
-func (r *ToolRegistry) Get(name string) (Tool, bool) {
-	tool, ok := r.tools[name]
+// Get returns a tool by id
+func (r *ToolRegistry) Get(id string) (Tool, bool) {
+	tool, ok := r.tools[id]
 	return tool, ok
 }
 
-// Execute executes a tool by name
-func (r *ToolRegistry) Execute(ctx context.Context, name string, argumentsJSON string) string {
-	if tool, ok := r.Get(name); ok {
+// Execute executes a tool by id
+func (r *ToolRegistry) Execute(ctx context.Context, id string, argumentsJSON string) string {
+	if tool, ok := r.Get(id); ok {
 		return tool.Execute(ctx, argumentsJSON)
 	}
 	return ""
@@ -71,7 +73,7 @@ func (r *ToolRegistry) AsOpenAITools() []openai.ChatCompletionToolUnionParam {
 	var result []openai.ChatCompletionToolUnionParam
 	for _, tool := range r.tools {
 		result = append(result, openai.ChatCompletionFunctionTool(openai.FunctionDefinitionParam{
-			Name:        tool.Name(),
+			Name:        tool.Id(),
 			Description: openai.String(tool.Description()),
 			Parameters: openai.FunctionParameters{
 				"type":       "object",

@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package service.v1;
+
+option go_package = "github.com/zapdos-labs/unblink/server/gen/service/v1;servicev1";
+
+service LiveUpdateService {
+  rpc StreamLiveUpdates(StreamLiveUpdatesRequest) returns (stream StreamLiveUpdatesResponse);
+}
+
+message StreamLiveUpdatesRequest {
+  repeated string node_ids = 1;
+}
+
+message StreamLiveUpdatesResponse {
+  oneof payload {
+    NodeStatusChanged node_status_changed = 1;
+    Notification notification = 2;
+    string heartbeat = 3;
+  }
+}
+
+message NodeStatusChanged {
+  string node_id = 1;
+  bool online = 2;
+}
+
+message Notification {
+  string id = 1;
+  string title = 2;
+  string body = 3;
+}

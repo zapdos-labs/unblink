@@ -14,8 +14,12 @@ type SetCharacterTool struct {
 	db Database
 }
 
-func (t *SetCharacterTool) Name() string {
+func (t *SetCharacterTool) Id() string {
 	return "set_character"
+}
+
+func (t *SetCharacterTool) Name() string {
+	return "Set character"
 }
 
 func (t *SetCharacterTool) Description() string {

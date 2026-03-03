@@ -5,6 +5,7 @@ import { AuthService } from "@/gen/chat/v1/auth/auth_pb";
 import { WebRTCService } from "@/gen/webrtc/v1/webrtc_pb";
 import { ServiceService } from "@/gen/service/v1/service_pb";
 import { EventService } from "@/gen/service/v1/event_pb";
+import { LiveUpdateService } from "@/gen/service/v1/live_update_pb";
 
 declare global {
   interface Window {
@@ -56,3 +57,4 @@ export const authClient = createClient(AuthService, transport);
 export const webrtcClient = createClient(WebRTCService, transport);
 export const serviceClient = createClient(ServiceService, transport);
 export const eventClient = createClient(EventService, transport);
+export const liveUpdateClient = createClient(LiveUpdateService, transport);

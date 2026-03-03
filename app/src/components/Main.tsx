@@ -7,12 +7,18 @@ import ChatView from './ChatView'
 import EventsView from './EventsView'
 import SettingsView from './SettingsView'
 import NodeRouteFallback from './NodeRouteFallback'
+import { useLiveUpdates } from '../hooks/useLiveUpdates'
 
 interface MainProps {
   nodeId: string
 }
 
 export default function Main(props: MainProps) {
+  useLiveUpdates({
+    enabled: () => permissionState() === 'ok',
+    nodeIds: () => (props.nodeId ? [props.nodeId] : []),
+  })
+
   // Fetch services on mount - only runs after auth is complete
   onMount(() => {
     if (props.nodeId) {

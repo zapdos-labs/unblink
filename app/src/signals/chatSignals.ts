@@ -18,7 +18,7 @@ export interface ReasoningData {
 
 export interface ToolData {
   toolName: string;
-  displayName?: string;
+  name?: string;
   state: ToolCallState;
   displayMessage?: string;
   error?: string;

@@ -64,9 +64,9 @@ func main() {
 	}
 	chatService := chat.NewService(dbClient, chatCfg)
 
-	// Register video search tool
-	videoSearchTool := tools.NewVideoSearchTool(dbClient)
-	chatService.RegisterTool(videoSearchTool)
+	// Register camera search tool
+	cameraSearchTool := tools.NewCameraSearchTool(dbClient)
+	chatService.RegisterTool(cameraSearchTool)
 	chat.RegisterSetCharacterTool(chatService)
 
 	// Initialize JWT manager and auth interceptor
@@ -103,10 +103,17 @@ func main() {
 		config.BridgeMaxRetries,
 		config.EnableIndexing,
 	)
+	liveUpdateService := service.NewLiveUpdateService(dbClient, serviceRegistry)
 
 	// Wire up node event callbacks
 	nodeServer.OnNodeReady(serviceRegistry.SetNodeOnline)
 	nodeServer.OnNodeOffline(serviceRegistry.SetNodeOffline)
+	nodeServer.OnNodeReady(func(nodeID string) {
+		liveUpdateService.BroadcastNodeStatus(nodeID, true)
+	})
+	nodeServer.OnNodeOffline(func(nodeID string) {
+		liveUpdateService.BroadcastNodeStatus(nodeID, false)
+	})
 
 	// Load existing services from database
 	if err := serviceRegistry.LoadServices(); err != nil {
@@ -164,6 +171,13 @@ func main() {
 	)
 	mux.Handle(eventPath, eventHandler)
 	log.Printf("Mounted EventService at %s (with auth)", eventPath)
+
+	liveUpdatePath, liveUpdateHandler := servicev1connect.NewLiveUpdateServiceHandler(
+		liveUpdateService,
+		connect.WithInterceptors(authInterceptor),
+	)
+	mux.Handle(liveUpdatePath, liveUpdateHandler)
+	log.Printf("Mounted LiveUpdateService at %s (with auth)", liveUpdatePath)
 
 	// Mount WebRTCService with auth interceptor
 	webrtcService := webrtc.NewService(nodeServer, dbClient)

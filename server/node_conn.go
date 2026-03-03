@@ -47,6 +47,12 @@ type NodeConn struct {
 	messageIDMu       sync.Mutex
 }
 
+const (
+	nodePongWait     = 60 * time.Second
+	nodePingInterval = 25 * time.Second
+	nodeWriteWait    = 10 * time.Second
+)
+
 // NewNodeConn creates a new node connection from a WebSocket connection
 func NewNodeConn(wsConn *websocket.Conn, server *Server) *NodeConn {
 	return &NodeConn{
@@ -63,8 +69,10 @@ func NewNodeConn(wsConn *websocket.Conn, server *Server) *NodeConn {
 // Run starts the message loop for handling the node connection
 func (nc *NodeConn) Run() error {
 	log.Printf("[NodeConn] Starting message loop...")
+	nc.configureHeartbeat()
 
 	go nc.messageLoop()
+	go nc.heartbeatLoop()
 	go nc.monitorConnection()
 
 	return nil
@@ -95,6 +103,44 @@ func (nc *NodeConn) messageLoop() {
 
 		if err := nc.handleMessage(msg); err != nil {
 			log.Printf("[NodeConn] Error handling message: %v", err)
+		}
+	}
+}
+
+func (nc *NodeConn) configureHeartbeat() {
+	if nc.wsConn == nil {
+		return
+	}
+
+	_ = nc.wsConn.SetReadDeadline(time.Now().Add(nodePongWait))
+	nc.wsConn.SetPongHandler(func(string) error {
+		return nc.wsConn.SetReadDeadline(time.Now().Add(nodePongWait))
+	})
+}
+
+func (nc *NodeConn) heartbeatLoop() {
+	if nc.wsConn == nil {
+		return
+	}
+
+	ticker := time.NewTicker(nodePingInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-nc.shutdown:
+			return
+		case <-ticker.C:
+			if err := nc.wsConn.WriteControl(websocket.PingMessage, []byte("hb"), time.Now().Add(nodeWriteWait)); err != nil {
+				select {
+				case <-nc.shutdown:
+					return
+				default:
+				}
+				log.Printf("[NodeConn %s] Heartbeat ping failed: %v", nc.nodeID, err)
+				nc.Close()
+				return
+			}
 		}
 	}
 }

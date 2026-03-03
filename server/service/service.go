@@ -122,7 +122,8 @@ func (s *Service) ListServicesByNodeId(ctx context.Context, req *connect.Request
 	}
 
 	return connect.NewResponse(&servicev1.ListServicesByNodeIdResponse{
-		Services: services,
+		Services:   services,
+		NodeOnline: s.registry.IsNodeOnline(req.Msg.NodeId),
 	}), nil
 }
 

@@ -100,6 +100,13 @@ func (r *ServiceRegistry) SetServer(srv *server.Server) {
 	r.srv = srv
 }
 
+func (r *ServiceRegistry) IsNodeOnline(nodeID string) bool {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	return r.onlineNodes[nodeID]
+}
+
 // AddService adds a service to the registry and starts handler if node is online
 func (r *ServiceRegistry) AddService(service *servicev1.Service) error {
 	r.mu.Lock()

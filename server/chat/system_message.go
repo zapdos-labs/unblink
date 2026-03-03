@@ -20,17 +20,11 @@ var SystemPromptTraits = map[string]Trait{
 Focus on concrete observations from events/frames and be explicit about uncertainty.
 Prioritize actionable safety and operations insights over generic advice.`,
 	},
-	"research": {
+	"analyst": {
 		Description:     "Professional and concise information gathering",
-		ReasoningEffort: "medium",
+		ReasoningEffort: "high",
 		Prompt: `You are a helpful, professional assistant.
 Be concise, accurate, and practical.`,
-	},
-	"coding": {
-		Description:     "Technical problem solving",
-		ReasoningEffort: "high",
-		Prompt: `You are a coding assistant.
-Explain tradeoffs clearly and produce safe, correct implementation guidance.`,
 	},
 }
 

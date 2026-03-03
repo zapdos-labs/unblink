@@ -257,6 +257,7 @@ func (x *ListServicesByNodeIdRequest) GetNodeId() string {
 type ListServicesByNodeIdResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Services      []*Service             `protobuf:"bytes,1,rep,name=services,proto3" json:"services,omitempty"`
+	NodeOnline    bool                   `protobuf:"varint,2,opt,name=node_online,json=nodeOnline,proto3" json:"node_online,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -296,6 +297,13 @@ func (x *ListServicesByNodeIdResponse) GetServices() []*Service {
 		return x.Services
 	}
 	return nil
+}
+
+func (x *ListServicesByNodeIdResponse) GetNodeOnline() bool {
+	if x != nil {
+		return x.NodeOnline
+	}
+	return false
 }
 
 type UpdateServiceRequest struct {
@@ -680,9 +688,11 @@ const file_service_v1_service_proto_rawDesc = "" +
 	"\x15CreateServiceResponse\x12-\n" +
 	"\aservice\x18\x01 \x01(\v2\x13.service.v1.ServiceR\aservice\"6\n" +
 	"\x1bListServicesByNodeIdRequest\x12\x17\n" +
-	"\anode_id\x18\x01 \x01(\tR\x06nodeId\"O\n" +
+	"\anode_id\x18\x01 \x01(\tR\x06nodeId\"p\n" +
 	"\x1cListServicesByNodeIdResponse\x12/\n" +
-	"\bservices\x18\x01 \x03(\v2\x13.service.v1.ServiceR\bservices\"L\n" +
+	"\bservices\x18\x01 \x03(\v2\x13.service.v1.ServiceR\bservices\x12\x1f\n" +
+	"\vnode_online\x18\x02 \x01(\bR\n" +
+	"nodeOnline\"L\n" +
 	"\x14UpdateServiceRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x10\n" +
@@ -707,7 +717,7 @@ const file_service_v1_service_proto_rawDesc = "" +
 	"\rUpdateService\x12 .service.v1.UpdateServiceRequest\x1a!.service.v1.UpdateServiceResponse\x12T\n" +
 	"\rDeleteService\x12 .service.v1.DeleteServiceRequest\x1a!.service.v1.DeleteServiceResponse\x12`\n" +
 	"\x11AssociateUserNode\x12$.service.v1.AssociateUserNodeRequest\x1a%.service.v1.AssociateUserNodeResponse\x12T\n" +
-	"\rListUserNodes\x12 .service.v1.ListUserNodesRequest\x1a!.service.v1.ListUserNodesResponseB)Z'unblink/server/gen/service/v1;servicev1b\x06proto3"
+	"\rListUserNodes\x12 .service.v1.ListUserNodesRequest\x1a!.service.v1.ListUserNodesResponseB@Z>github.com/zapdos-labs/unblink/server/gen/service/v1;servicev1b\x06proto3"
 
 var (
 	file_service_v1_service_proto_rawDescOnce sync.Once

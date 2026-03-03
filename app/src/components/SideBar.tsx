@@ -6,7 +6,7 @@ import {
   FiList,
 } from "solid-icons/fi";
 import { createSignal, For, Show } from "solid-js";
-import { services, activeTab, setActiveTab, type Tab, fetchServices } from "../shared";
+import { services, activeTab, setActiveTab, type Tab, fetchServices, isNodeOnline } from "../shared";
 import AddServiceButton from "./AddServiceButton";
 import ServiceItem from "./ServiceItem";
 import ServiceEditSheet from "./ServiceEditSheet";
@@ -51,10 +51,16 @@ export default function SideBar(props: SideBarProps) {
             class={`mt-4 flex items-center ${collapsed() ? "justify-center" : "space-x-3 mx-4"
               } mb-8`}
           >
-            <img src="/logo.svg" class="w-12 h-12" />
+            <img src="/logo.svg" class="w-12 h-12 flex-shrink-0" />
             <Show when={!collapsed()}>
-              <div class="flex-1 font-montserrat font-semibold text-white text-3xl mt-2 leading-none">
-                Unblink
+              <div class="flex-1 min-w-0">
+                <div class="font-montserrat font-semibold text-white text-3xl mt-2 leading-none">
+                  Unblink
+                </div>
+                <div class="mt-2 flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-neu-500">
+                  <div class={`h-2 w-2 rounded-full ${isNodeOnline(props.nodeId) ? "bg-emerald-400" : "bg-neu-600"}`} />
+                  <span>{isNodeOnline(props.nodeId) ? "Node online" : "Node offline"}</span>
+                </div>
               </div>
             </Show>
           </div>

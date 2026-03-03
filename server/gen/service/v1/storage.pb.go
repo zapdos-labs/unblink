@@ -450,7 +450,7 @@ const file_service_v1_storage_proto_rawDesc = "" +
 	"\x0eStorageService\x12]\n" +
 	"\x10ListStorageItems\x12#.service.v1.ListStorageItemsRequest\x1a$.service.v1.ListStorageItemsResponse\x12W\n" +
 	"\x0eGetStorageItem\x12!.service.v1.GetStorageItemRequest\x1a\".service.v1.GetStorageItemResponse\x12l\n" +
-	"\x15DeleteOldStorageItems\x12(.service.v1.DeleteOldStorageItemsRequest\x1a).service.v1.DeleteOldStorageItemsResponseB)Z'unblink/server/gen/service/v1;servicev1b\x06proto3"
+	"\x15DeleteOldStorageItems\x12(.service.v1.DeleteOldStorageItemsRequest\x1a).service.v1.DeleteOldStorageItemsResponseB@Z>github.com/zapdos-labs/unblink/server/gen/service/v1;servicev1b\x06proto3"
 
 var (
 	file_service_v1_storage_proto_rawDescOnce sync.Once

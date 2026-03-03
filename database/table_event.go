@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	servicev1 "github.com/zapdos-labs/unblink/server/gen/service/v1"
@@ -236,34 +237,108 @@ func (c *Client) CountEventsForUser(userID string) (int64, error) {
 	return count, nil
 }
 
-// SearchEventsByPayload searches events by keywords in JSONB payload
-// Filters for events where type = "vlm-indexing" and any keyword matches the payload text
-func (c *Client) SearchEventsByPayload(keywords []string) ([]*servicev1.Event, error) {
-	const limit = 10
+// CameraEventQuery defines the supported filters for querying accessible camera events.
+type CameraEventQuery struct {
+	SearchTerms []string
+	From        *time.Time
+	To          *time.Time
+	Granularity string
+	ServiceID   string
+	Limit       int
+}
 
-	// Build ILIKE query for each keyword (OR condition)
-	// Also filter for type = "vlm-indexing"
-	querySQL := `
+// QueryCameraEventsForUser queries VLM-indexed events visible to the user.
+// Search terms are matched against the structured VLM description and object labels.
+func (c *Client) QueryCameraEventsForUser(userID string, query CameraEventQuery) ([]*servicev1.Event, error) {
+	const (
+		defaultLimit = 20
+		maxLimit     = 100
+	)
+
+	limit := query.Limit
+	if limit <= 0 {
+		limit = defaultLimit
+	}
+	if limit > maxLimit {
+		limit = maxLimit
+	}
+
+	startExpr := `COALESCE(NULLIF(e.payload->>'from_iso', '')::timestamptz, e.created_at AT TIME ZONE 'UTC')`
+	endExpr := `COALESCE(NULLIF(e.payload->>'to_iso', '')::timestamptz, e.created_at AT TIME ZONE 'UTC')`
+
+	args := make([]interface{}, 0, len(query.SearchTerms)+6)
+	args = append(args, userID)
+
+	whereClauses := []string{
+		`e.payload->>'type' = 'vlm-indexing'`,
+		`(
+			NOT EXISTS (
+				SELECT 1
+				FROM user_node un
+				WHERE un.node_id = s.node_id
+			)
+			OR EXISTS (
+				SELECT 1
+				FROM user_node un
+				WHERE un.node_id = s.node_id AND un.user_id = $1
+			)
+		)`,
+	}
+
+	if query.ServiceID != "" {
+		args = append(args, query.ServiceID)
+		whereClauses = append(whereClauses, fmt.Sprintf("e.service_id = $%d", len(args)))
+	}
+
+	if query.Granularity != "" {
+		args = append(args, query.Granularity)
+		whereClauses = append(whereClauses, fmt.Sprintf(`e.payload->>'granularity' = $%d`, len(args)))
+	}
+
+	if query.From != nil {
+		args = append(args, query.From.UTC())
+		whereClauses = append(whereClauses, fmt.Sprintf("%s >= $%d", endExpr, len(args)))
+	}
+
+	if query.To != nil {
+		args = append(args, query.To.UTC())
+		whereClauses = append(whereClauses, fmt.Sprintf("%s < $%d", startExpr, len(args)))
+	}
+
+	orderBy := fmt.Sprintf("%s DESC, e.created_at DESC", endExpr)
+	if len(query.SearchTerms) > 0 {
+		searchClauses := make([]string, 0, len(query.SearchTerms))
+		scoreClauses := make([]string, 0, len(query.SearchTerms))
+		for _, term := range query.SearchTerms {
+			args = append(args, "%"+strings.ToLower(term)+"%")
+			placeholder := fmt.Sprintf("$%d", len(args))
+
+			matchExpr := fmt.Sprintf(`(
+				COALESCE(LOWER(e.payload->'response'->>'description'), '') LIKE %s
+				OR EXISTS (
+					SELECT 1
+					FROM jsonb_array_elements(COALESCE(e.payload->'response'->'objects', '[]'::jsonb)) AS obj
+					WHERE COALESCE(LOWER(obj->>'label'), '') LIKE %s
+				)
+			)`, placeholder, placeholder)
+
+			searchClauses = append(searchClauses, matchExpr)
+			scoreClauses = append(scoreClauses, fmt.Sprintf("CASE WHEN %s THEN 1 ELSE 0 END", matchExpr))
+		}
+
+		whereClauses = append(whereClauses, fmt.Sprintf("(%s)", strings.Join(searchClauses, " OR ")))
+		orderBy = fmt.Sprintf("(%s) DESC, %s DESC, e.created_at DESC", strings.Join(scoreClauses, " + "), endExpr)
+	}
+
+	args = append(args, limit)
+	querySQL := fmt.Sprintf(`
 		SELECT e.id, e.service_id, e.payload, e.created_at
 		FROM events e
-		WHERE e.payload->>'type' = 'vlm-indexing'
-		AND (`
-
-	// Add ILIKE conditions for each keyword
-	conditions := make([]string, len(keywords))
-	args := make([]interface{}, 0, len(keywords))
-	for i, kw := range keywords {
-		conditions[i] = `e.payload::text ILIKE $` + fmt.Sprint(i+1)
-		args = append(args, "%"+kw+"%")
-	}
-	querySQL += fmt.Sprint(conditions[0])
-	for i := 1; i < len(conditions); i++ {
-		querySQL += " OR " + conditions[i]
-	}
-	querySQL += `)
-		ORDER BY e.created_at DESC
-		LIMIT $` + fmt.Sprint(len(keywords)+1)
-	args = append(args, limit)
+		JOIN services s ON e.service_id = s.id
+		WHERE %s
+		ORDER BY %s
+		LIMIT $%d
+	`, strings.Join(whereClauses, "\n\t\tAND "), orderBy, len(args))
 
 	rows, err := c.db.Query(querySQL, args...)
 	if err != nil {
