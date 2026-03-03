@@ -149,19 +149,38 @@ func (t *CameraSearchTool) Execute(ctx context.Context, argumentsJSON string) st
 
 	// Convert events to JSON response
 	type eventResult struct {
-		ID        string         `json:"id"`
-		ServiceID string         `json:"service_id"`
-		Payload   map[string]any `json:"payload"`
-		CreatedAt string         `json:"created_at"`
+		ID          string         `json:"id"`
+		ServiceName string         `json:"service_name,omitempty"`
+		ServiceID   string         `json:"service_id"`
+		FromISO     string         `json:"from_iso,omitempty"`
+		ToISO       string         `json:"to_iso,omitempty"`
+		Granularity string         `json:"granularity,omitempty"`
+		Payload     map[string]any `json:"payload"`
+		CreatedAt   string         `json:"created_at"`
 	}
 
+	serviceNames := make(map[string]string, len(events))
 	results := make([]eventResult, len(events))
 	for i, e := range events {
+		payload := e.Payload.AsMap()
+		serviceName := serviceNames[e.ServiceId]
+		if serviceName == "" {
+			svc, err := t.db.GetService(e.ServiceId)
+			if err == nil && svc != nil {
+				serviceName = strings.TrimSpace(svc.Name)
+				serviceNames[e.ServiceId] = serviceName
+			}
+		}
+
 		results[i] = eventResult{
-			ID:        e.Id,
-			ServiceID: e.ServiceId,
-			Payload:   e.Payload.AsMap(),
-			CreatedAt: e.CreatedAt.AsTime().Format("2006-01-02T15:04:05Z"),
+			ID:          e.Id,
+			ServiceName: serviceName,
+			ServiceID:   e.ServiceId,
+			FromISO:     stringValueFromMap(payload, "from_iso"),
+			ToISO:       stringValueFromMap(payload, "to_iso"),
+			Granularity: stringValueFromMap(payload, "granularity"),
+			Payload:     payload,
+			CreatedAt:   e.CreatedAt.AsTime().Format("2006-01-02T15:04:05Z"),
 		}
 	}
 
@@ -188,25 +207,39 @@ func (t *CameraSearchTool) DisplayMessage(argumentsJSON string) string {
 		return "Querying camera events"
 	}
 
-	parts := make([]string, 0, 4)
-	if searchTerms, err := buildCameraSearchTerms(args.Query, args.Keywords); err == nil && len(searchTerms) > 0 {
-		parts = append(parts, fmt.Sprintf("query=%q", searchTerms[0]))
-	}
-	if strings.TrimSpace(args.FromISO) != "" || strings.TrimSpace(args.ToISO) != "" {
-		parts = append(parts, "time range")
-	}
-	if granularity, err := normalizeCameraGranularity(args.Granularity); err == nil && granularity != "" {
-		parts = append(parts, "granularity="+granularity)
-	}
-	if serviceID := strings.TrimSpace(args.ServiceID); serviceID != "" {
-		parts = append(parts, "service="+serviceID)
+	searchTerms, _ := buildCameraSearchTerms(args.Query, args.Keywords)
+	queryText := ""
+	if len(searchTerms) > 0 {
+		queryText = searchTerms[0]
 	}
 
-	if len(parts) == 0 {
-		return "Listing camera events"
+	fromText := formatCameraEventTimeForDisplay(args.FromISO)
+	toText := formatCameraEventTimeForDisplay(args.ToISO)
+	granularity, _ := normalizeCameraGranularity(args.Granularity)
+	hasServiceFilter := strings.TrimSpace(args.ServiceID) != ""
+
+	base := "Listing camera events"
+	if queryText != "" {
+		base = fmt.Sprintf("Searching camera events for %q", queryText)
 	}
 
-	return fmt.Sprintf("Querying camera events (%s)", strings.Join(parts, ", "))
+	switch {
+	case fromText != "" && toText != "":
+		base += fmt.Sprintf(" from %s to %s", fromText, toText)
+	case fromText != "":
+		base += fmt.Sprintf(" since %s", fromText)
+	case toText != "":
+		base += fmt.Sprintf(" before %s", toText)
+	}
+
+	if granularity != "" {
+		base += fmt.Sprintf(" (%s granularity)", granularity)
+	}
+	if hasServiceFilter {
+		base += " for one camera"
+	}
+
+	return base
 }
 
 func buildCameraSearchTerms(query string, keywords []string) ([]string, error) {
@@ -335,4 +368,28 @@ func normalizeCameraLimit(limit int) (int, error) {
 	default:
 		return limit, nil
 	}
+}
+
+func stringValueFromMap(m map[string]any, key string) string {
+	if m == nil {
+		return ""
+	}
+	value, _ := m[key].(string)
+	return strings.TrimSpace(value)
+}
+
+func formatCameraEventTimeForDisplay(raw string) string {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return ""
+	}
+
+	if t, err := parseCameraEventTime(raw); err == nil && t != nil {
+		if len(raw) <= len("2006-01-02") {
+			return t.Format("2006-01-02")
+		}
+		return t.Format("2006-01-02 15:04")
+	}
+
+	return raw
 }
