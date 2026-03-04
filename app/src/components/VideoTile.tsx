@@ -1,4 +1,4 @@
-import { createSignal, onCleanup, Show, onMount } from 'solid-js'
+import { createEffect, createSignal, onCleanup, Show, untrack } from 'solid-js'
 import { webrtcClient } from '@/src/lib/rpc'
 
 interface Props {
@@ -10,35 +10,43 @@ interface Props {
 
 export default function VideoTile(props: Props) {
   let videoRef: HTMLVideoElement | undefined
+  let connectAttempt = 0
 
   const [pc, setPc] = createSignal<RTCPeerConnection | null>(null)
   const [loading, setLoading] = createSignal(true)
   const [error, setError] = createSignal<string | null>(null)
   const [connected, setConnected] = createSignal(false)
 
-  const connect = async () => {
-    // Prevent multiple simultaneous connections
-    if (connected()) {
-      console.log('[VideoTile] Already connected, skipping')
-      return
+  const disconnect = () => {
+    const connection = pc()
+    if (connection) {
+      console.log('[VideoTile] Cleaning up connection')
+      connection.close()
+      setPc(null)
     }
 
+    if (videoRef) {
+      videoRef.srcObject = null
+    }
+
+    setConnected(false)
+  }
+
+  const connect = async (nodeId: string, serviceId: string, serviceUrl: string) => {
+    const attempt = ++connectAttempt
+
     console.log('[VideoTile] Connecting to:', {
-      nodeId: props.nodeId,
-      serviceId: props.serviceId,
-      serviceUrl: props.serviceUrl,
+      nodeId,
+      serviceId,
+      serviceUrl,
     })
 
     setConnected(true)
     setLoading(true)
     setError(null)
 
-    // Close existing connection
-    const existingPc = pc()
-    if (existingPc) {
-      existingPc.close()
-      setPc(null)
-    }
+    disconnect()
+    setConnected(true)
 
     try {
       // Create new peer connection
@@ -50,6 +58,10 @@ export default function VideoTile(props: Props) {
 
       // Handle incoming tracks (both video and audio)
       newPc.ontrack = (event) => {
+        if (attempt !== connectAttempt) {
+          return
+        }
+
         console.log(`[VideoTile] Got ${event.track.kind} track:`, event.track.label || event.track.id)
 
         if (!videoRef) {
@@ -86,6 +98,10 @@ export default function VideoTile(props: Props) {
 
       // Monitor ICE connection state
       newPc.oniceconnectionstatechange = () => {
+        if (attempt !== connectAttempt) {
+          return
+        }
+
         console.log('[VideoTile] ICE connection state:', newPc.iceConnectionState)
         if (
           newPc.iceConnectionState === 'failed' ||
@@ -106,15 +122,25 @@ export default function VideoTile(props: Props) {
       const offer = await newPc.createOffer()
       await newPc.setLocalDescription(offer)
 
+      if (attempt !== connectAttempt) {
+        newPc.close()
+        return
+      }
+
       console.log('[VideoTile] Sending WebRTC session request...')
 
       // Request WebRTC session from server
       const response = await webrtcClient.createWebRTCSession({
-        nodeId: props.nodeId,
-        serviceId: props.serviceId,
-        serviceUrl: props.serviceUrl,
+        nodeId,
+        serviceId,
+        serviceUrl,
         sdpOffer: newPc.localDescription?.sdp || '',
       })
+
+      if (attempt !== connectAttempt) {
+        newPc.close()
+        return
+      }
 
       console.log('[VideoTile] Got session response, session ID:', response.sessionId)
 
@@ -126,8 +152,17 @@ export default function VideoTile(props: Props) {
         })
       )
 
+      if (attempt !== connectAttempt) {
+        newPc.close()
+        return
+      }
+
       console.log('[VideoTile] WebRTC session established')
     } catch (err) {
+      if (attempt !== connectAttempt) {
+        return
+      }
+
       console.error('[VideoTile] Connection error:', err)
       setError(err instanceof Error ? err.message : 'Connection failed')
       setLoading(false)
@@ -135,20 +170,20 @@ export default function VideoTile(props: Props) {
     }
   }
 
-  // Connect only once when component mounts
-  onMount(() => {
-    connect()
+  createEffect(() => {
+    const nodeId = props.nodeId
+    const serviceId = props.serviceId
+    const serviceUrl = props.serviceUrl
+
+    untrack(() => {
+      void connect(nodeId, serviceId, serviceUrl)
+    })
   })
 
   // Cleanup on unmount
   onCleanup(() => {
-    const connection = pc()
-    if (connection) {
-      console.log('[VideoTile] Cleaning up connection')
-      connection.close()
-      setPc(null)
-    }
-    setConnected(false)
+    connectAttempt += 1
+    disconnect()
   })
 
   return (
@@ -180,7 +215,7 @@ export default function VideoTile(props: Props) {
             <button
               onClick={() => {
                 setConnected(false)
-                connect()
+                void connect(props.nodeId, props.serviceId, props.serviceUrl)
               }}
               class="px-4 py-2 bg-neu-700 hover:bg-neu-600 text-neu-100 text-sm rounded-md transition-colors"
             >
