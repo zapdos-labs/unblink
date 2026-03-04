@@ -46,7 +46,7 @@ const (
 			file_size BIGINT,
 			content_type TEXT NOT NULL,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-			metadata TEXT,
+			metadata JSONB,
 			FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE CASCADE
 		);
 

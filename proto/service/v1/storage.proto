@@ -25,6 +25,7 @@ message StorageItem {
   string type = 3;     // Type of storage item (e.g., "frame", "clip")
   int64 size = 4;
   google.protobuf.Timestamp timestamp = 5;
+  string metadata = 6; // Raw JSON metadata
 }
 
 // List storage items for a service

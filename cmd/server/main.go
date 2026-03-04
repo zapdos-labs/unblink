@@ -76,7 +76,8 @@ func main() {
 
 	// Create storage for frames
 	storage := webrtc.NewStorage(config.FramesBaseDir())
-	log.Printf("[Main] Initialized storage: baseDir=%s", config.FramesBaseDir())
+	log.Printf("[Main] Initialized frame storage: baseDir=%s", config.FramesBaseDir())
+	log.Printf("[Main] Initialized clip storage: baseDir=%s segment_duration=%s", config.ClipsBaseDir(), 15*time.Minute)
 
 	// Create event service BEFORE batch manager (batch manager needs the broadcaster)
 	eventService := service.NewEventService(dbClient)
@@ -96,6 +97,7 @@ func main() {
 	serviceRegistry := service.NewServiceRegistry(
 		dbClient,
 		frameInterval,
+		config.ClipsBaseDir(),
 		storage,
 		nodeServer,
 		batchManager,

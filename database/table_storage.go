@@ -14,12 +14,23 @@ type StorageType string
 
 const (
 	StorageTypeFrame StorageType = "frame" // JPEG video frame
+	StorageTypeClip  StorageType = "clip"  // Independently playable MP4 clip
 )
 
 // FrameMetadata holds additional metadata for frames
 type FrameMetadata struct {
 	Width  int `json:"width,omitempty"`
 	Height int `json:"height,omitempty"`
+}
+
+// ClipMetadata holds additional metadata for recorded clips.
+type ClipMetadata struct {
+	EndTime                string `json:"end_time,omitempty"`
+	DurationSeconds        int64  `json:"duration_seconds,omitempty"`
+	Container              string `json:"container,omitempty"`
+	VideoCodec             string `json:"video_codec,omitempty"`
+	SourceKind             string `json:"source_kind,omitempty"`
+	SegmentDurationSeconds int64  `json:"segment_duration_seconds,omitempty"`
 }
 
 // StorageEntry represents a row in the storage table
@@ -35,22 +46,22 @@ type StorageEntry struct {
 	Metadata    string // JSON-encoded metadata
 }
 
-// SaveStorageItem saves storage item metadata to the database
-func (c *Client) SaveStorageItem(serviceID, storagePath string, timestamp time.Time, fileSize int64, storageType StorageType, contentType string, metadata *FrameMetadata) error {
-	id := uuid.New().String()
-
-	var metadataJSON sql.NullString
+// SaveStorageItem saves storage item metadata to the database.
+// metadata is stored as JSONB when non-nil.
+func (c *Client) SaveStorageItem(serviceID, storagePath string, timestamp time.Time, fileSize int64, storageType StorageType, contentType string, metadata any) error {
+	var metadataJSON any
 	if metadata != nil {
 		metadataBytes, err := json.Marshal(metadata)
 		if err != nil {
 			return fmt.Errorf("failed to marshal storage metadata: %w", err)
 		}
-		metadataJSON = sql.NullString{String: string(metadataBytes), Valid: true}
+		metadataJSON = string(metadataBytes)
 	}
 
+	id := uuid.New().String()
 	insertSQL := `
 		INSERT INTO storage (id, service_id, type, storage_path, timestamp, file_size, content_type, metadata)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb)
 	`
 
 	_, err := c.db.Exec(insertSQL,
@@ -68,11 +79,13 @@ func (c *Client) ListStorageItemsForService(serviceID string, storageType string
 	// Get total count
 	var total int64
 	countSQL := `SELECT COUNT(*) FROM storage WHERE service_id = $1`
+	countArgs := []any{serviceID}
 	if storageType != "" {
 		countSQL += ` AND type = $2`
+		countArgs = append(countArgs, storageType)
 	}
 
-	err := c.db.QueryRow(countSQL, serviceID, storageType).Scan(&total)
+	err := c.db.QueryRow(countSQL, countArgs...).Scan(&total)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count storage entries: %w", err)
 	}
@@ -177,13 +190,21 @@ func (c *Client) DeleteOldStorageItems(serviceID string, storageType string, old
 	deleteSQL := `
 		DELETE FROM storage
 		WHERE service_id = $1
-		AND type = $2
-		AND created_at < $3
 	`
 
-	cutoffTime := time.Now().Add(-time.Duration(olderThanSeconds) * time.Second)
+	args := []any{serviceID}
+	argOffset := 2
+	if storageType != "" {
+		deleteSQL += fmt.Sprintf("\n\t\tAND type = $%d", argOffset)
+		args = append(args, storageType)
+		argOffset++
+	}
+	deleteSQL += fmt.Sprintf("\n\t\tAND timestamp < $%d", argOffset)
 
-	result, err := c.db.Exec(deleteSQL, serviceID, storageType, cutoffTime)
+	cutoffTime := time.Now().Add(-time.Duration(olderThanSeconds) * time.Second)
+	args = append(args, cutoffTime)
+
+	result, err := c.db.Exec(deleteSQL, args...)
 	if err != nil {
 		return 0, fmt.Errorf("failed to delete old storage entries: %w", err)
 	}

@@ -8,6 +8,7 @@ import (
 
 	"github.com/AlexxIT/go2rtc/pkg/core"
 
+	"github.com/zapdos-labs/unblink/database"
 	"github.com/zapdos-labs/unblink/server"
 	"github.com/zapdos-labs/unblink/server/webrtc"
 )
@@ -23,6 +24,7 @@ type ServiceHandler struct {
 	bridgeConn   *server.BridgeConn
 	mediaSource  webrtc.MediaSource
 	extractor    *webrtc.FrameExtractor
+	clipRecorder *webrtc.ClipRecorder
 	producer     core.Producer // Track producer for cleanup
 	producerDone chan struct{} // Signal when producer goroutine exits
 
@@ -30,9 +32,13 @@ type ServiceHandler struct {
 	storage      *webrtc.Storage
 	batchManager *webrtc.BatchManager
 	srv          *server.Server
+	onClipSaved  func(serviceID, clipPath string, startTime, endTime time.Time, fileSize int64, metadata *database.ClipMetadata)
 
 	// Configuration
-	frameInterval time.Duration
+	frameInterval       time.Duration
+	clipBaseDir         string
+	clipSegmentDuration time.Duration
+	enableIndexing      bool
 
 	// Context for cancellation
 	ctx    context.Context
@@ -41,28 +47,36 @@ type ServiceHandler struct {
 
 // ServiceHandlerConfig holds configuration for creating a service handler
 type ServiceHandlerConfig struct {
-	ServiceID     string
-	URL           string
-	NodeID        string
-	FrameInterval time.Duration
-	Storage       *webrtc.Storage
-	BatchManager  *webrtc.BatchManager
-	Server        *server.Server
+	ServiceID           string
+	URL                 string
+	NodeID              string
+	FrameInterval       time.Duration
+	Storage             *webrtc.Storage
+	BatchManager        *webrtc.BatchManager
+	Server              *server.Server
+	ClipBaseDir         string
+	ClipSegmentDuration time.Duration
+	EnableIndexing      bool
+	OnClipSaved         func(serviceID, clipPath string, startTime, endTime time.Time, fileSize int64, metadata *database.ClipMetadata)
 }
 
 // NewServiceHandler creates a new service handler
 func NewServiceHandler(cfg ServiceHandlerConfig) *ServiceHandler {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &ServiceHandler{
-		serviceID:     cfg.ServiceID,
-		url:           cfg.URL,
-		nodeID:        cfg.NodeID,
-		frameInterval: cfg.FrameInterval,
-		storage:       cfg.Storage,
-		batchManager:  cfg.BatchManager,
-		srv:           cfg.Server,
-		ctx:           ctx,
-		cancel:        cancel,
+		serviceID:           cfg.ServiceID,
+		url:                 cfg.URL,
+		nodeID:              cfg.NodeID,
+		frameInterval:       cfg.FrameInterval,
+		storage:             cfg.Storage,
+		batchManager:        cfg.BatchManager,
+		srv:                 cfg.Server,
+		clipBaseDir:         cfg.ClipBaseDir,
+		clipSegmentDuration: cfg.ClipSegmentDuration,
+		enableIndexing:      cfg.EnableIndexing,
+		onClipSaved:         cfg.OnClipSaved,
+		ctx:                 ctx,
+		cancel:              cancel,
 	}
 }
 
@@ -107,38 +121,58 @@ func (h *ServiceHandler) Start() error {
 		}
 	}()
 
-	// Create and start extractor
-	h.extractor = webrtc.NewFrameExtractor(h.serviceID, h.frameInterval, func(frame *webrtc.Frame) {
-		// Preprocess frame: resize to max 800px edge and burn in timestamp
-		preprocessedData, err := webrtc.PreprocessFrame(frame.Data, frame.Timestamp)
-		if err != nil {
-			log.Printf("[ServiceHandler] Failed to preprocess frame for service %s: %v", h.serviceID, err)
-			// Fall back to original frame if preprocessing fails
-			preprocessedData = frame.Data
+	clipRecorderStarted := false
+	h.clipRecorder = webrtc.NewClipRecorder(h.serviceID, h.clipBaseDir, h.clipSegmentDuration, h.onClipSaved)
+	if err := h.clipRecorder.Start(h.mediaSource); err != nil {
+		log.Printf("[ServiceHandler] Failed to start clip recorder for service %s: %v", h.serviceID, err)
+	} else {
+		clipRecorderStarted = true
+	}
+
+	if h.enableIndexing {
+		// Create and start extractor
+		h.extractor = webrtc.NewFrameExtractor(h.serviceID, h.frameInterval, func(frame *webrtc.Frame) {
+			// Preprocess frame: resize to max 800px edge and burn in timestamp
+			preprocessedData, err := webrtc.PreprocessFrame(frame.Data, frame.Timestamp)
+			if err != nil {
+				log.Printf("[ServiceHandler] Failed to preprocess frame for service %s: %v", h.serviceID, err)
+				// Fall back to original frame if preprocessing fails
+				preprocessedData = frame.Data
+			}
+
+			// Create preprocessed frame
+			preprocessedFrame := &webrtc.Frame{
+				Data:      preprocessedData,
+				Timestamp: frame.Timestamp,
+				ServiceID: frame.ServiceID,
+			}
+
+			// Save preprocessed frame to disk
+			h.storage.Save(h.serviceID, preprocessedFrame)
+
+			// Add preprocessed frame to batch manager for vLLM processing
+			if h.batchManager != nil {
+				h.batchManager.AddFrame(preprocessedFrame)
+			}
+		})
+
+		if err := h.extractor.Start(h.mediaSource); err != nil {
+			if h.clipRecorder != nil {
+				h.clipRecorder.Close()
+				h.clipRecorder = nil
+			}
+			h.mediaSource.Close()
+			h.bridgeConn.Close()
+			ctx := context.Background()
+			nodeConn.CloseBridge(ctx, bridgeID)
+			return fmt.Errorf("failed to start extractor: %w", err)
 		}
-
-		// Create preprocessed frame
-		preprocessedFrame := &webrtc.Frame{
-			Data:      preprocessedData,
-			Timestamp: frame.Timestamp,
-			ServiceID: frame.ServiceID,
-		}
-
-		// Save preprocessed frame to disk
-		h.storage.Save(h.serviceID, preprocessedFrame)
-
-		// Add preprocessed frame to batch manager for vLLM processing
-		if h.batchManager != nil {
-			h.batchManager.AddFrame(preprocessedFrame)
-		}
-	})
-
-	if err := h.extractor.Start(h.mediaSource); err != nil {
+	} else if !clipRecorderStarted {
 		h.mediaSource.Close()
 		h.bridgeConn.Close()
 		ctx := context.Background()
 		nodeConn.CloseBridge(ctx, bridgeID)
-		return fmt.Errorf("failed to start extractor: %w", err)
+		return fmt.Errorf("failed to start clip recorder")
 	}
 
 	log.Printf("[ServiceHandler] Started handler for service %s", h.serviceID)
@@ -153,6 +187,11 @@ func (h *ServiceHandler) Stop() {
 	if h.extractor != nil {
 		h.extractor.Close()
 		h.extractor = nil
+	}
+
+	if h.clipRecorder != nil {
+		h.clipRecorder.Close()
+		h.clipRecorder = nil
 	}
 
 	// Stop producer and wait for goroutine to exit (BEFORE closing media source)
@@ -196,5 +235,5 @@ func (h *ServiceHandler) GetBridgeConn() *server.BridgeConn {
 
 // IsRunning returns true if the handler is currently running
 func (h *ServiceHandler) IsRunning() bool {
-	return h.bridgeConn != nil && h.extractor != nil
+	return h.bridgeConn != nil && (h.extractor != nil || h.clipRecorder != nil)
 }

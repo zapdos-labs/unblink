@@ -35,12 +35,14 @@ type reconnectRequest struct {
 
 // ServiceRegistry manages all services and their handlers
 type ServiceRegistry struct {
-	db             *database.Client
-	storage        *webrtc.Storage
-	batchManager   *webrtc.BatchManager
-	frameInterval  time.Duration
-	srv            *server.Server
-	enableIndexing bool // Enable frame indexing/extraction
+	db                  *database.Client
+	storage             *webrtc.Storage
+	batchManager        *webrtc.BatchManager
+	frameInterval       time.Duration
+	clipBaseDir         string
+	clipSegmentDuration time.Duration
+	srv                 *server.Server
+	enableIndexing      bool // Enable frame indexing/extraction
 
 	mu          sync.RWMutex
 	services    map[string]*ServiceState   // serviceID -> ServiceState
@@ -58,7 +60,7 @@ type ServiceRegistry struct {
 }
 
 // NewServiceRegistry creates a new service registry
-func NewServiceRegistry(db *database.Client, frameInterval time.Duration, storage *webrtc.Storage, srv *server.Server, batchMgr *webrtc.BatchManager, idleTimeout time.Duration, maxRetries int, enableIndexing bool) *ServiceRegistry {
+func NewServiceRegistry(db *database.Client, frameInterval time.Duration, clipBaseDir string, storage *webrtc.Storage, srv *server.Server, batchMgr *webrtc.BatchManager, idleTimeout time.Duration, maxRetries int, enableIndexing bool) *ServiceRegistry {
 	// Wire up callback to save frame metadata to database when frames are saved to disk
 	storage.SetOnSaved(func(serviceID, frameID, framePath string, timestamp time.Time, fileSize int64) {
 		metadata := &database.FrameMetadata{}
@@ -68,20 +70,22 @@ func NewServiceRegistry(db *database.Client, frameInterval time.Duration, storag
 	})
 
 	r := &ServiceRegistry{
-		db:             db,
-		storage:        storage,
-		batchManager:   batchMgr,
-		frameInterval:  frameInterval,
-		srv:            srv,
-		enableIndexing: enableIndexing,
-		services:       make(map[string]*ServiceState),
-		nodes:          make(map[string]map[string]bool),
-		onlineNodes:    make(map[string]bool),
-		idleTimeout:    idleTimeout,
-		maxRetries:     maxRetries,
-		monitorStop:    make(chan struct{}),
-		monitorStopped: make(chan struct{}),
-		reconnectQueue: make(chan reconnectRequest, 100), // Buffered channel
+		db:                  db,
+		storage:             storage,
+		batchManager:        batchMgr,
+		frameInterval:       frameInterval,
+		clipBaseDir:         clipBaseDir,
+		clipSegmentDuration: 15 * time.Minute,
+		srv:                 srv,
+		enableIndexing:      enableIndexing,
+		services:            make(map[string]*ServiceState),
+		nodes:               make(map[string]map[string]bool),
+		onlineNodes:         make(map[string]bool),
+		idleTimeout:         idleTimeout,
+		maxRetries:          maxRetries,
+		monitorStop:         make(chan struct{}),
+		monitorStopped:      make(chan struct{}),
+		reconnectQueue:      make(chan reconnectRequest, 100), // Buffered channel
 	}
 
 	// Start idle monitoring goroutine
@@ -257,26 +261,25 @@ func (r *ServiceRegistry) SetNodeOffline(nodeID string) {
 	}
 }
 
-// NOTE: Currently, the only logic in a handler is indexing.
-// That's why we can skip starting handlers if indexing is disabled.
-// If there are other functionalities in the future, we might need to revisit this.
 // startHandlerLocked starts the service handler for a service (caller must hold lock)
 func (r *ServiceRegistry) startHandlerLocked(state *ServiceState) {
-	// Skip handler start if indexing is disabled
-	if !r.enableIndexing {
-		log.Printf("[ServiceRegistry] Indexing disabled, skipping handler start for service %s", state.ID)
-		return
-	}
-
 	// Create handler with configuration
 	handler := NewServiceHandler(ServiceHandlerConfig{
-		ServiceID:     state.ID,
-		URL:           state.URL,
-		NodeID:        state.NodeID,
-		FrameInterval: r.frameInterval,
-		Storage:       r.storage,
-		BatchManager:  r.batchManager,
-		Server:        r.srv,
+		ServiceID:           state.ID,
+		URL:                 state.URL,
+		NodeID:              state.NodeID,
+		FrameInterval:       r.frameInterval,
+		Storage:             r.storage,
+		BatchManager:        r.batchManager,
+		Server:              r.srv,
+		ClipBaseDir:         r.clipBaseDir,
+		ClipSegmentDuration: r.clipSegmentDuration,
+		EnableIndexing:      r.enableIndexing,
+		OnClipSaved: func(serviceID, clipPath string, startTime, endTime time.Time, fileSize int64, metadata *database.ClipMetadata) {
+			if err := r.db.SaveStorageItem(serviceID, clipPath, startTime, fileSize, database.StorageTypeClip, "video/mp4", metadata); err != nil {
+				log.Printf("[ServiceRegistry] Failed to save clip metadata: %v", err)
+			}
+		},
 	})
 
 	// Start the handler

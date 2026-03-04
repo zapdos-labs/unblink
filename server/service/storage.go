@@ -17,7 +17,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-// StorageConfig holds configuration for storage
+// StorageConfig holds configuration for stored media.
 type StorageConfig struct {
 	StorageBaseDir string // Base directory where storage items are stored
 }
@@ -99,6 +99,7 @@ func (s *StorageService) ListStorageItems(ctx context.Context, req *connect.Requ
 			Type:      string(entry.Type),
 			Size:      entry.FileSize,
 			Timestamp: timestamppb.New(entry.Timestamp),
+			Metadata:  entry.Metadata,
 		})
 	}
 
@@ -137,6 +138,7 @@ func (s *StorageService) GetStorageItem(ctx context.Context, req *connect.Reques
 		Type:      string(entry.Type),
 		Size:      entry.FileSize,
 		Timestamp: timestamppb.New(entry.Timestamp),
+		Metadata:  entry.Metadata,
 	}
 
 	log.Printf("[Storage] Got storage item %s for service %s", item.Id, item.ServiceId)
@@ -179,13 +181,13 @@ func (s *StorageService) DeleteOldStorageItems(ctx context.Context, req *connect
 // Ensure StorageService implements interface
 var _ servicev1connect.StorageServiceHandler = (*StorageService)(nil)
 
-// RegisterHTTPHandlers registers HTTP handlers for serving JPEG files
+// RegisterHTTPHandlers registers HTTP handlers for serving stored media files.
 func (s *StorageService) RegisterHTTPHandlers(mux *http.ServeMux) {
 	mux.HandleFunc("/storage/", s.serveStorage)
 	log.Printf("[Storage] Registered HTTP handler for /storage/")
 }
 
-// serveStorage serves JPEG files via HTTP
+// serveStorage serves stored media files via HTTP.
 // URL format: /storage/{itemID}
 func (s *StorageService) serveStorage(w http.ResponseWriter, r *http.Request) {
 	claims, err := s.authenticateStorageRequest(r)

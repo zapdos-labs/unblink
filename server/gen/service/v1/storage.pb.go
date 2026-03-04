@@ -30,6 +30,7 @@ type StorageItem struct {
 	Type          string                 `protobuf:"bytes,3,opt,name=type,proto3" json:"type,omitempty"` // Type of storage item (e.g., "frame", "clip")
 	Size          int64                  `protobuf:"varint,4,opt,name=size,proto3" json:"size,omitempty"`
 	Timestamp     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Metadata      string                 `protobuf:"bytes,6,opt,name=metadata,proto3" json:"metadata,omitempty"` // Raw JSON metadata
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -97,6 +98,13 @@ func (x *StorageItem) GetTimestamp() *timestamppb.Timestamp {
 		return x.Timestamp
 	}
 	return nil
+}
+
+func (x *StorageItem) GetMetadata() string {
+	if x != nil {
+		return x.Metadata
+	}
+	return ""
 }
 
 // List storage items for a service
@@ -419,14 +427,15 @@ var File_service_v1_storage_proto protoreflect.FileDescriptor
 const file_service_v1_storage_proto_rawDesc = "" +
 	"\n" +
 	"\x18service/v1/storage.proto\x12\n" +
-	"service.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\x9e\x01\n" +
+	"service.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\xba\x01\n" +
 	"\vStorageItem\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1d\n" +
 	"\n" +
 	"service_id\x18\x02 \x01(\tR\tserviceId\x12\x12\n" +
 	"\x04type\x18\x03 \x01(\tR\x04type\x12\x12\n" +
 	"\x04size\x18\x04 \x01(\x03R\x04size\x128\n" +
-	"\ttimestamp\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\ttimestamp\"z\n" +
+	"\ttimestamp\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\ttimestamp\x12\x1a\n" +
+	"\bmetadata\x18\x06 \x01(\tR\bmetadata\"z\n" +
 	"\x17ListStorageItemsRequest\x12\x1d\n" +
 	"\n" +
 	"service_id\x18\x01 \x01(\tR\tserviceId\x12\x12\n" +

@@ -14,7 +14,7 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: DASHBOARD_URL
-        value: https://app.zapdoslabs.com
+        sync: false
       - key: CHAT_OPENAI_MODEL
         sync: false
       - key: CHAT_OPENAI_BASE_URL

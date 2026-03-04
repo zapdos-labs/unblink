@@ -54,7 +54,7 @@ type Config struct {
 	DistPath string `json:"dist_path,omitempty"` // Path to frontend dist directory (optional)
 
 	// Frame indexing settings
-	EnableIndexing bool `json:"enable_indexing"` // Enable frame indexing (default true). When true, batch manager is not created.
+	EnableIndexing bool `json:"enable_indexing"` // Enable frame indexing (default true).
 }
 
 func (c *Config) applyModelFallbacks() {
@@ -153,6 +153,14 @@ func (c *Config) FramesDir(serviceID string) string {
 		return filepath.Join("storage", "frames", serviceID)
 	}
 	return filepath.Join(c.AppDir, "storage", "frames", serviceID)
+}
+
+// ClipsBaseDir returns the base directory for storing recorded video clips.
+func (c *Config) ClipsBaseDir() string {
+	if c.AppDir == "" {
+		return filepath.Join("storage", "clips")
+	}
+	return filepath.Join(c.AppDir, "storage", "clips")
 }
 
 // LoadConfig loads server configuration from environment variables.
