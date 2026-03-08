@@ -32,3 +32,6 @@ Do not automatically simplify or fallback. Always ask user "Can I skip this task
 
 # Ask user about migration
 Since the app is in beta, migration is not usually needed, and we don't want to pollute the codebase (prefer clean, breaking changes instead). Therefore ask the user for permission before implementing migration / fallback.
+
+# Solid-js
+- `createMemo` is banned in this workspace. Use derived signals.

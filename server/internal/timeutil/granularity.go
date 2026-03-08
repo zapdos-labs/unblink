@@ -40,6 +40,44 @@ func CalculateGranularity(durationSeconds int64) GranularityLevel {
 	}
 }
 
+// NextGranularity returns the next coarser granularity level.
+func NextGranularity(level GranularityLevel) (GranularityLevel, bool) {
+	switch level {
+	case GranularitySecond:
+		return GranularityMinute, true
+	case GranularityMinute:
+		return GranularityHour, true
+	case GranularityHour:
+		return GranularityDay, true
+	case GranularityDay:
+		return GranularityWeek, true
+	case GranularityWeek:
+		return GranularityMonth, true
+	default:
+		return "", false
+	}
+}
+
+// MinSecondsForGranularity returns the minimum duration in seconds for a granularity.
+func MinSecondsForGranularity(level GranularityLevel) int64 {
+	switch level {
+	case GranularitySecond:
+		return 0
+	case GranularityMinute:
+		return 30
+	case GranularityHour:
+		return 1800
+	case GranularityDay:
+		return 43200
+	case GranularityWeek:
+		return 604800
+	case GranularityMonth:
+		return 1209600
+	default:
+		return 0
+	}
+}
+
 // FormatToISO formats a time.Time to ISO 8601 string with UTC (e.g., "2026-02-01T10:00:00Z")
 func FormatToISO(t time.Time) string {
 	return t.UTC().Format(time.RFC3339)

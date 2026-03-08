@@ -188,6 +188,61 @@ func (c *Client) ListEventsByNodeId(nodeID string, pageSize, pageOffset int32) (
 	return events, totalCount, nil
 }
 
+// ListVLMEventsByGranularityRange returns VLM-indexing events for a service and granularity
+// that overlap with [from, to), ordered by start time.
+func (c *Client) ListVLMEventsByGranularityRange(serviceID, granularity string, from, to time.Time) ([]*servicev1.Event, error) {
+	startExpr := `COALESCE(NULLIF(e.payload->>'from_iso', '')::timestamptz, e.created_at AT TIME ZONE 'UTC')`
+	endExpr := `COALESCE(NULLIF(e.payload->>'to_iso', '')::timestamptz, e.created_at AT TIME ZONE 'UTC')`
+
+	querySQL := fmt.Sprintf(`
+		SELECT e.id, e.service_id, e.payload, e.created_at
+		FROM events e
+		WHERE e.service_id = $1
+		  AND e.payload->>'type' = 'vlm-indexing'
+		  AND e.payload->>'granularity' = $2
+		  AND %s > $3
+		  AND %s < $4
+		ORDER BY %s ASC, e.created_at ASC
+	`, endExpr, startExpr, startExpr)
+
+	rows, err := c.db.Query(querySQL, serviceID, granularity, from.UTC(), to.UTC())
+	if err != nil {
+		return nil, fmt.Errorf("failed to list vlm events by granularity range: %w", err)
+	}
+	defer rows.Close()
+
+	var events []*servicev1.Event
+	for rows.Next() {
+		var event servicev1.Event
+		var svcID sql.NullString
+		var payloadJSON sql.NullString
+		var createdAt time.Time
+
+		if err := rows.Scan(&event.Id, &svcID, &payloadJSON, &createdAt); err != nil {
+			return nil, fmt.Errorf("failed to scan event: %w", err)
+		}
+
+		if svcID.Valid {
+			event.ServiceId = svcID.String
+		}
+		if payloadJSON.Valid {
+			payload, err := jsonToProtoStruct(payloadJSON.String)
+			if err != nil {
+				return nil, fmt.Errorf("failed to convert payload: %w", err)
+			}
+			event.Payload = payload
+		}
+		event.CreatedAt = timestampToProto(createdAt)
+		events = append(events, &event)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating events: %w", err)
+	}
+
+	return events, nil
+}
+
 // protoStructToJSON converts a protobuf Struct to JSON string
 // It converts the protobuf Struct to a native Go map first to get clean JSON
 func protoStructToJSON(s *structpb.Struct) (string, error) {

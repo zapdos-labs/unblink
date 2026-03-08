@@ -51,6 +51,52 @@ func (c *FrameClient) SendFrameBatchWithInstruction(ctx context.Context, frames 
 	return c.SendFrameBatchWithStructuredOutput(ctx, frames, instruction)
 }
 
+// SendTextWithStructuredOutput sends text-only context and returns VLMResponse-structured output.
+func (c *FrameClient) SendTextWithStructuredOutput(ctx context.Context, instruction, text string) (*openai.ChatCompletion, error) {
+	content := []openai.ChatCompletionContentPartUnionParam{}
+	if instruction != "" {
+		content = append(content, openai.TextContentPart(instruction))
+	}
+	if text != "" {
+		content = append(content, openai.TextContentPart(text))
+	}
+	if len(content) == 0 {
+		return nil, fmt.Errorf("empty text payload")
+	}
+
+	schema := GenerateVLMResponseSchema()
+	schemaParam := openai.ResponseFormatJSONSchemaJSONSchemaParam{
+		Name:        "vlm_response",
+		Description: openai.String("Video event aggregation with detected objects and detailed description"),
+		Schema:      schema,
+		Strict:      openai.Bool(true),
+	}
+
+	params := openai.ChatCompletionNewParams{
+		Model: openai.ChatModel(c.Model),
+		Messages: []openai.ChatCompletionMessageParamUnion{
+			openai.UserMessage(content),
+		},
+		MaxTokens: openai.Int(int64(6000)),
+		ResponseFormat: openai.ChatCompletionNewParamsResponseFormatUnion{
+			OfJSONSchema: &openai.ResponseFormatJSONSchemaParam{JSONSchema: schemaParam},
+		},
+	}
+
+	timeoutCtx, cancel := context.WithTimeout(ctx, c.timeout)
+	defer cancel()
+
+	startTime := time.Now()
+	response, err := c.client.Chat.Completions.New(timeoutCtx, params)
+	if err != nil {
+		return nil, fmt.Errorf("vLLM text request failed: %w", err)
+	}
+	duration := time.Since(startTime)
+	log.Printf("[FrameClient] Text request successful: duration=%v, tokens=%d", duration, response.Usage.TotalTokens)
+
+	return response, nil
+}
+
 // SendFrameBatchWithStructuredOutput sends frames with structured output using response_format
 func (c *FrameClient) SendFrameBatchWithStructuredOutput(ctx context.Context, frames []*Frame, instruction string) (*openai.ChatCompletion, error) {
 	if len(frames) == 0 {

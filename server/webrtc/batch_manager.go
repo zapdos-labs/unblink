@@ -3,6 +3,7 @@ package webrtc
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"strings"
 	"sync"
@@ -28,6 +29,12 @@ type rollingContext struct {
 	lastBatchSentTime int64        // Unix nano timestamp of last batch sent (for ordering)
 }
 
+// rollupWindow tracks the current accumulation window for lower granularity events.
+type rollupWindow struct {
+	from time.Time
+	to   time.Time
+}
+
 // BatchManager accumulates frames and sends them in batches to vLLM
 // It maintains rolling context per service, asking the model to describe only what's new
 type BatchManager struct {
@@ -35,22 +42,24 @@ type BatchManager struct {
 	batchSize        int
 	frameBuffers     map[string][]*Frame        // serviceID -> buffer of frames (max size = batchSize)
 	rollingContexts  map[string]*rollingContext // serviceID -> rolling state
-	processingLocks  map[string]bool            // serviceID -> is currently processing
-	baseInstruction  string                     // Base instruction
-	storage          *Storage                   // Storage for saving annotated frames
-	db               *database.Client           // Database for events
-	eventBroadcaster EventBroadcaster           // For broadcasting events to subscribers
+	rollupWindows    map[string]map[timeutil.GranularityLevel]*rollupWindow
+	processingLocks  map[string]bool  // serviceID -> is currently processing
+	baseInstruction  string           // Base instruction
+	storage          *Storage         // Storage for saving annotated frames
+	db               *database.Client // Database for events
+	eventBroadcaster EventBroadcaster // For broadcasting events to subscribers
 	mu               sync.Mutex
 }
 
 // NewBatchManager creates a new batch manager
 func NewBatchManager(client *FrameClient, batchSize int, storage *Storage, db *database.Client, broadcaster EventBroadcaster) *BatchManager {
 	return &BatchManager{
-		client:           client,
-		batchSize:        batchSize,
-		frameBuffers:     make(map[string][]*Frame),
-		rollingContexts:  make(map[string]*rollingContext),
-		processingLocks:  make(map[string]bool),
+		client:          client,
+		batchSize:       batchSize,
+		frameBuffers:    make(map[string][]*Frame),
+		rollingContexts: make(map[string]*rollingContext),
+		rollupWindows:   make(map[string]map[timeutil.GranularityLevel]*rollupWindow),
+		processingLocks: make(map[string]bool),
 		baseInstruction: strings.Join([]string{
 			"Analyze these video frames for motion, action, emotion, facial expressions, and subtle details.",
 			"Detect the most important objects (MAX 10) and return bounding boxes in NORMALIZED 1000 COORDINATES (0=top/left, 1000=bottom/right).",
@@ -205,40 +214,16 @@ func (m *BatchManager) sendBatch(serviceID string, frames []*Frame, previousResp
 			} else if err := json.Unmarshal(respJSON, &responseMap); err != nil {
 				log.Printf("[BatchManager] Failed to unmarshal VLM response to map: %v", err)
 			} else {
-				// Calculate time span and granularity
+				// Base events are emitted from each frame batch.
 				firstFrame := framesToSend[0]
 				lastFrame := framesToSend[len(framesToSend)-1]
 				duration := lastFrame.Timestamp.Sub(firstFrame.Timestamp)
 				granularity := timeutil.CalculateGranularity(int64(duration.Seconds()))
 
-				payload, err := structpb.NewStruct(map[string]any{
-					"type":        "vlm-indexing",
-					"granularity": string(granularity),
-					"from_iso":    timeutil.FormatToISO(firstFrame.Timestamp),
-					"to_iso":      timeutil.FormatToISO(lastFrame.Timestamp),
-					"response":    responseMap,
-				})
-				if err != nil {
-					log.Printf("[BatchManager] Failed to create event payload: %v", err)
+				if _, err := m.createAndBroadcastEvent(serviceID, granularity, firstFrame.Timestamp, lastFrame.Timestamp, responseMap); err != nil {
+					log.Printf("[BatchManager] Failed to create %s event: %v", granularity, err)
 				} else {
-					eventID := uuid.New().String()
-					if err := m.db.CreateEvent(eventID, serviceID, payload); err != nil {
-						log.Printf("[BatchManager] Failed to create event: %v", err)
-					} else {
-						// Broadcast the event to subscribers
-						if m.eventBroadcaster != nil {
-							event := &servicev1.Event{
-								Id:        eventID,
-								ServiceId: serviceID,
-								Payload:   payload,
-								CreatedAt: timestamppb.New(time.Now()),
-							}
-							// Get node_id from service
-							if svc, err := m.db.GetService(serviceID); err == nil && svc != nil {
-								m.eventBroadcaster.Broadcast(event, svc.NodeId)
-							}
-						}
-					}
+					m.maybeBuildHigherGranularity(serviceID, granularity, firstFrame.Timestamp, lastFrame.Timestamp)
 				}
 			}
 		}
@@ -285,6 +270,191 @@ func (m *BatchManager) sendBatch(serviceID string, frames []*Frame, previousResp
 
 		log.Printf("[BatchManager] Service %s: annotated frame with %d objects", serviceID, len(vlmResp.Objects))
 	}
+}
+
+func (m *BatchManager) createAndBroadcastEvent(serviceID string, granularity timeutil.GranularityLevel, from, to time.Time, responseMap map[string]any) (*servicev1.Event, error) {
+	payload, err := structpb.NewStruct(map[string]any{
+		"type":        "vlm-indexing",
+		"granularity": string(granularity),
+		"from_iso":    timeutil.FormatToISO(from),
+		"to_iso":      timeutil.FormatToISO(to),
+		"response":    responseMap,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("create payload: %w", err)
+	}
+
+	eventID := uuid.New().String()
+	if err := m.db.CreateEvent(eventID, serviceID, payload); err != nil {
+		return nil, fmt.Errorf("insert event: %w", err)
+	}
+
+	event := &servicev1.Event{
+		Id:        eventID,
+		ServiceId: serviceID,
+		Payload:   payload,
+		CreatedAt: timestamppb.New(time.Now()),
+	}
+	if m.eventBroadcaster != nil {
+		if svc, err := m.db.GetService(serviceID); err == nil && svc != nil {
+			m.eventBroadcaster.Broadcast(event, svc.NodeId)
+		}
+	}
+	return event, nil
+}
+
+// maybeBuildHigherGranularity accumulates lower-level event time in memory and, once threshold is reached,
+// loads lower-level events from DB, summarizes them via VLM, and emits a higher-level event.
+func (m *BatchManager) maybeBuildHigherGranularity(serviceID string, lowerGranularity timeutil.GranularityLevel, lowerFrom, lowerTo time.Time) {
+	nextGranularity, ok := timeutil.NextGranularity(lowerGranularity)
+	if !ok || m.db == nil {
+		return
+	}
+
+	windowFrom, windowTo, ready := m.extendRollupWindow(serviceID, lowerGranularity, lowerFrom, lowerTo, timeutil.MinSecondsForGranularity(nextGranularity))
+	if !ready {
+		return
+	}
+
+	lowerEvents, err := m.db.ListVLMEventsByGranularityRange(serviceID, string(lowerGranularity), windowFrom, windowTo)
+	if err != nil {
+		log.Printf("[BatchManager] Failed loading %s events for %s rollup: %v", lowerGranularity, nextGranularity, err)
+		return
+	}
+	if len(lowerEvents) == 0 {
+		return
+	}
+
+	aggregatedResp, err := m.aggregateLowerEventsWithVLM(serviceID, lowerGranularity, nextGranularity, windowFrom, windowTo, lowerEvents)
+	if err != nil {
+		log.Printf("[BatchManager] Failed aggregating %s -> %s: %v", lowerGranularity, nextGranularity, err)
+		return
+	}
+
+	if _, err := m.createAndBroadcastEvent(serviceID, nextGranularity, windowFrom, windowTo, aggregatedResp); err != nil {
+		log.Printf("[BatchManager] Failed to create %s rollup event: %v", nextGranularity, err)
+		return
+	}
+	m.clearRollupWindow(serviceID, lowerGranularity)
+
+	// Feed the produced higher-level event into the next rollup tier.
+	m.maybeBuildHigherGranularity(serviceID, nextGranularity, windowFrom, windowTo)
+}
+
+// extendRollupWindow extends or initializes the rollup window for one service + lower granularity.
+// It returns ready=true when the accumulated span reaches thresholdSeconds.
+func (m *BatchManager) extendRollupWindow(serviceID string, lowerGranularity timeutil.GranularityLevel, batchFrom, batchTo time.Time, thresholdSeconds int64) (time.Time, time.Time, bool) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	windowsByGranularity := m.rollupWindows[serviceID]
+	if windowsByGranularity == nil {
+		windowsByGranularity = make(map[timeutil.GranularityLevel]*rollupWindow)
+		m.rollupWindows[serviceID] = windowsByGranularity
+	}
+
+	win := windowsByGranularity[lowerGranularity]
+	if win == nil {
+		win = &rollupWindow{
+			from: batchFrom,
+			to:   batchTo,
+		}
+		windowsByGranularity[lowerGranularity] = win
+	} else {
+		if batchFrom.Before(win.from) {
+			win.from = batchFrom
+		}
+		if batchTo.After(win.to) {
+			win.to = batchTo
+		}
+	}
+
+	if win.to.Sub(win.from) < time.Duration(thresholdSeconds)*time.Second {
+		return win.from, win.to, false
+	}
+
+	return win.from, win.to, true
+}
+
+func (m *BatchManager) clearRollupWindow(serviceID string, granularity timeutil.GranularityLevel) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	windowsByGranularity := m.rollupWindows[serviceID]
+	if windowsByGranularity == nil {
+		return
+	}
+	delete(windowsByGranularity, granularity)
+	if len(windowsByGranularity) == 0 {
+		delete(m.rollupWindows, serviceID)
+	}
+}
+
+func (m *BatchManager) aggregateLowerEventsWithVLM(serviceID string, lowerGranularity, nextGranularity timeutil.GranularityLevel, from, to time.Time, lowerEvents []*servicev1.Event) (map[string]any, error) {
+	sourceRows := make([]map[string]any, 0, len(lowerEvents))
+	for _, ev := range lowerEvents {
+		if ev.GetPayload() == nil {
+			continue
+		}
+		payloadMap := ev.Payload.AsMap()
+		sourceRows = append(sourceRows, map[string]any{
+			"id":          ev.GetId(),
+			"from_iso":    payloadMap["from_iso"],
+			"to_iso":      payloadMap["to_iso"],
+			"granularity": payloadMap["granularity"],
+			"response":    payloadMap["response"],
+		})
+	}
+	if len(sourceRows) == 0 {
+		return nil, fmt.Errorf("no lower-level payloads available")
+	}
+
+	sourceJSON, err := json.Marshal(sourceRows)
+	if err != nil {
+		return nil, fmt.Errorf("marshal source events: %w", err)
+	}
+
+	instruction := strings.Join([]string{
+		fmt.Sprintf("Aggregate lower-granularity camera events into one %s-level event.", nextGranularity),
+		fmt.Sprintf("Input events are %s-level and already structured.", lowerGranularity),
+		"Return consolidated objects and one concise, accurate description for the full time window.",
+		"If details conflict, prefer consistency with majority evidence across events.",
+		"Do not invent objects or actions not present in input events.",
+		"Output must follow the provided JSON schema exactly.",
+	}, "\n")
+
+	textInput := strings.Join([]string{
+		fmt.Sprintf("service_id: %s", serviceID),
+		fmt.Sprintf("from_iso: %s", timeutil.FormatToISO(from)),
+		fmt.Sprintf("to_iso: %s", timeutil.FormatToISO(to)),
+		fmt.Sprintf("source_count: %d", len(sourceRows)),
+		"source_events_json:",
+		string(sourceJSON),
+	}, "\n")
+
+	resp, err := m.client.SendTextWithStructuredOutput(context.Background(), instruction, textInput)
+	if err != nil {
+		return nil, err
+	}
+	if len(resp.Choices) == 0 {
+		return nil, fmt.Errorf("empty aggregation response")
+	}
+
+	var summarized VLMResponse
+	if err := json.Unmarshal([]byte(resp.Choices[0].Message.Content), &summarized); err != nil {
+		return nil, fmt.Errorf("parse aggregation response: %w", err)
+	}
+
+	respJSON, err := json.Marshal(summarized)
+	if err != nil {
+		return nil, fmt.Errorf("marshal summarized response: %w", err)
+	}
+
+	var responseMap map[string]any
+	if err := json.Unmarshal(respJSON, &responseMap); err != nil {
+		return nil, fmt.Errorf("convert summarized response to map: %w", err)
+	}
+	return responseMap, nil
 }
 
 // Flush sends batches from buffers regardless of batch size
@@ -360,6 +530,7 @@ func (m *BatchManager) ResetSummary(serviceID string) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	delete(m.rollingContexts, serviceID)
+	delete(m.rollupWindows, serviceID)
 	log.Printf("[BatchManager] Reset rolling context for service %s", serviceID)
 }
 
@@ -370,6 +541,7 @@ func (m *BatchManager) RemoveService(serviceID string) {
 	defer m.mu.Unlock()
 	delete(m.frameBuffers, serviceID)
 	delete(m.rollingContexts, serviceID)
+	delete(m.rollupWindows, serviceID)
 	delete(m.processingLocks, serviceID)
 	log.Printf("[BatchManager] Removed service %s (freed buffer and context)", serviceID)
 }
