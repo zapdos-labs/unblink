@@ -74,11 +74,7 @@ export function ServiceForm(props: ServiceFormProps) {
                 <button
                     onClick={() => props.onSubmit?.()}
                     disabled={!props.name() || !props.serviceUrl() || props.isSubmitting}
-                    class="w-full py-3 rounded-lg font-semibold transition-all outline-none"
-                    classList={{
-                        "bg-white text-black hover:bg-neu-200": !!props.name() && !!props.serviceUrl() && !props.isSubmitting,
-                        "bg-neu-700 text-neu-500 cursor-not-allowed": !props.name() || !props.serviceUrl() || props.isSubmitting,
-                    }}
+                    class="sheet-action-btn sheet-action-btn-primary"
                 >
                     {props.isSubmitting ? "Saving..." : "Add Service"}
                 </button>

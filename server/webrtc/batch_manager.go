@@ -63,10 +63,7 @@ func NewBatchManager(client *FrameClient, batchSize int, storage *Storage, db *d
 		baseInstruction: strings.Join([]string{
 			"Analyze these video frames for motion, action, emotion, facial expressions, and subtle details.",
 			"Detect the most important objects (MAX 10) and return bounding boxes in NORMALIZED 1000 COORDINATES (0=top/left, 1000=bottom/right).",
-			"",
-			"USE CASE PRIORITIES:",
-			"1. Detect when any worker is trying to open a container while the container has no visible color safety belt. Treat this as an SOP violation and clearly call out that it should alert.",
-			"2. Detect when any worker is dangerously close to a forklift, especially if the worker is within the red laser boundary or roughly 1-2 meters from the forklift. Treat this as an unsafe proximity event and clearly call out that it should alert.",
+			"Focus on safety-relevant behavior and call out clear violations.",
 		}, "\n"),
 		storage:          storage,
 		db:               db,
@@ -155,13 +152,17 @@ func (m *BatchManager) sendBatch(serviceID string, frames []*Frame, previousResp
 		delete(m.processingLocks, serviceID)
 		m.mu.Unlock()
 	}()
-	// Build instruction based on whether we have previous context
-	// Note: JSON schema is handled by response_format in FrameClient
-	instruction := m.baseInstruction
+	// Build instruction from base + SOP procedures + optional previous response context.
+	// Note: JSON schema is handled by response_format in FrameClient.
+	instructionParts := []string{m.baseInstruction}
+	if sopText := m.buildSOPInstruction(serviceID); sopText != "" {
+		instructionParts = append(instructionParts, sopText)
+	}
+	instruction := strings.Join(instructionParts, "\n\n")
 
 	if previousResponse != nil && previousResponse.Description != "" {
 		instruction = strings.Join([]string{
-			m.baseInstruction,
+			instruction,
 			"",
 			"PREVIOUS ANALYSIS (use for object tracking):",
 			previousResponse.Description,
@@ -270,6 +271,41 @@ func (m *BatchManager) sendBatch(serviceID string, frames []*Frame, previousResp
 
 		log.Printf("[BatchManager] Service %s: annotated frame with %d objects", serviceID, len(vlmResp.Objects))
 	}
+}
+
+func (m *BatchManager) buildSOPInstruction(serviceID string) string {
+	if m.db == nil {
+		return ""
+	}
+
+	svc, err := m.db.GetService(serviceID)
+	if err != nil || svc == nil || svc.NodeId == "" {
+		return ""
+	}
+
+	procedures, err := m.db.ListSOPProceduresByNodeID(svc.NodeId)
+	if err != nil || len(procedures) == 0 {
+		return ""
+	}
+
+	lines := []string{
+		"STANDARD OPERATING PROCEDURES (SOP):",
+		"Treat each item below as enforceable policy. If violated, explicitly state that it should alert.",
+	}
+	for i, proc := range procedures {
+		title := strings.TrimSpace(proc.GetTitle())
+		content := strings.TrimSpace(proc.GetContent())
+		switch {
+		case title != "" && content != "":
+			lines = append(lines, fmt.Sprintf("%d. %s: %s", i+1, title, content))
+		case content != "":
+			lines = append(lines, fmt.Sprintf("%d. %s", i+1, content))
+		case title != "":
+			lines = append(lines, fmt.Sprintf("%d. %s", i+1, title))
+		}
+	}
+
+	return strings.Join(lines, "\n")
 }
 
 func (m *BatchManager) createAndBroadcastEvent(serviceID string, granularity timeutil.GranularityLevel, from, to time.Time, responseMap map[string]any) (*servicev1.Event, error) {
@@ -422,6 +458,9 @@ func (m *BatchManager) aggregateLowerEventsWithVLM(serviceID string, lowerGranul
 		"Do not invent objects or actions not present in input events.",
 		"Output must follow the provided JSON schema exactly.",
 	}, "\n")
+	if sopText := m.buildSOPInstruction(serviceID); sopText != "" {
+		instruction = instruction + "\n\n" + sopText
+	}
 
 	textInput := strings.Join([]string{
 		fmt.Sprintf("service_id: %s", serviceID),

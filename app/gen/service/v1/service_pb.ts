@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file service/v1/service.proto.
  */
 export const file_service_v1_service: GenFile = /*@__PURE__*/
-  fileDesc("ChhzZXJ2aWNlL3YxL3NlcnZpY2UucHJvdG8SCnNlcnZpY2UudjEioQEKB1NlcnZpY2USCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRILCgN1cmwYAyABKAkSDwoHbm9kZV9pZBgEIAEoCRIuCgpjcmVhdGVkX2F0GAUgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIuCgp1cGRhdGVkX2F0GAYgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCJCChRDcmVhdGVTZXJ2aWNlUmVxdWVzdBIMCgRuYW1lGAEgASgJEgsKA3VybBgCIAEoCRIPCgdub2RlX2lkGAMgASgJIj0KFUNyZWF0ZVNlcnZpY2VSZXNwb25zZRIkCgdzZXJ2aWNlGAEgASgLMhMuc2VydmljZS52MS5TZXJ2aWNlIi4KG0xpc3RTZXJ2aWNlc0J5Tm9kZUlkUmVxdWVzdBIPCgdub2RlX2lkGAEgASgJIloKHExpc3RTZXJ2aWNlc0J5Tm9kZUlkUmVzcG9uc2USJQoIc2VydmljZXMYASADKAsyEy5zZXJ2aWNlLnYxLlNlcnZpY2USEwoLbm9kZV9vbmxpbmUYAiABKAgiPQoUVXBkYXRlU2VydmljZVJlcXVlc3QSCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRILCgN1cmwYAyABKAkiPQoVVXBkYXRlU2VydmljZVJlc3BvbnNlEiQKB3NlcnZpY2UYASABKAsyEy5zZXJ2aWNlLnYxLlNlcnZpY2UiKgoURGVsZXRlU2VydmljZVJlcXVlc3QSEgoKc2VydmljZV9pZBgBIAEoCSIoChVEZWxldGVTZXJ2aWNlUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCCIrChhBc3NvY2lhdGVVc2VyTm9kZVJlcXVlc3QSDwoHbm9kZV9pZBgBIAEoCSIsChlBc3NvY2lhdGVVc2VyTm9kZVJlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgiFgoUTGlzdFVzZXJOb2Rlc1JlcXVlc3QiKQoVTGlzdFVzZXJOb2Rlc1Jlc3BvbnNlEhAKCG5vZGVfaWRzGAEgAygJMrUECg5TZXJ2aWNlU2VydmljZRJUCg1DcmVhdGVTZXJ2aWNlEiAuc2VydmljZS52MS5DcmVhdGVTZXJ2aWNlUmVxdWVzdBohLnNlcnZpY2UudjEuQ3JlYXRlU2VydmljZVJlc3BvbnNlEmkKFExpc3RTZXJ2aWNlc0J5Tm9kZUlkEicuc2VydmljZS52MS5MaXN0U2VydmljZXNCeU5vZGVJZFJlcXVlc3QaKC5zZXJ2aWNlLnYxLkxpc3RTZXJ2aWNlc0J5Tm9kZUlkUmVzcG9uc2USVAoNVXBkYXRlU2VydmljZRIgLnNlcnZpY2UudjEuVXBkYXRlU2VydmljZVJlcXVlc3QaIS5zZXJ2aWNlLnYxLlVwZGF0ZVNlcnZpY2VSZXNwb25zZRJUCg1EZWxldGVTZXJ2aWNlEiAuc2VydmljZS52MS5EZWxldGVTZXJ2aWNlUmVxdWVzdBohLnNlcnZpY2UudjEuRGVsZXRlU2VydmljZVJlc3BvbnNlEmAKEUFzc29jaWF0ZVVzZXJOb2RlEiQuc2VydmljZS52MS5Bc3NvY2lhdGVVc2VyTm9kZVJlcXVlc3QaJS5zZXJ2aWNlLnYxLkFzc29jaWF0ZVVzZXJOb2RlUmVzcG9uc2USVAoNTGlzdFVzZXJOb2RlcxIgLnNlcnZpY2UudjEuTGlzdFVzZXJOb2Rlc1JlcXVlc3QaIS5zZXJ2aWNlLnYxLkxpc3RVc2VyTm9kZXNSZXNwb25zZUJAWj5naXRodWIuY29tL3phcGRvcy1sYWJzL3VuYmxpbmsvc2VydmVyL2dlbi9zZXJ2aWNlL3YxO3NlcnZpY2V2MWIGcHJvdG8z", [file_google_protobuf_timestamp]);
+  fileDesc("ChhzZXJ2aWNlL3YxL3NlcnZpY2UucHJvdG8SCnNlcnZpY2UudjEioQEKB1NlcnZpY2USCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRILCgN1cmwYAyABKAkSDwoHbm9kZV9pZBgEIAEoCRIuCgpjcmVhdGVkX2F0GAUgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIuCgp1cGRhdGVkX2F0GAYgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCKrAQoMU09QUHJvY2VkdXJlEgoKAmlkGAEgASgJEg8KB25vZGVfaWQYAiABKAkSDQoFdGl0bGUYAyABKAkSDwoHY29udGVudBgEIAEoCRIuCgpjcmVhdGVkX2F0GAUgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIuCgp1cGRhdGVkX2F0GAYgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCJCChRDcmVhdGVTZXJ2aWNlUmVxdWVzdBIMCgRuYW1lGAEgASgJEgsKA3VybBgCIAEoCRIPCgdub2RlX2lkGAMgASgJIj0KFUNyZWF0ZVNlcnZpY2VSZXNwb25zZRIkCgdzZXJ2aWNlGAEgASgLMhMuc2VydmljZS52MS5TZXJ2aWNlIi4KG0xpc3RTZXJ2aWNlc0J5Tm9kZUlkUmVxdWVzdBIPCgdub2RlX2lkGAEgASgJIloKHExpc3RTZXJ2aWNlc0J5Tm9kZUlkUmVzcG9uc2USJQoIc2VydmljZXMYASADKAsyEy5zZXJ2aWNlLnYxLlNlcnZpY2USEwoLbm9kZV9vbmxpbmUYAiABKAgiPQoUVXBkYXRlU2VydmljZVJlcXVlc3QSCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRILCgN1cmwYAyABKAkiPQoVVXBkYXRlU2VydmljZVJlc3BvbnNlEiQKB3NlcnZpY2UYASABKAsyEy5zZXJ2aWNlLnYxLlNlcnZpY2UiKgoURGVsZXRlU2VydmljZVJlcXVlc3QSEgoKc2VydmljZV9pZBgBIAEoCSIoChVEZWxldGVTZXJ2aWNlUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCCJMChlDcmVhdGVTT1BQcm9jZWR1cmVSZXF1ZXN0Eg8KB25vZGVfaWQYASABKAkSDQoFdGl0bGUYAiABKAkSDwoHY29udGVudBgDIAEoCSJJChpDcmVhdGVTT1BQcm9jZWR1cmVSZXNwb25zZRIrCglwcm9jZWR1cmUYASABKAsyGC5zZXJ2aWNlLnYxLlNPUFByb2NlZHVyZSIzCiBMaXN0U09QUHJvY2VkdXJlc0J5Tm9kZUlkUmVxdWVzdBIPCgdub2RlX2lkGAEgASgJIlEKIUxpc3RTT1BQcm9jZWR1cmVzQnlOb2RlSWRSZXNwb25zZRIsCgpwcm9jZWR1cmVzGAEgAygLMhguc2VydmljZS52MS5TT1BQcm9jZWR1cmUiRwoZVXBkYXRlU09QUHJvY2VkdXJlUmVxdWVzdBIKCgJpZBgBIAEoCRINCgV0aXRsZRgCIAEoCRIPCgdjb250ZW50GAMgASgJIkkKGlVwZGF0ZVNPUFByb2NlZHVyZVJlc3BvbnNlEisKCXByb2NlZHVyZRgBIAEoCzIYLnNlcnZpY2UudjEuU09QUHJvY2VkdXJlIicKGURlbGV0ZVNPUFByb2NlZHVyZVJlcXVlc3QSCgoCaWQYASABKAkiLQoaRGVsZXRlU09QUHJvY2VkdXJlUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCCIrChhBc3NvY2lhdGVVc2VyTm9kZVJlcXVlc3QSDwoHbm9kZV9pZBgBIAEoCSIsChlBc3NvY2lhdGVVc2VyTm9kZVJlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgiFgoUTGlzdFVzZXJOb2Rlc1JlcXVlc3QiKQoVTGlzdFVzZXJOb2Rlc1Jlc3BvbnNlEhAKCG5vZGVfaWRzGAEgAygJMt4HCg5TZXJ2aWNlU2VydmljZRJUCg1DcmVhdGVTZXJ2aWNlEiAuc2VydmljZS52MS5DcmVhdGVTZXJ2aWNlUmVxdWVzdBohLnNlcnZpY2UudjEuQ3JlYXRlU2VydmljZVJlc3BvbnNlEmkKFExpc3RTZXJ2aWNlc0J5Tm9kZUlkEicuc2VydmljZS52MS5MaXN0U2VydmljZXNCeU5vZGVJZFJlcXVlc3QaKC5zZXJ2aWNlLnYxLkxpc3RTZXJ2aWNlc0J5Tm9kZUlkUmVzcG9uc2USVAoNVXBkYXRlU2VydmljZRIgLnNlcnZpY2UudjEuVXBkYXRlU2VydmljZVJlcXVlc3QaIS5zZXJ2aWNlLnYxLlVwZGF0ZVNlcnZpY2VSZXNwb25zZRJUCg1EZWxldGVTZXJ2aWNlEiAuc2VydmljZS52MS5EZWxldGVTZXJ2aWNlUmVxdWVzdBohLnNlcnZpY2UudjEuRGVsZXRlU2VydmljZVJlc3BvbnNlEmMKEkNyZWF0ZVNPUFByb2NlZHVyZRIlLnNlcnZpY2UudjEuQ3JlYXRlU09QUHJvY2VkdXJlUmVxdWVzdBomLnNlcnZpY2UudjEuQ3JlYXRlU09QUHJvY2VkdXJlUmVzcG9uc2USeAoZTGlzdFNPUFByb2NlZHVyZXNCeU5vZGVJZBIsLnNlcnZpY2UudjEuTGlzdFNPUFByb2NlZHVyZXNCeU5vZGVJZFJlcXVlc3QaLS5zZXJ2aWNlLnYxLkxpc3RTT1BQcm9jZWR1cmVzQnlOb2RlSWRSZXNwb25zZRJjChJVcGRhdGVTT1BQcm9jZWR1cmUSJS5zZXJ2aWNlLnYxLlVwZGF0ZVNPUFByb2NlZHVyZVJlcXVlc3QaJi5zZXJ2aWNlLnYxLlVwZGF0ZVNPUFByb2NlZHVyZVJlc3BvbnNlEmMKEkRlbGV0ZVNPUFByb2NlZHVyZRIlLnNlcnZpY2UudjEuRGVsZXRlU09QUHJvY2VkdXJlUmVxdWVzdBomLnNlcnZpY2UudjEuRGVsZXRlU09QUHJvY2VkdXJlUmVzcG9uc2USYAoRQXNzb2NpYXRlVXNlck5vZGUSJC5zZXJ2aWNlLnYxLkFzc29jaWF0ZVVzZXJOb2RlUmVxdWVzdBolLnNlcnZpY2UudjEuQXNzb2NpYXRlVXNlck5vZGVSZXNwb25zZRJUCg1MaXN0VXNlck5vZGVzEiAuc2VydmljZS52MS5MaXN0VXNlck5vZGVzUmVxdWVzdBohLnNlcnZpY2UudjEuTGlzdFVzZXJOb2Rlc1Jlc3BvbnNlQkBaPmdpdGh1Yi5jb20vemFwZG9zLWxhYnMvdW5ibGluay9zZXJ2ZXIvZ2VuL3NlcnZpY2UvdjE7c2VydmljZXYxYgZwcm90bzM", [file_google_protobuf_timestamp]);
 
 /**
  * @generated from message service.v1.Service
@@ -57,6 +57,48 @@ export const ServiceSchema: GenMessage<Service> = /*@__PURE__*/
   messageDesc(file_service_v1_service, 0);
 
 /**
+ * @generated from message service.v1.SOPProcedure
+ */
+export type SOPProcedure = Message<"service.v1.SOPProcedure"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: string node_id = 2;
+   */
+  nodeId: string;
+
+  /**
+   * @generated from field: string title = 3;
+   */
+  title: string;
+
+  /**
+   * @generated from field: string content = 4;
+   */
+  content: string;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp created_at = 5;
+   */
+  createdAt?: Timestamp;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp updated_at = 6;
+   */
+  updatedAt?: Timestamp;
+};
+
+/**
+ * Describes the message service.v1.SOPProcedure.
+ * Use `create(SOPProcedureSchema)` to create a new message.
+ */
+export const SOPProcedureSchema: GenMessage<SOPProcedure> = /*@__PURE__*/
+  messageDesc(file_service_v1_service, 1);
+
+/**
  * @generated from message service.v1.CreateServiceRequest
  */
 export type CreateServiceRequest = Message<"service.v1.CreateServiceRequest"> & {
@@ -81,7 +123,7 @@ export type CreateServiceRequest = Message<"service.v1.CreateServiceRequest"> & 
  * Use `create(CreateServiceRequestSchema)` to create a new message.
  */
 export const CreateServiceRequestSchema: GenMessage<CreateServiceRequest> = /*@__PURE__*/
-  messageDesc(file_service_v1_service, 1);
+  messageDesc(file_service_v1_service, 2);
 
 /**
  * @generated from message service.v1.CreateServiceResponse
@@ -98,7 +140,7 @@ export type CreateServiceResponse = Message<"service.v1.CreateServiceResponse"> 
  * Use `create(CreateServiceResponseSchema)` to create a new message.
  */
 export const CreateServiceResponseSchema: GenMessage<CreateServiceResponse> = /*@__PURE__*/
-  messageDesc(file_service_v1_service, 2);
+  messageDesc(file_service_v1_service, 3);
 
 /**
  * @generated from message service.v1.ListServicesByNodeIdRequest
@@ -115,7 +157,7 @@ export type ListServicesByNodeIdRequest = Message<"service.v1.ListServicesByNode
  * Use `create(ListServicesByNodeIdRequestSchema)` to create a new message.
  */
 export const ListServicesByNodeIdRequestSchema: GenMessage<ListServicesByNodeIdRequest> = /*@__PURE__*/
-  messageDesc(file_service_v1_service, 3);
+  messageDesc(file_service_v1_service, 4);
 
 /**
  * @generated from message service.v1.ListServicesByNodeIdResponse
@@ -137,7 +179,7 @@ export type ListServicesByNodeIdResponse = Message<"service.v1.ListServicesByNod
  * Use `create(ListServicesByNodeIdResponseSchema)` to create a new message.
  */
 export const ListServicesByNodeIdResponseSchema: GenMessage<ListServicesByNodeIdResponse> = /*@__PURE__*/
-  messageDesc(file_service_v1_service, 4);
+  messageDesc(file_service_v1_service, 5);
 
 /**
  * @generated from message service.v1.UpdateServiceRequest
@@ -164,7 +206,7 @@ export type UpdateServiceRequest = Message<"service.v1.UpdateServiceRequest"> & 
  * Use `create(UpdateServiceRequestSchema)` to create a new message.
  */
 export const UpdateServiceRequestSchema: GenMessage<UpdateServiceRequest> = /*@__PURE__*/
-  messageDesc(file_service_v1_service, 5);
+  messageDesc(file_service_v1_service, 6);
 
 /**
  * @generated from message service.v1.UpdateServiceResponse
@@ -181,7 +223,7 @@ export type UpdateServiceResponse = Message<"service.v1.UpdateServiceResponse"> 
  * Use `create(UpdateServiceResponseSchema)` to create a new message.
  */
 export const UpdateServiceResponseSchema: GenMessage<UpdateServiceResponse> = /*@__PURE__*/
-  messageDesc(file_service_v1_service, 6);
+  messageDesc(file_service_v1_service, 7);
 
 /**
  * @generated from message service.v1.DeleteServiceRequest
@@ -198,7 +240,7 @@ export type DeleteServiceRequest = Message<"service.v1.DeleteServiceRequest"> & 
  * Use `create(DeleteServiceRequestSchema)` to create a new message.
  */
 export const DeleteServiceRequestSchema: GenMessage<DeleteServiceRequest> = /*@__PURE__*/
-  messageDesc(file_service_v1_service, 7);
+  messageDesc(file_service_v1_service, 8);
 
 /**
  * @generated from message service.v1.DeleteServiceResponse
@@ -215,7 +257,163 @@ export type DeleteServiceResponse = Message<"service.v1.DeleteServiceResponse"> 
  * Use `create(DeleteServiceResponseSchema)` to create a new message.
  */
 export const DeleteServiceResponseSchema: GenMessage<DeleteServiceResponse> = /*@__PURE__*/
-  messageDesc(file_service_v1_service, 8);
+  messageDesc(file_service_v1_service, 9);
+
+/**
+ * @generated from message service.v1.CreateSOPProcedureRequest
+ */
+export type CreateSOPProcedureRequest = Message<"service.v1.CreateSOPProcedureRequest"> & {
+  /**
+   * @generated from field: string node_id = 1;
+   */
+  nodeId: string;
+
+  /**
+   * @generated from field: string title = 2;
+   */
+  title: string;
+
+  /**
+   * @generated from field: string content = 3;
+   */
+  content: string;
+};
+
+/**
+ * Describes the message service.v1.CreateSOPProcedureRequest.
+ * Use `create(CreateSOPProcedureRequestSchema)` to create a new message.
+ */
+export const CreateSOPProcedureRequestSchema: GenMessage<CreateSOPProcedureRequest> = /*@__PURE__*/
+  messageDesc(file_service_v1_service, 10);
+
+/**
+ * @generated from message service.v1.CreateSOPProcedureResponse
+ */
+export type CreateSOPProcedureResponse = Message<"service.v1.CreateSOPProcedureResponse"> & {
+  /**
+   * @generated from field: service.v1.SOPProcedure procedure = 1;
+   */
+  procedure?: SOPProcedure;
+};
+
+/**
+ * Describes the message service.v1.CreateSOPProcedureResponse.
+ * Use `create(CreateSOPProcedureResponseSchema)` to create a new message.
+ */
+export const CreateSOPProcedureResponseSchema: GenMessage<CreateSOPProcedureResponse> = /*@__PURE__*/
+  messageDesc(file_service_v1_service, 11);
+
+/**
+ * @generated from message service.v1.ListSOPProceduresByNodeIdRequest
+ */
+export type ListSOPProceduresByNodeIdRequest = Message<"service.v1.ListSOPProceduresByNodeIdRequest"> & {
+  /**
+   * @generated from field: string node_id = 1;
+   */
+  nodeId: string;
+};
+
+/**
+ * Describes the message service.v1.ListSOPProceduresByNodeIdRequest.
+ * Use `create(ListSOPProceduresByNodeIdRequestSchema)` to create a new message.
+ */
+export const ListSOPProceduresByNodeIdRequestSchema: GenMessage<ListSOPProceduresByNodeIdRequest> = /*@__PURE__*/
+  messageDesc(file_service_v1_service, 12);
+
+/**
+ * @generated from message service.v1.ListSOPProceduresByNodeIdResponse
+ */
+export type ListSOPProceduresByNodeIdResponse = Message<"service.v1.ListSOPProceduresByNodeIdResponse"> & {
+  /**
+   * @generated from field: repeated service.v1.SOPProcedure procedures = 1;
+   */
+  procedures: SOPProcedure[];
+};
+
+/**
+ * Describes the message service.v1.ListSOPProceduresByNodeIdResponse.
+ * Use `create(ListSOPProceduresByNodeIdResponseSchema)` to create a new message.
+ */
+export const ListSOPProceduresByNodeIdResponseSchema: GenMessage<ListSOPProceduresByNodeIdResponse> = /*@__PURE__*/
+  messageDesc(file_service_v1_service, 13);
+
+/**
+ * @generated from message service.v1.UpdateSOPProcedureRequest
+ */
+export type UpdateSOPProcedureRequest = Message<"service.v1.UpdateSOPProcedureRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: string title = 2;
+   */
+  title: string;
+
+  /**
+   * @generated from field: string content = 3;
+   */
+  content: string;
+};
+
+/**
+ * Describes the message service.v1.UpdateSOPProcedureRequest.
+ * Use `create(UpdateSOPProcedureRequestSchema)` to create a new message.
+ */
+export const UpdateSOPProcedureRequestSchema: GenMessage<UpdateSOPProcedureRequest> = /*@__PURE__*/
+  messageDesc(file_service_v1_service, 14);
+
+/**
+ * @generated from message service.v1.UpdateSOPProcedureResponse
+ */
+export type UpdateSOPProcedureResponse = Message<"service.v1.UpdateSOPProcedureResponse"> & {
+  /**
+   * @generated from field: service.v1.SOPProcedure procedure = 1;
+   */
+  procedure?: SOPProcedure;
+};
+
+/**
+ * Describes the message service.v1.UpdateSOPProcedureResponse.
+ * Use `create(UpdateSOPProcedureResponseSchema)` to create a new message.
+ */
+export const UpdateSOPProcedureResponseSchema: GenMessage<UpdateSOPProcedureResponse> = /*@__PURE__*/
+  messageDesc(file_service_v1_service, 15);
+
+/**
+ * @generated from message service.v1.DeleteSOPProcedureRequest
+ */
+export type DeleteSOPProcedureRequest = Message<"service.v1.DeleteSOPProcedureRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+};
+
+/**
+ * Describes the message service.v1.DeleteSOPProcedureRequest.
+ * Use `create(DeleteSOPProcedureRequestSchema)` to create a new message.
+ */
+export const DeleteSOPProcedureRequestSchema: GenMessage<DeleteSOPProcedureRequest> = /*@__PURE__*/
+  messageDesc(file_service_v1_service, 16);
+
+/**
+ * @generated from message service.v1.DeleteSOPProcedureResponse
+ */
+export type DeleteSOPProcedureResponse = Message<"service.v1.DeleteSOPProcedureResponse"> & {
+  /**
+   * @generated from field: bool success = 1;
+   */
+  success: boolean;
+};
+
+/**
+ * Describes the message service.v1.DeleteSOPProcedureResponse.
+ * Use `create(DeleteSOPProcedureResponseSchema)` to create a new message.
+ */
+export const DeleteSOPProcedureResponseSchema: GenMessage<DeleteSOPProcedureResponse> = /*@__PURE__*/
+  messageDesc(file_service_v1_service, 17);
 
 /**
  * @generated from message service.v1.AssociateUserNodeRequest
@@ -232,7 +430,7 @@ export type AssociateUserNodeRequest = Message<"service.v1.AssociateUserNodeRequ
  * Use `create(AssociateUserNodeRequestSchema)` to create a new message.
  */
 export const AssociateUserNodeRequestSchema: GenMessage<AssociateUserNodeRequest> = /*@__PURE__*/
-  messageDesc(file_service_v1_service, 9);
+  messageDesc(file_service_v1_service, 18);
 
 /**
  * @generated from message service.v1.AssociateUserNodeResponse
@@ -249,7 +447,7 @@ export type AssociateUserNodeResponse = Message<"service.v1.AssociateUserNodeRes
  * Use `create(AssociateUserNodeResponseSchema)` to create a new message.
  */
 export const AssociateUserNodeResponseSchema: GenMessage<AssociateUserNodeResponse> = /*@__PURE__*/
-  messageDesc(file_service_v1_service, 10);
+  messageDesc(file_service_v1_service, 19);
 
 /**
  * @generated from message service.v1.ListUserNodesRequest
@@ -262,7 +460,7 @@ export type ListUserNodesRequest = Message<"service.v1.ListUserNodesRequest"> & 
  * Use `create(ListUserNodesRequestSchema)` to create a new message.
  */
 export const ListUserNodesRequestSchema: GenMessage<ListUserNodesRequest> = /*@__PURE__*/
-  messageDesc(file_service_v1_service, 11);
+  messageDesc(file_service_v1_service, 20);
 
 /**
  * @generated from message service.v1.ListUserNodesResponse
@@ -279,7 +477,7 @@ export type ListUserNodesResponse = Message<"service.v1.ListUserNodesResponse"> 
  * Use `create(ListUserNodesResponseSchema)` to create a new message.
  */
 export const ListUserNodesResponseSchema: GenMessage<ListUserNodesResponse> = /*@__PURE__*/
-  messageDesc(file_service_v1_service, 12);
+  messageDesc(file_service_v1_service, 21);
 
 /**
  * @generated from service service.v1.ServiceService
@@ -318,6 +516,38 @@ export const ServiceService: GenService<{
     methodKind: "unary";
     input: typeof DeleteServiceRequestSchema;
     output: typeof DeleteServiceResponseSchema;
+  },
+  /**
+   * @generated from rpc service.v1.ServiceService.CreateSOPProcedure
+   */
+  createSOPProcedure: {
+    methodKind: "unary";
+    input: typeof CreateSOPProcedureRequestSchema;
+    output: typeof CreateSOPProcedureResponseSchema;
+  },
+  /**
+   * @generated from rpc service.v1.ServiceService.ListSOPProceduresByNodeId
+   */
+  listSOPProceduresByNodeId: {
+    methodKind: "unary";
+    input: typeof ListSOPProceduresByNodeIdRequestSchema;
+    output: typeof ListSOPProceduresByNodeIdResponseSchema;
+  },
+  /**
+   * @generated from rpc service.v1.ServiceService.UpdateSOPProcedure
+   */
+  updateSOPProcedure: {
+    methodKind: "unary";
+    input: typeof UpdateSOPProcedureRequestSchema;
+    output: typeof UpdateSOPProcedureResponseSchema;
+  },
+  /**
+   * @generated from rpc service.v1.ServiceService.DeleteSOPProcedure
+   */
+  deleteSOPProcedure: {
+    methodKind: "unary";
+    input: typeof DeleteSOPProcedureRequestSchema;
+    output: typeof DeleteSOPProcedureResponseSchema;
   },
   /**
    * Node access management

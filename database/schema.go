@@ -34,6 +34,9 @@ func (c *Client) EnsureSchema() error {
 	if _, err := c.db.Exec(createEventTablesSQL); err != nil {
 		return fmt.Errorf("failed to create event tables: %w", err)
 	}
+	if _, err := c.db.Exec(createSOPProcedureTablesSQL); err != nil {
+		return fmt.Errorf("failed to create SOP procedure tables: %w", err)
+	}
 	return nil
 }
 
@@ -50,6 +53,9 @@ func (c *Client) DropSchema() error {
 	}
 	if _, err := c.db.Exec(dropEventTablesSQL); err != nil {
 		return fmt.Errorf("failed to drop event tables: %w", err)
+	}
+	if _, err := c.db.Exec(dropSOPProcedureTablesSQL); err != nil {
+		return fmt.Errorf("failed to drop SOP procedure tables: %w", err)
 	}
 	if _, err := c.db.Exec(dropChatTablesSQL); err != nil {
 		return fmt.Errorf("failed to drop chat tables: %w", err)

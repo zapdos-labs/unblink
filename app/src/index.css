@@ -91,6 +91,18 @@ body {
     @apply flex items-center justify-center space-x-2 text-neutral-400 hover:text-white transition-all duration-100 bg-neutral-900 hover:bg-neutral-950 border border-neutral-800/0 hover:border-neutral-800 px-4 py-2 rounded-lg;
   }
 
+  .sheet-action-btn {
+    @apply w-full py-3 rounded-lg font-semibold transition-all outline-none disabled:bg-neu-700 disabled:text-neu-500 disabled:cursor-not-allowed;
+  }
+
+  .sheet-action-btn-primary {
+    @apply bg-white text-black hover:bg-neu-200 disabled:hover:bg-neu-700;
+  }
+
+  .sheet-action-btn-danger {
+    @apply bg-red-600 text-white hover:bg-red-500 disabled:hover:bg-neu-700;
+  }
+
   .prose-text { line-height: 1.75; overflow-x: hidden; }
   .prose-text ul { margin-top: 1.25rem; margin-bottom: 1.25rem; list-style-type: disc; padding-left: 1.5rem; }
   .prose-text ul ul { margin-top: 0.75rem; margin-bottom: 0.75rem; list-style-type: circle; }

@@ -81,7 +81,6 @@ export default function CameraView() {
                 <Menu.Root>
                   <Menu.Trigger class="focus:outline-none drop-shadow-xl px-3 py-1.5 rounded-xl border border-neu-750 bg-neu-800 hover:bg-neu-850 flex items-center space-x-2 text-sm text-white transition-colors">
                     <FiActivity class="w-4 h-4" />
-                    <span>Stats</span>
                   </Menu.Trigger>
                   <Portal>
                     <Menu.Positioner>

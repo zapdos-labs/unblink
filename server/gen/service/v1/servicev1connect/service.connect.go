@@ -45,6 +45,18 @@ const (
 	// ServiceServiceDeleteServiceProcedure is the fully-qualified name of the ServiceService's
 	// DeleteService RPC.
 	ServiceServiceDeleteServiceProcedure = "/service.v1.ServiceService/DeleteService"
+	// ServiceServiceCreateSOPProcedureProcedure is the fully-qualified name of the ServiceService's
+	// CreateSOPProcedure RPC.
+	ServiceServiceCreateSOPProcedureProcedure = "/service.v1.ServiceService/CreateSOPProcedure"
+	// ServiceServiceListSOPProceduresByNodeIdProcedure is the fully-qualified name of the
+	// ServiceService's ListSOPProceduresByNodeId RPC.
+	ServiceServiceListSOPProceduresByNodeIdProcedure = "/service.v1.ServiceService/ListSOPProceduresByNodeId"
+	// ServiceServiceUpdateSOPProcedureProcedure is the fully-qualified name of the ServiceService's
+	// UpdateSOPProcedure RPC.
+	ServiceServiceUpdateSOPProcedureProcedure = "/service.v1.ServiceService/UpdateSOPProcedure"
+	// ServiceServiceDeleteSOPProcedureProcedure is the fully-qualified name of the ServiceService's
+	// DeleteSOPProcedure RPC.
+	ServiceServiceDeleteSOPProcedureProcedure = "/service.v1.ServiceService/DeleteSOPProcedure"
 	// ServiceServiceAssociateUserNodeProcedure is the fully-qualified name of the ServiceService's
 	// AssociateUserNode RPC.
 	ServiceServiceAssociateUserNodeProcedure = "/service.v1.ServiceService/AssociateUserNode"
@@ -60,6 +72,10 @@ type ServiceServiceClient interface {
 	ListServicesByNodeId(context.Context, *connect.Request[v1.ListServicesByNodeIdRequest]) (*connect.Response[v1.ListServicesByNodeIdResponse], error)
 	UpdateService(context.Context, *connect.Request[v1.UpdateServiceRequest]) (*connect.Response[v1.UpdateServiceResponse], error)
 	DeleteService(context.Context, *connect.Request[v1.DeleteServiceRequest]) (*connect.Response[v1.DeleteServiceResponse], error)
+	CreateSOPProcedure(context.Context, *connect.Request[v1.CreateSOPProcedureRequest]) (*connect.Response[v1.CreateSOPProcedureResponse], error)
+	ListSOPProceduresByNodeId(context.Context, *connect.Request[v1.ListSOPProceduresByNodeIdRequest]) (*connect.Response[v1.ListSOPProceduresByNodeIdResponse], error)
+	UpdateSOPProcedure(context.Context, *connect.Request[v1.UpdateSOPProcedureRequest]) (*connect.Response[v1.UpdateSOPProcedureResponse], error)
+	DeleteSOPProcedure(context.Context, *connect.Request[v1.DeleteSOPProcedureRequest]) (*connect.Response[v1.DeleteSOPProcedureResponse], error)
 	// Node access management
 	AssociateUserNode(context.Context, *connect.Request[v1.AssociateUserNodeRequest]) (*connect.Response[v1.AssociateUserNodeResponse], error)
 	ListUserNodes(context.Context, *connect.Request[v1.ListUserNodesRequest]) (*connect.Response[v1.ListUserNodesResponse], error)
@@ -100,6 +116,30 @@ func NewServiceServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(serviceServiceMethods.ByName("DeleteService")),
 			connect.WithClientOptions(opts...),
 		),
+		createSOPProcedure: connect.NewClient[v1.CreateSOPProcedureRequest, v1.CreateSOPProcedureResponse](
+			httpClient,
+			baseURL+ServiceServiceCreateSOPProcedureProcedure,
+			connect.WithSchema(serviceServiceMethods.ByName("CreateSOPProcedure")),
+			connect.WithClientOptions(opts...),
+		),
+		listSOPProceduresByNodeId: connect.NewClient[v1.ListSOPProceduresByNodeIdRequest, v1.ListSOPProceduresByNodeIdResponse](
+			httpClient,
+			baseURL+ServiceServiceListSOPProceduresByNodeIdProcedure,
+			connect.WithSchema(serviceServiceMethods.ByName("ListSOPProceduresByNodeId")),
+			connect.WithClientOptions(opts...),
+		),
+		updateSOPProcedure: connect.NewClient[v1.UpdateSOPProcedureRequest, v1.UpdateSOPProcedureResponse](
+			httpClient,
+			baseURL+ServiceServiceUpdateSOPProcedureProcedure,
+			connect.WithSchema(serviceServiceMethods.ByName("UpdateSOPProcedure")),
+			connect.WithClientOptions(opts...),
+		),
+		deleteSOPProcedure: connect.NewClient[v1.DeleteSOPProcedureRequest, v1.DeleteSOPProcedureResponse](
+			httpClient,
+			baseURL+ServiceServiceDeleteSOPProcedureProcedure,
+			connect.WithSchema(serviceServiceMethods.ByName("DeleteSOPProcedure")),
+			connect.WithClientOptions(opts...),
+		),
 		associateUserNode: connect.NewClient[v1.AssociateUserNodeRequest, v1.AssociateUserNodeResponse](
 			httpClient,
 			baseURL+ServiceServiceAssociateUserNodeProcedure,
@@ -117,12 +157,16 @@ func NewServiceServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 
 // serviceServiceClient implements ServiceServiceClient.
 type serviceServiceClient struct {
-	createService        *connect.Client[v1.CreateServiceRequest, v1.CreateServiceResponse]
-	listServicesByNodeId *connect.Client[v1.ListServicesByNodeIdRequest, v1.ListServicesByNodeIdResponse]
-	updateService        *connect.Client[v1.UpdateServiceRequest, v1.UpdateServiceResponse]
-	deleteService        *connect.Client[v1.DeleteServiceRequest, v1.DeleteServiceResponse]
-	associateUserNode    *connect.Client[v1.AssociateUserNodeRequest, v1.AssociateUserNodeResponse]
-	listUserNodes        *connect.Client[v1.ListUserNodesRequest, v1.ListUserNodesResponse]
+	createService             *connect.Client[v1.CreateServiceRequest, v1.CreateServiceResponse]
+	listServicesByNodeId      *connect.Client[v1.ListServicesByNodeIdRequest, v1.ListServicesByNodeIdResponse]
+	updateService             *connect.Client[v1.UpdateServiceRequest, v1.UpdateServiceResponse]
+	deleteService             *connect.Client[v1.DeleteServiceRequest, v1.DeleteServiceResponse]
+	createSOPProcedure        *connect.Client[v1.CreateSOPProcedureRequest, v1.CreateSOPProcedureResponse]
+	listSOPProceduresByNodeId *connect.Client[v1.ListSOPProceduresByNodeIdRequest, v1.ListSOPProceduresByNodeIdResponse]
+	updateSOPProcedure        *connect.Client[v1.UpdateSOPProcedureRequest, v1.UpdateSOPProcedureResponse]
+	deleteSOPProcedure        *connect.Client[v1.DeleteSOPProcedureRequest, v1.DeleteSOPProcedureResponse]
+	associateUserNode         *connect.Client[v1.AssociateUserNodeRequest, v1.AssociateUserNodeResponse]
+	listUserNodes             *connect.Client[v1.ListUserNodesRequest, v1.ListUserNodesResponse]
 }
 
 // CreateService calls service.v1.ServiceService.CreateService.
@@ -145,6 +189,26 @@ func (c *serviceServiceClient) DeleteService(ctx context.Context, req *connect.R
 	return c.deleteService.CallUnary(ctx, req)
 }
 
+// CreateSOPProcedure calls service.v1.ServiceService.CreateSOPProcedure.
+func (c *serviceServiceClient) CreateSOPProcedure(ctx context.Context, req *connect.Request[v1.CreateSOPProcedureRequest]) (*connect.Response[v1.CreateSOPProcedureResponse], error) {
+	return c.createSOPProcedure.CallUnary(ctx, req)
+}
+
+// ListSOPProceduresByNodeId calls service.v1.ServiceService.ListSOPProceduresByNodeId.
+func (c *serviceServiceClient) ListSOPProceduresByNodeId(ctx context.Context, req *connect.Request[v1.ListSOPProceduresByNodeIdRequest]) (*connect.Response[v1.ListSOPProceduresByNodeIdResponse], error) {
+	return c.listSOPProceduresByNodeId.CallUnary(ctx, req)
+}
+
+// UpdateSOPProcedure calls service.v1.ServiceService.UpdateSOPProcedure.
+func (c *serviceServiceClient) UpdateSOPProcedure(ctx context.Context, req *connect.Request[v1.UpdateSOPProcedureRequest]) (*connect.Response[v1.UpdateSOPProcedureResponse], error) {
+	return c.updateSOPProcedure.CallUnary(ctx, req)
+}
+
+// DeleteSOPProcedure calls service.v1.ServiceService.DeleteSOPProcedure.
+func (c *serviceServiceClient) DeleteSOPProcedure(ctx context.Context, req *connect.Request[v1.DeleteSOPProcedureRequest]) (*connect.Response[v1.DeleteSOPProcedureResponse], error) {
+	return c.deleteSOPProcedure.CallUnary(ctx, req)
+}
+
 // AssociateUserNode calls service.v1.ServiceService.AssociateUserNode.
 func (c *serviceServiceClient) AssociateUserNode(ctx context.Context, req *connect.Request[v1.AssociateUserNodeRequest]) (*connect.Response[v1.AssociateUserNodeResponse], error) {
 	return c.associateUserNode.CallUnary(ctx, req)
@@ -162,6 +226,10 @@ type ServiceServiceHandler interface {
 	ListServicesByNodeId(context.Context, *connect.Request[v1.ListServicesByNodeIdRequest]) (*connect.Response[v1.ListServicesByNodeIdResponse], error)
 	UpdateService(context.Context, *connect.Request[v1.UpdateServiceRequest]) (*connect.Response[v1.UpdateServiceResponse], error)
 	DeleteService(context.Context, *connect.Request[v1.DeleteServiceRequest]) (*connect.Response[v1.DeleteServiceResponse], error)
+	CreateSOPProcedure(context.Context, *connect.Request[v1.CreateSOPProcedureRequest]) (*connect.Response[v1.CreateSOPProcedureResponse], error)
+	ListSOPProceduresByNodeId(context.Context, *connect.Request[v1.ListSOPProceduresByNodeIdRequest]) (*connect.Response[v1.ListSOPProceduresByNodeIdResponse], error)
+	UpdateSOPProcedure(context.Context, *connect.Request[v1.UpdateSOPProcedureRequest]) (*connect.Response[v1.UpdateSOPProcedureResponse], error)
+	DeleteSOPProcedure(context.Context, *connect.Request[v1.DeleteSOPProcedureRequest]) (*connect.Response[v1.DeleteSOPProcedureResponse], error)
 	// Node access management
 	AssociateUserNode(context.Context, *connect.Request[v1.AssociateUserNodeRequest]) (*connect.Response[v1.AssociateUserNodeResponse], error)
 	ListUserNodes(context.Context, *connect.Request[v1.ListUserNodesRequest]) (*connect.Response[v1.ListUserNodesResponse], error)
@@ -198,6 +266,30 @@ func NewServiceServiceHandler(svc ServiceServiceHandler, opts ...connect.Handler
 		connect.WithSchema(serviceServiceMethods.ByName("DeleteService")),
 		connect.WithHandlerOptions(opts...),
 	)
+	serviceServiceCreateSOPProcedureHandler := connect.NewUnaryHandler(
+		ServiceServiceCreateSOPProcedureProcedure,
+		svc.CreateSOPProcedure,
+		connect.WithSchema(serviceServiceMethods.ByName("CreateSOPProcedure")),
+		connect.WithHandlerOptions(opts...),
+	)
+	serviceServiceListSOPProceduresByNodeIdHandler := connect.NewUnaryHandler(
+		ServiceServiceListSOPProceduresByNodeIdProcedure,
+		svc.ListSOPProceduresByNodeId,
+		connect.WithSchema(serviceServiceMethods.ByName("ListSOPProceduresByNodeId")),
+		connect.WithHandlerOptions(opts...),
+	)
+	serviceServiceUpdateSOPProcedureHandler := connect.NewUnaryHandler(
+		ServiceServiceUpdateSOPProcedureProcedure,
+		svc.UpdateSOPProcedure,
+		connect.WithSchema(serviceServiceMethods.ByName("UpdateSOPProcedure")),
+		connect.WithHandlerOptions(opts...),
+	)
+	serviceServiceDeleteSOPProcedureHandler := connect.NewUnaryHandler(
+		ServiceServiceDeleteSOPProcedureProcedure,
+		svc.DeleteSOPProcedure,
+		connect.WithSchema(serviceServiceMethods.ByName("DeleteSOPProcedure")),
+		connect.WithHandlerOptions(opts...),
+	)
 	serviceServiceAssociateUserNodeHandler := connect.NewUnaryHandler(
 		ServiceServiceAssociateUserNodeProcedure,
 		svc.AssociateUserNode,
@@ -220,6 +312,14 @@ func NewServiceServiceHandler(svc ServiceServiceHandler, opts ...connect.Handler
 			serviceServiceUpdateServiceHandler.ServeHTTP(w, r)
 		case ServiceServiceDeleteServiceProcedure:
 			serviceServiceDeleteServiceHandler.ServeHTTP(w, r)
+		case ServiceServiceCreateSOPProcedureProcedure:
+			serviceServiceCreateSOPProcedureHandler.ServeHTTP(w, r)
+		case ServiceServiceListSOPProceduresByNodeIdProcedure:
+			serviceServiceListSOPProceduresByNodeIdHandler.ServeHTTP(w, r)
+		case ServiceServiceUpdateSOPProcedureProcedure:
+			serviceServiceUpdateSOPProcedureHandler.ServeHTTP(w, r)
+		case ServiceServiceDeleteSOPProcedureProcedure:
+			serviceServiceDeleteSOPProcedureHandler.ServeHTTP(w, r)
 		case ServiceServiceAssociateUserNodeProcedure:
 			serviceServiceAssociateUserNodeHandler.ServeHTTP(w, r)
 		case ServiceServiceListUserNodesProcedure:
@@ -247,6 +347,22 @@ func (UnimplementedServiceServiceHandler) UpdateService(context.Context, *connec
 
 func (UnimplementedServiceServiceHandler) DeleteService(context.Context, *connect.Request[v1.DeleteServiceRequest]) (*connect.Response[v1.DeleteServiceResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("service.v1.ServiceService.DeleteService is not implemented"))
+}
+
+func (UnimplementedServiceServiceHandler) CreateSOPProcedure(context.Context, *connect.Request[v1.CreateSOPProcedureRequest]) (*connect.Response[v1.CreateSOPProcedureResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("service.v1.ServiceService.CreateSOPProcedure is not implemented"))
+}
+
+func (UnimplementedServiceServiceHandler) ListSOPProceduresByNodeId(context.Context, *connect.Request[v1.ListSOPProceduresByNodeIdRequest]) (*connect.Response[v1.ListSOPProceduresByNodeIdResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("service.v1.ServiceService.ListSOPProceduresByNodeId is not implemented"))
+}
+
+func (UnimplementedServiceServiceHandler) UpdateSOPProcedure(context.Context, *connect.Request[v1.UpdateSOPProcedureRequest]) (*connect.Response[v1.UpdateSOPProcedureResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("service.v1.ServiceService.UpdateSOPProcedure is not implemented"))
+}
+
+func (UnimplementedServiceServiceHandler) DeleteSOPProcedure(context.Context, *connect.Request[v1.DeleteSOPProcedureRequest]) (*connect.Response[v1.DeleteSOPProcedureResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("service.v1.ServiceService.DeleteSOPProcedure is not implemented"))
 }
 
 func (UnimplementedServiceServiceHandler) AssociateUserNode(context.Context, *connect.Request[v1.AssociateUserNodeRequest]) (*connect.Response[v1.AssociateUserNodeResponse], error) {

@@ -16,6 +16,7 @@ export type Tab =
   | { type: 'view'; nodeId: string; serviceId: string; name: string }
   | { type: 'settings' }
   | { type: 'events' }
+  | { type: 'procedures' }
   | { type: 'camera' }
 
 // Services state

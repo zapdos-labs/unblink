@@ -61,6 +61,7 @@ export function useEventPanel(props: EventPanelProps) {
         <span>Events</span>
       </>}>
         <FiChevronRight class="w-4 h-4" />
+        <span>Events</span>
       </Show>
     </Button>
   );
@@ -88,9 +89,7 @@ export function useEventPanel(props: EventPanelProps) {
           <Show when={showEventPanel()}>
             <div class="h-14 flex items-center gap-2 p-2 border-b border-neu-800">
               <div class="flex-1" />
-              <Button onClick={() => setShowEventPanel(false)}>
-                <FiChevronRight class="w-4 h-4" />
-              </Button>
+              <Toggle />
             </div>
           </Show>
 

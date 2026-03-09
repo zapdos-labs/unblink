@@ -32,6 +32,11 @@ type Database interface {
 	ListServicesByNodeId(nodeID string) ([]*servicev1.Service, error)
 	UpdateService(id, name, url string) error
 	DeleteService(id string) error
+	CreateSOPProcedure(id, nodeID, title, content string) error
+	GetSOPProcedure(id string) (*servicev1.SOPProcedure, error)
+	ListSOPProceduresByNodeID(nodeID string) ([]*servicev1.SOPProcedure, error)
+	UpdateSOPProcedure(id, title, content string) error
+	DeleteSOPProcedure(id string) error
 	CheckNodeAccess(nodeID, userID string) (bool, error)
 	IsGuest(userID string) (bool, error)
 	AssociateUserNode(userID, nodeID string) error
@@ -216,6 +221,123 @@ func (s *Service) DeleteService(ctx context.Context, req *connect.Request[servic
 	return connect.NewResponse(&servicev1.DeleteServiceResponse{
 		Success: true,
 	}), nil
+}
+
+func (s *Service) CreateSOPProcedure(ctx context.Context, req *connect.Request[servicev1.CreateSOPProcedureRequest]) (*connect.Response[servicev1.CreateSOPProcedureResponse], error) {
+	if req.Msg.NodeId == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("node_id is required"))
+	}
+	title := req.Msg.Title
+	if title == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("title is required"))
+	}
+	content := req.Msg.Content
+	if content == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("content is required"))
+	}
+
+	if err := ctxutil.CheckNodeAccessWithContext(ctx, s.db, req.Msg.NodeId); err != nil {
+		return nil, err
+	}
+
+	id := generateID()
+	if err := s.db.CreateSOPProcedure(id, req.Msg.NodeId, title, content); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to create SOP procedure: %w", err))
+	}
+
+	created, err := s.db.GetSOPProcedure(id)
+	if err != nil || created == nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to load SOP procedure after create: %w", err))
+	}
+
+	log.Printf("[Service] Created SOP procedure: id=%s node_id=%s", id, req.Msg.NodeId)
+	return connect.NewResponse(&servicev1.CreateSOPProcedureResponse{
+		Procedure: created,
+	}), nil
+}
+
+func (s *Service) ListSOPProceduresByNodeId(ctx context.Context, req *connect.Request[servicev1.ListSOPProceduresByNodeIdRequest]) (*connect.Response[servicev1.ListSOPProceduresByNodeIdResponse], error) {
+	if req.Msg.NodeId == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("node_id is required"))
+	}
+
+	if err := ctxutil.CheckNodeAccessWithContext(ctx, s.db, req.Msg.NodeId); err != nil {
+		return nil, err
+	}
+
+	procedures, err := s.db.ListSOPProceduresByNodeID(req.Msg.NodeId)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to list SOP procedures: %w", err))
+	}
+
+	return connect.NewResponse(&servicev1.ListSOPProceduresByNodeIdResponse{
+		Procedures: procedures,
+	}), nil
+}
+
+func (s *Service) UpdateSOPProcedure(ctx context.Context, req *connect.Request[servicev1.UpdateSOPProcedureRequest]) (*connect.Response[servicev1.UpdateSOPProcedureResponse], error) {
+	if req.Msg.Id == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("id is required"))
+	}
+	title := req.Msg.Title
+	if title == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("title is required"))
+	}
+	content := req.Msg.Content
+	if content == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("content is required"))
+	}
+
+	existing, err := s.db.GetSOPProcedure(req.Msg.Id)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to load SOP procedure: %w", err))
+	}
+	if existing == nil {
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("SOP procedure not found"))
+	}
+
+	if err := ctxutil.CheckNodeAccessWithContext(ctx, s.db, existing.NodeId); err != nil {
+		return nil, err
+	}
+
+	if err := s.db.UpdateSOPProcedure(req.Msg.Id, title, content); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to update SOP procedure: %w", err))
+	}
+
+	updated, err := s.db.GetSOPProcedure(req.Msg.Id)
+	if err != nil || updated == nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to load SOP procedure after update: %w", err))
+	}
+
+	log.Printf("[Service] Updated SOP procedure: id=%s node_id=%s", req.Msg.Id, updated.NodeId)
+	return connect.NewResponse(&servicev1.UpdateSOPProcedureResponse{
+		Procedure: updated,
+	}), nil
+}
+
+func (s *Service) DeleteSOPProcedure(ctx context.Context, req *connect.Request[servicev1.DeleteSOPProcedureRequest]) (*connect.Response[servicev1.DeleteSOPProcedureResponse], error) {
+	if req.Msg.Id == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("id is required"))
+	}
+
+	existing, err := s.db.GetSOPProcedure(req.Msg.Id)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to load SOP procedure: %w", err))
+	}
+	if existing == nil {
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("SOP procedure not found"))
+	}
+
+	if err := ctxutil.CheckNodeAccessWithContext(ctx, s.db, existing.NodeId); err != nil {
+		return nil, err
+	}
+
+	if err := s.db.DeleteSOPProcedure(req.Msg.Id); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to delete SOP procedure: %w", err))
+	}
+
+	log.Printf("[Service] Deleted SOP procedure: id=%s node_id=%s", req.Msg.Id, existing.NodeId)
+	return connect.NewResponse(&servicev1.DeleteSOPProcedureResponse{Success: true}), nil
 }
 
 // AssociateUserNode associates a node with the authenticated user

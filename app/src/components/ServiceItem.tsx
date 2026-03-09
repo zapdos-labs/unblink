@@ -1,4 +1,4 @@
-import { FiVideo, FiMoreVertical, FiEdit2 } from "solid-icons/fi";
+import { FiVideo, FiMoreVertical, FiEdit2, FiTrash2 } from "solid-icons/fi";
 import { Show } from "solid-js";
 import { ArkMenu } from "../ark/ArkMenu";
 
@@ -36,7 +36,8 @@ export default function ServiceItem(props: ServiceItemProps) {
       <Show when={!props.collapsed}>
         <ArkMenu
           items={() => [
-            { id: "edit", title: "Edit", icon: <FiEdit2 class="w-4 h-4" /> }
+            { id: "edit", title: "Edit", icon: <FiEdit2 class="w-4 h-4" /> },
+            { id: "delete", title: "Delete", icon: <FiTrash2 class="w-4 h-4" /> },
           ]}
           class="group-hover:opacity-100 opacity-0 p-2 border border-neu-750 rounded-lg text-neu-400 hover:bg-neu-750 hover:border-neu-700 hover:text-white transition-colors"
           triggerIcon={<FiMoreVertical class="w-4 h-4" />}

@@ -121,11 +121,7 @@ export const ServiceEditSheet = (props: ServiceEditSheetProps) => {
             <button
               onClick={() => handleSave()}
               disabled={!name() || !serviceUrl() || isSubmitting()}
-              class="w-full py-3 rounded-lg font-semibold transition-all outline-none"
-              classList={{
-                "bg-white text-black hover:bg-neu-200": !!name() && !!serviceUrl() && !isSubmitting(),
-                "bg-neu-700 text-neu-500 cursor-not-allowed": !name() || !serviceUrl() || isSubmitting(),
-              }}
+              class="sheet-action-btn sheet-action-btn-primary"
             >
               {isSubmitting() ? "Saving..." : "Save Changes"}
             </button>

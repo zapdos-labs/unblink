@@ -6,6 +6,7 @@ import SideBar from './SideBar'
 import ChatView from './ChatView'
 import EventsView from './EventsView'
 import SettingsView from './SettingsView'
+import ProceduresView from './ProceduresView'
 import NodeRouteFallback from './NodeRouteFallback'
 import { useLiveUpdates } from '../hooks/useLiveUpdates'
 
@@ -77,6 +78,9 @@ export default function Main(props: MainProps) {
               </Match>
               <Match when={activeTab().type === 'events'}>
                 <EventsView nodeId={props.nodeId} />
+              </Match>
+              <Match when={activeTab().type === 'procedures'}>
+                <ProceduresView nodeId={props.nodeId} />
               </Match>
               <Match when={activeTab().type === 'settings'}>
                 <SettingsView nodeId={props.nodeId} />

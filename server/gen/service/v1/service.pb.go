@@ -106,6 +106,90 @@ func (x *Service) GetUpdatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+type SOPProcedure struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	NodeId        string                 `protobuf:"bytes,2,opt,name=node_id,json=nodeId,proto3" json:"node_id,omitempty"`
+	Title         string                 `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
+	Content       string                 `protobuf:"bytes,4,opt,name=content,proto3" json:"content,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SOPProcedure) Reset() {
+	*x = SOPProcedure{}
+	mi := &file_service_v1_service_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SOPProcedure) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SOPProcedure) ProtoMessage() {}
+
+func (x *SOPProcedure) ProtoReflect() protoreflect.Message {
+	mi := &file_service_v1_service_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SOPProcedure.ProtoReflect.Descriptor instead.
+func (*SOPProcedure) Descriptor() ([]byte, []int) {
+	return file_service_v1_service_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *SOPProcedure) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *SOPProcedure) GetNodeId() string {
+	if x != nil {
+		return x.NodeId
+	}
+	return ""
+}
+
+func (x *SOPProcedure) GetTitle() string {
+	if x != nil {
+		return x.Title
+	}
+	return ""
+}
+
+func (x *SOPProcedure) GetContent() string {
+	if x != nil {
+		return x.Content
+	}
+	return ""
+}
+
+func (x *SOPProcedure) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+func (x *SOPProcedure) GetUpdatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return nil
+}
+
 type CreateServiceRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
@@ -117,7 +201,7 @@ type CreateServiceRequest struct {
 
 func (x *CreateServiceRequest) Reset() {
 	*x = CreateServiceRequest{}
-	mi := &file_service_v1_service_proto_msgTypes[1]
+	mi := &file_service_v1_service_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -129,7 +213,7 @@ func (x *CreateServiceRequest) String() string {
 func (*CreateServiceRequest) ProtoMessage() {}
 
 func (x *CreateServiceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[1]
+	mi := &file_service_v1_service_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -142,7 +226,7 @@ func (x *CreateServiceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateServiceRequest.ProtoReflect.Descriptor instead.
 func (*CreateServiceRequest) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{1}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *CreateServiceRequest) GetName() string {
@@ -175,7 +259,7 @@ type CreateServiceResponse struct {
 
 func (x *CreateServiceResponse) Reset() {
 	*x = CreateServiceResponse{}
-	mi := &file_service_v1_service_proto_msgTypes[2]
+	mi := &file_service_v1_service_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -187,7 +271,7 @@ func (x *CreateServiceResponse) String() string {
 func (*CreateServiceResponse) ProtoMessage() {}
 
 func (x *CreateServiceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[2]
+	mi := &file_service_v1_service_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -200,7 +284,7 @@ func (x *CreateServiceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateServiceResponse.ProtoReflect.Descriptor instead.
 func (*CreateServiceResponse) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{2}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *CreateServiceResponse) GetService() *Service {
@@ -219,7 +303,7 @@ type ListServicesByNodeIdRequest struct {
 
 func (x *ListServicesByNodeIdRequest) Reset() {
 	*x = ListServicesByNodeIdRequest{}
-	mi := &file_service_v1_service_proto_msgTypes[3]
+	mi := &file_service_v1_service_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -231,7 +315,7 @@ func (x *ListServicesByNodeIdRequest) String() string {
 func (*ListServicesByNodeIdRequest) ProtoMessage() {}
 
 func (x *ListServicesByNodeIdRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[3]
+	mi := &file_service_v1_service_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -244,7 +328,7 @@ func (x *ListServicesByNodeIdRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListServicesByNodeIdRequest.ProtoReflect.Descriptor instead.
 func (*ListServicesByNodeIdRequest) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{3}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *ListServicesByNodeIdRequest) GetNodeId() string {
@@ -264,7 +348,7 @@ type ListServicesByNodeIdResponse struct {
 
 func (x *ListServicesByNodeIdResponse) Reset() {
 	*x = ListServicesByNodeIdResponse{}
-	mi := &file_service_v1_service_proto_msgTypes[4]
+	mi := &file_service_v1_service_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -276,7 +360,7 @@ func (x *ListServicesByNodeIdResponse) String() string {
 func (*ListServicesByNodeIdResponse) ProtoMessage() {}
 
 func (x *ListServicesByNodeIdResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[4]
+	mi := &file_service_v1_service_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -289,7 +373,7 @@ func (x *ListServicesByNodeIdResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListServicesByNodeIdResponse.ProtoReflect.Descriptor instead.
 func (*ListServicesByNodeIdResponse) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{4}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *ListServicesByNodeIdResponse) GetServices() []*Service {
@@ -317,7 +401,7 @@ type UpdateServiceRequest struct {
 
 func (x *UpdateServiceRequest) Reset() {
 	*x = UpdateServiceRequest{}
-	mi := &file_service_v1_service_proto_msgTypes[5]
+	mi := &file_service_v1_service_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -329,7 +413,7 @@ func (x *UpdateServiceRequest) String() string {
 func (*UpdateServiceRequest) ProtoMessage() {}
 
 func (x *UpdateServiceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[5]
+	mi := &file_service_v1_service_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -342,7 +426,7 @@ func (x *UpdateServiceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateServiceRequest.ProtoReflect.Descriptor instead.
 func (*UpdateServiceRequest) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{5}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *UpdateServiceRequest) GetId() string {
@@ -375,7 +459,7 @@ type UpdateServiceResponse struct {
 
 func (x *UpdateServiceResponse) Reset() {
 	*x = UpdateServiceResponse{}
-	mi := &file_service_v1_service_proto_msgTypes[6]
+	mi := &file_service_v1_service_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -387,7 +471,7 @@ func (x *UpdateServiceResponse) String() string {
 func (*UpdateServiceResponse) ProtoMessage() {}
 
 func (x *UpdateServiceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[6]
+	mi := &file_service_v1_service_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -400,7 +484,7 @@ func (x *UpdateServiceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateServiceResponse.ProtoReflect.Descriptor instead.
 func (*UpdateServiceResponse) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{6}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *UpdateServiceResponse) GetService() *Service {
@@ -419,7 +503,7 @@ type DeleteServiceRequest struct {
 
 func (x *DeleteServiceRequest) Reset() {
 	*x = DeleteServiceRequest{}
-	mi := &file_service_v1_service_proto_msgTypes[7]
+	mi := &file_service_v1_service_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -431,7 +515,7 @@ func (x *DeleteServiceRequest) String() string {
 func (*DeleteServiceRequest) ProtoMessage() {}
 
 func (x *DeleteServiceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[7]
+	mi := &file_service_v1_service_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -444,7 +528,7 @@ func (x *DeleteServiceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteServiceRequest.ProtoReflect.Descriptor instead.
 func (*DeleteServiceRequest) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{7}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *DeleteServiceRequest) GetServiceId() string {
@@ -463,7 +547,7 @@ type DeleteServiceResponse struct {
 
 func (x *DeleteServiceResponse) Reset() {
 	*x = DeleteServiceResponse{}
-	mi := &file_service_v1_service_proto_msgTypes[8]
+	mi := &file_service_v1_service_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -475,7 +559,7 @@ func (x *DeleteServiceResponse) String() string {
 func (*DeleteServiceResponse) ProtoMessage() {}
 
 func (x *DeleteServiceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[8]
+	mi := &file_service_v1_service_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -488,10 +572,394 @@ func (x *DeleteServiceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteServiceResponse.ProtoReflect.Descriptor instead.
 func (*DeleteServiceResponse) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{8}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *DeleteServiceResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+type CreateSOPProcedureRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	NodeId        string                 `protobuf:"bytes,1,opt,name=node_id,json=nodeId,proto3" json:"node_id,omitempty"`
+	Title         string                 `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
+	Content       string                 `protobuf:"bytes,3,opt,name=content,proto3" json:"content,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateSOPProcedureRequest) Reset() {
+	*x = CreateSOPProcedureRequest{}
+	mi := &file_service_v1_service_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateSOPProcedureRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateSOPProcedureRequest) ProtoMessage() {}
+
+func (x *CreateSOPProcedureRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_service_v1_service_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateSOPProcedureRequest.ProtoReflect.Descriptor instead.
+func (*CreateSOPProcedureRequest) Descriptor() ([]byte, []int) {
+	return file_service_v1_service_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *CreateSOPProcedureRequest) GetNodeId() string {
+	if x != nil {
+		return x.NodeId
+	}
+	return ""
+}
+
+func (x *CreateSOPProcedureRequest) GetTitle() string {
+	if x != nil {
+		return x.Title
+	}
+	return ""
+}
+
+func (x *CreateSOPProcedureRequest) GetContent() string {
+	if x != nil {
+		return x.Content
+	}
+	return ""
+}
+
+type CreateSOPProcedureResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Procedure     *SOPProcedure          `protobuf:"bytes,1,opt,name=procedure,proto3" json:"procedure,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateSOPProcedureResponse) Reset() {
+	*x = CreateSOPProcedureResponse{}
+	mi := &file_service_v1_service_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateSOPProcedureResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateSOPProcedureResponse) ProtoMessage() {}
+
+func (x *CreateSOPProcedureResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_service_v1_service_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateSOPProcedureResponse.ProtoReflect.Descriptor instead.
+func (*CreateSOPProcedureResponse) Descriptor() ([]byte, []int) {
+	return file_service_v1_service_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *CreateSOPProcedureResponse) GetProcedure() *SOPProcedure {
+	if x != nil {
+		return x.Procedure
+	}
+	return nil
+}
+
+type ListSOPProceduresByNodeIdRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	NodeId        string                 `protobuf:"bytes,1,opt,name=node_id,json=nodeId,proto3" json:"node_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListSOPProceduresByNodeIdRequest) Reset() {
+	*x = ListSOPProceduresByNodeIdRequest{}
+	mi := &file_service_v1_service_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListSOPProceduresByNodeIdRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListSOPProceduresByNodeIdRequest) ProtoMessage() {}
+
+func (x *ListSOPProceduresByNodeIdRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_service_v1_service_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListSOPProceduresByNodeIdRequest.ProtoReflect.Descriptor instead.
+func (*ListSOPProceduresByNodeIdRequest) Descriptor() ([]byte, []int) {
+	return file_service_v1_service_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *ListSOPProceduresByNodeIdRequest) GetNodeId() string {
+	if x != nil {
+		return x.NodeId
+	}
+	return ""
+}
+
+type ListSOPProceduresByNodeIdResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Procedures    []*SOPProcedure        `protobuf:"bytes,1,rep,name=procedures,proto3" json:"procedures,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListSOPProceduresByNodeIdResponse) Reset() {
+	*x = ListSOPProceduresByNodeIdResponse{}
+	mi := &file_service_v1_service_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListSOPProceduresByNodeIdResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListSOPProceduresByNodeIdResponse) ProtoMessage() {}
+
+func (x *ListSOPProceduresByNodeIdResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_service_v1_service_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListSOPProceduresByNodeIdResponse.ProtoReflect.Descriptor instead.
+func (*ListSOPProceduresByNodeIdResponse) Descriptor() ([]byte, []int) {
+	return file_service_v1_service_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *ListSOPProceduresByNodeIdResponse) GetProcedures() []*SOPProcedure {
+	if x != nil {
+		return x.Procedures
+	}
+	return nil
+}
+
+type UpdateSOPProcedureRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Title         string                 `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
+	Content       string                 `protobuf:"bytes,3,opt,name=content,proto3" json:"content,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateSOPProcedureRequest) Reset() {
+	*x = UpdateSOPProcedureRequest{}
+	mi := &file_service_v1_service_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateSOPProcedureRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateSOPProcedureRequest) ProtoMessage() {}
+
+func (x *UpdateSOPProcedureRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_service_v1_service_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateSOPProcedureRequest.ProtoReflect.Descriptor instead.
+func (*UpdateSOPProcedureRequest) Descriptor() ([]byte, []int) {
+	return file_service_v1_service_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *UpdateSOPProcedureRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *UpdateSOPProcedureRequest) GetTitle() string {
+	if x != nil {
+		return x.Title
+	}
+	return ""
+}
+
+func (x *UpdateSOPProcedureRequest) GetContent() string {
+	if x != nil {
+		return x.Content
+	}
+	return ""
+}
+
+type UpdateSOPProcedureResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Procedure     *SOPProcedure          `protobuf:"bytes,1,opt,name=procedure,proto3" json:"procedure,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateSOPProcedureResponse) Reset() {
+	*x = UpdateSOPProcedureResponse{}
+	mi := &file_service_v1_service_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateSOPProcedureResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateSOPProcedureResponse) ProtoMessage() {}
+
+func (x *UpdateSOPProcedureResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_service_v1_service_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateSOPProcedureResponse.ProtoReflect.Descriptor instead.
+func (*UpdateSOPProcedureResponse) Descriptor() ([]byte, []int) {
+	return file_service_v1_service_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *UpdateSOPProcedureResponse) GetProcedure() *SOPProcedure {
+	if x != nil {
+		return x.Procedure
+	}
+	return nil
+}
+
+type DeleteSOPProcedureRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteSOPProcedureRequest) Reset() {
+	*x = DeleteSOPProcedureRequest{}
+	mi := &file_service_v1_service_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteSOPProcedureRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteSOPProcedureRequest) ProtoMessage() {}
+
+func (x *DeleteSOPProcedureRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_service_v1_service_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteSOPProcedureRequest.ProtoReflect.Descriptor instead.
+func (*DeleteSOPProcedureRequest) Descriptor() ([]byte, []int) {
+	return file_service_v1_service_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *DeleteSOPProcedureRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+type DeleteSOPProcedureResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteSOPProcedureResponse) Reset() {
+	*x = DeleteSOPProcedureResponse{}
+	mi := &file_service_v1_service_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteSOPProcedureResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteSOPProcedureResponse) ProtoMessage() {}
+
+func (x *DeleteSOPProcedureResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_service_v1_service_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteSOPProcedureResponse.ProtoReflect.Descriptor instead.
+func (*DeleteSOPProcedureResponse) Descriptor() ([]byte, []int) {
+	return file_service_v1_service_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *DeleteSOPProcedureResponse) GetSuccess() bool {
 	if x != nil {
 		return x.Success
 	}
@@ -507,7 +975,7 @@ type AssociateUserNodeRequest struct {
 
 func (x *AssociateUserNodeRequest) Reset() {
 	*x = AssociateUserNodeRequest{}
-	mi := &file_service_v1_service_proto_msgTypes[9]
+	mi := &file_service_v1_service_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -519,7 +987,7 @@ func (x *AssociateUserNodeRequest) String() string {
 func (*AssociateUserNodeRequest) ProtoMessage() {}
 
 func (x *AssociateUserNodeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[9]
+	mi := &file_service_v1_service_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -532,7 +1000,7 @@ func (x *AssociateUserNodeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AssociateUserNodeRequest.ProtoReflect.Descriptor instead.
 func (*AssociateUserNodeRequest) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{9}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *AssociateUserNodeRequest) GetNodeId() string {
@@ -551,7 +1019,7 @@ type AssociateUserNodeResponse struct {
 
 func (x *AssociateUserNodeResponse) Reset() {
 	*x = AssociateUserNodeResponse{}
-	mi := &file_service_v1_service_proto_msgTypes[10]
+	mi := &file_service_v1_service_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -563,7 +1031,7 @@ func (x *AssociateUserNodeResponse) String() string {
 func (*AssociateUserNodeResponse) ProtoMessage() {}
 
 func (x *AssociateUserNodeResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[10]
+	mi := &file_service_v1_service_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -576,7 +1044,7 @@ func (x *AssociateUserNodeResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AssociateUserNodeResponse.ProtoReflect.Descriptor instead.
 func (*AssociateUserNodeResponse) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{10}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *AssociateUserNodeResponse) GetSuccess() bool {
@@ -594,7 +1062,7 @@ type ListUserNodesRequest struct {
 
 func (x *ListUserNodesRequest) Reset() {
 	*x = ListUserNodesRequest{}
-	mi := &file_service_v1_service_proto_msgTypes[11]
+	mi := &file_service_v1_service_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -606,7 +1074,7 @@ func (x *ListUserNodesRequest) String() string {
 func (*ListUserNodesRequest) ProtoMessage() {}
 
 func (x *ListUserNodesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[11]
+	mi := &file_service_v1_service_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -619,7 +1087,7 @@ func (x *ListUserNodesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListUserNodesRequest.ProtoReflect.Descriptor instead.
 func (*ListUserNodesRequest) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{11}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{20}
 }
 
 type ListUserNodesResponse struct {
@@ -631,7 +1099,7 @@ type ListUserNodesResponse struct {
 
 func (x *ListUserNodesResponse) Reset() {
 	*x = ListUserNodesResponse{}
-	mi := &file_service_v1_service_proto_msgTypes[12]
+	mi := &file_service_v1_service_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -643,7 +1111,7 @@ func (x *ListUserNodesResponse) String() string {
 func (*ListUserNodesResponse) ProtoMessage() {}
 
 func (x *ListUserNodesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[12]
+	mi := &file_service_v1_service_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -656,7 +1124,7 @@ func (x *ListUserNodesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListUserNodesResponse.ProtoReflect.Descriptor instead.
 func (*ListUserNodesResponse) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{12}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *ListUserNodesResponse) GetNodeIds() []string {
@@ -677,6 +1145,15 @@ const file_service_v1_service_proto_rawDesc = "" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x10\n" +
 	"\x03url\x18\x03 \x01(\tR\x03url\x12\x17\n" +
 	"\anode_id\x18\x04 \x01(\tR\x06nodeId\x129\n" +
+	"\n" +
+	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"\n" +
+	"updated_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\xdd\x01\n" +
+	"\fSOPProcedure\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x17\n" +
+	"\anode_id\x18\x02 \x01(\tR\x06nodeId\x12\x14\n" +
+	"\x05title\x18\x03 \x01(\tR\x05title\x12\x18\n" +
+	"\acontent\x18\x04 \x01(\tR\acontent\x129\n" +
 	"\n" +
 	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
@@ -703,6 +1180,28 @@ const file_service_v1_service_proto_rawDesc = "" +
 	"\n" +
 	"service_id\x18\x01 \x01(\tR\tserviceId\"1\n" +
 	"\x15DeleteServiceResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"d\n" +
+	"\x19CreateSOPProcedureRequest\x12\x17\n" +
+	"\anode_id\x18\x01 \x01(\tR\x06nodeId\x12\x14\n" +
+	"\x05title\x18\x02 \x01(\tR\x05title\x12\x18\n" +
+	"\acontent\x18\x03 \x01(\tR\acontent\"T\n" +
+	"\x1aCreateSOPProcedureResponse\x126\n" +
+	"\tprocedure\x18\x01 \x01(\v2\x18.service.v1.SOPProcedureR\tprocedure\";\n" +
+	" ListSOPProceduresByNodeIdRequest\x12\x17\n" +
+	"\anode_id\x18\x01 \x01(\tR\x06nodeId\"]\n" +
+	"!ListSOPProceduresByNodeIdResponse\x128\n" +
+	"\n" +
+	"procedures\x18\x01 \x03(\v2\x18.service.v1.SOPProcedureR\n" +
+	"procedures\"[\n" +
+	"\x19UpdateSOPProcedureRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
+	"\x05title\x18\x02 \x01(\tR\x05title\x12\x18\n" +
+	"\acontent\x18\x03 \x01(\tR\acontent\"T\n" +
+	"\x1aUpdateSOPProcedureResponse\x126\n" +
+	"\tprocedure\x18\x01 \x01(\v2\x18.service.v1.SOPProcedureR\tprocedure\"+\n" +
+	"\x19DeleteSOPProcedureRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"6\n" +
+	"\x1aDeleteSOPProcedureResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\"3\n" +
 	"\x18AssociateUserNodeRequest\x12\x17\n" +
 	"\anode_id\x18\x01 \x01(\tR\x06nodeId\"5\n" +
@@ -710,12 +1209,16 @@ const file_service_v1_service_proto_rawDesc = "" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\"\x16\n" +
 	"\x14ListUserNodesRequest\"2\n" +
 	"\x15ListUserNodesResponse\x12\x19\n" +
-	"\bnode_ids\x18\x01 \x03(\tR\anodeIds2\xb5\x04\n" +
+	"\bnode_ids\x18\x01 \x03(\tR\anodeIds2\xde\a\n" +
 	"\x0eServiceService\x12T\n" +
 	"\rCreateService\x12 .service.v1.CreateServiceRequest\x1a!.service.v1.CreateServiceResponse\x12i\n" +
 	"\x14ListServicesByNodeId\x12'.service.v1.ListServicesByNodeIdRequest\x1a(.service.v1.ListServicesByNodeIdResponse\x12T\n" +
 	"\rUpdateService\x12 .service.v1.UpdateServiceRequest\x1a!.service.v1.UpdateServiceResponse\x12T\n" +
-	"\rDeleteService\x12 .service.v1.DeleteServiceRequest\x1a!.service.v1.DeleteServiceResponse\x12`\n" +
+	"\rDeleteService\x12 .service.v1.DeleteServiceRequest\x1a!.service.v1.DeleteServiceResponse\x12c\n" +
+	"\x12CreateSOPProcedure\x12%.service.v1.CreateSOPProcedureRequest\x1a&.service.v1.CreateSOPProcedureResponse\x12x\n" +
+	"\x19ListSOPProceduresByNodeId\x12,.service.v1.ListSOPProceduresByNodeIdRequest\x1a-.service.v1.ListSOPProceduresByNodeIdResponse\x12c\n" +
+	"\x12UpdateSOPProcedure\x12%.service.v1.UpdateSOPProcedureRequest\x1a&.service.v1.UpdateSOPProcedureResponse\x12c\n" +
+	"\x12DeleteSOPProcedure\x12%.service.v1.DeleteSOPProcedureRequest\x1a&.service.v1.DeleteSOPProcedureResponse\x12`\n" +
 	"\x11AssociateUserNode\x12$.service.v1.AssociateUserNodeRequest\x1a%.service.v1.AssociateUserNodeResponse\x12T\n" +
 	"\rListUserNodes\x12 .service.v1.ListUserNodesRequest\x1a!.service.v1.ListUserNodesResponseB@Z>github.com/zapdos-labs/unblink/server/gen/service/v1;servicev1b\x06proto3"
 
@@ -731,46 +1234,68 @@ func file_service_v1_service_proto_rawDescGZIP() []byte {
 	return file_service_v1_service_proto_rawDescData
 }
 
-var file_service_v1_service_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
+var file_service_v1_service_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
 var file_service_v1_service_proto_goTypes = []any{
-	(*Service)(nil),                      // 0: service.v1.Service
-	(*CreateServiceRequest)(nil),         // 1: service.v1.CreateServiceRequest
-	(*CreateServiceResponse)(nil),        // 2: service.v1.CreateServiceResponse
-	(*ListServicesByNodeIdRequest)(nil),  // 3: service.v1.ListServicesByNodeIdRequest
-	(*ListServicesByNodeIdResponse)(nil), // 4: service.v1.ListServicesByNodeIdResponse
-	(*UpdateServiceRequest)(nil),         // 5: service.v1.UpdateServiceRequest
-	(*UpdateServiceResponse)(nil),        // 6: service.v1.UpdateServiceResponse
-	(*DeleteServiceRequest)(nil),         // 7: service.v1.DeleteServiceRequest
-	(*DeleteServiceResponse)(nil),        // 8: service.v1.DeleteServiceResponse
-	(*AssociateUserNodeRequest)(nil),     // 9: service.v1.AssociateUserNodeRequest
-	(*AssociateUserNodeResponse)(nil),    // 10: service.v1.AssociateUserNodeResponse
-	(*ListUserNodesRequest)(nil),         // 11: service.v1.ListUserNodesRequest
-	(*ListUserNodesResponse)(nil),        // 12: service.v1.ListUserNodesResponse
-	(*timestamppb.Timestamp)(nil),        // 13: google.protobuf.Timestamp
+	(*Service)(nil),                           // 0: service.v1.Service
+	(*SOPProcedure)(nil),                      // 1: service.v1.SOPProcedure
+	(*CreateServiceRequest)(nil),              // 2: service.v1.CreateServiceRequest
+	(*CreateServiceResponse)(nil),             // 3: service.v1.CreateServiceResponse
+	(*ListServicesByNodeIdRequest)(nil),       // 4: service.v1.ListServicesByNodeIdRequest
+	(*ListServicesByNodeIdResponse)(nil),      // 5: service.v1.ListServicesByNodeIdResponse
+	(*UpdateServiceRequest)(nil),              // 6: service.v1.UpdateServiceRequest
+	(*UpdateServiceResponse)(nil),             // 7: service.v1.UpdateServiceResponse
+	(*DeleteServiceRequest)(nil),              // 8: service.v1.DeleteServiceRequest
+	(*DeleteServiceResponse)(nil),             // 9: service.v1.DeleteServiceResponse
+	(*CreateSOPProcedureRequest)(nil),         // 10: service.v1.CreateSOPProcedureRequest
+	(*CreateSOPProcedureResponse)(nil),        // 11: service.v1.CreateSOPProcedureResponse
+	(*ListSOPProceduresByNodeIdRequest)(nil),  // 12: service.v1.ListSOPProceduresByNodeIdRequest
+	(*ListSOPProceduresByNodeIdResponse)(nil), // 13: service.v1.ListSOPProceduresByNodeIdResponse
+	(*UpdateSOPProcedureRequest)(nil),         // 14: service.v1.UpdateSOPProcedureRequest
+	(*UpdateSOPProcedureResponse)(nil),        // 15: service.v1.UpdateSOPProcedureResponse
+	(*DeleteSOPProcedureRequest)(nil),         // 16: service.v1.DeleteSOPProcedureRequest
+	(*DeleteSOPProcedureResponse)(nil),        // 17: service.v1.DeleteSOPProcedureResponse
+	(*AssociateUserNodeRequest)(nil),          // 18: service.v1.AssociateUserNodeRequest
+	(*AssociateUserNodeResponse)(nil),         // 19: service.v1.AssociateUserNodeResponse
+	(*ListUserNodesRequest)(nil),              // 20: service.v1.ListUserNodesRequest
+	(*ListUserNodesResponse)(nil),             // 21: service.v1.ListUserNodesResponse
+	(*timestamppb.Timestamp)(nil),             // 22: google.protobuf.Timestamp
 }
 var file_service_v1_service_proto_depIdxs = []int32{
-	13, // 0: service.v1.Service.created_at:type_name -> google.protobuf.Timestamp
-	13, // 1: service.v1.Service.updated_at:type_name -> google.protobuf.Timestamp
-	0,  // 2: service.v1.CreateServiceResponse.service:type_name -> service.v1.Service
-	0,  // 3: service.v1.ListServicesByNodeIdResponse.services:type_name -> service.v1.Service
-	0,  // 4: service.v1.UpdateServiceResponse.service:type_name -> service.v1.Service
-	1,  // 5: service.v1.ServiceService.CreateService:input_type -> service.v1.CreateServiceRequest
-	3,  // 6: service.v1.ServiceService.ListServicesByNodeId:input_type -> service.v1.ListServicesByNodeIdRequest
-	5,  // 7: service.v1.ServiceService.UpdateService:input_type -> service.v1.UpdateServiceRequest
-	7,  // 8: service.v1.ServiceService.DeleteService:input_type -> service.v1.DeleteServiceRequest
-	9,  // 9: service.v1.ServiceService.AssociateUserNode:input_type -> service.v1.AssociateUserNodeRequest
-	11, // 10: service.v1.ServiceService.ListUserNodes:input_type -> service.v1.ListUserNodesRequest
-	2,  // 11: service.v1.ServiceService.CreateService:output_type -> service.v1.CreateServiceResponse
-	4,  // 12: service.v1.ServiceService.ListServicesByNodeId:output_type -> service.v1.ListServicesByNodeIdResponse
-	6,  // 13: service.v1.ServiceService.UpdateService:output_type -> service.v1.UpdateServiceResponse
-	8,  // 14: service.v1.ServiceService.DeleteService:output_type -> service.v1.DeleteServiceResponse
-	10, // 15: service.v1.ServiceService.AssociateUserNode:output_type -> service.v1.AssociateUserNodeResponse
-	12, // 16: service.v1.ServiceService.ListUserNodes:output_type -> service.v1.ListUserNodesResponse
-	11, // [11:17] is the sub-list for method output_type
-	5,  // [5:11] is the sub-list for method input_type
-	5,  // [5:5] is the sub-list for extension type_name
-	5,  // [5:5] is the sub-list for extension extendee
-	0,  // [0:5] is the sub-list for field type_name
+	22, // 0: service.v1.Service.created_at:type_name -> google.protobuf.Timestamp
+	22, // 1: service.v1.Service.updated_at:type_name -> google.protobuf.Timestamp
+	22, // 2: service.v1.SOPProcedure.created_at:type_name -> google.protobuf.Timestamp
+	22, // 3: service.v1.SOPProcedure.updated_at:type_name -> google.protobuf.Timestamp
+	0,  // 4: service.v1.CreateServiceResponse.service:type_name -> service.v1.Service
+	0,  // 5: service.v1.ListServicesByNodeIdResponse.services:type_name -> service.v1.Service
+	0,  // 6: service.v1.UpdateServiceResponse.service:type_name -> service.v1.Service
+	1,  // 7: service.v1.CreateSOPProcedureResponse.procedure:type_name -> service.v1.SOPProcedure
+	1,  // 8: service.v1.ListSOPProceduresByNodeIdResponse.procedures:type_name -> service.v1.SOPProcedure
+	1,  // 9: service.v1.UpdateSOPProcedureResponse.procedure:type_name -> service.v1.SOPProcedure
+	2,  // 10: service.v1.ServiceService.CreateService:input_type -> service.v1.CreateServiceRequest
+	4,  // 11: service.v1.ServiceService.ListServicesByNodeId:input_type -> service.v1.ListServicesByNodeIdRequest
+	6,  // 12: service.v1.ServiceService.UpdateService:input_type -> service.v1.UpdateServiceRequest
+	8,  // 13: service.v1.ServiceService.DeleteService:input_type -> service.v1.DeleteServiceRequest
+	10, // 14: service.v1.ServiceService.CreateSOPProcedure:input_type -> service.v1.CreateSOPProcedureRequest
+	12, // 15: service.v1.ServiceService.ListSOPProceduresByNodeId:input_type -> service.v1.ListSOPProceduresByNodeIdRequest
+	14, // 16: service.v1.ServiceService.UpdateSOPProcedure:input_type -> service.v1.UpdateSOPProcedureRequest
+	16, // 17: service.v1.ServiceService.DeleteSOPProcedure:input_type -> service.v1.DeleteSOPProcedureRequest
+	18, // 18: service.v1.ServiceService.AssociateUserNode:input_type -> service.v1.AssociateUserNodeRequest
+	20, // 19: service.v1.ServiceService.ListUserNodes:input_type -> service.v1.ListUserNodesRequest
+	3,  // 20: service.v1.ServiceService.CreateService:output_type -> service.v1.CreateServiceResponse
+	5,  // 21: service.v1.ServiceService.ListServicesByNodeId:output_type -> service.v1.ListServicesByNodeIdResponse
+	7,  // 22: service.v1.ServiceService.UpdateService:output_type -> service.v1.UpdateServiceResponse
+	9,  // 23: service.v1.ServiceService.DeleteService:output_type -> service.v1.DeleteServiceResponse
+	11, // 24: service.v1.ServiceService.CreateSOPProcedure:output_type -> service.v1.CreateSOPProcedureResponse
+	13, // 25: service.v1.ServiceService.ListSOPProceduresByNodeId:output_type -> service.v1.ListSOPProceduresByNodeIdResponse
+	15, // 26: service.v1.ServiceService.UpdateSOPProcedure:output_type -> service.v1.UpdateSOPProcedureResponse
+	17, // 27: service.v1.ServiceService.DeleteSOPProcedure:output_type -> service.v1.DeleteSOPProcedureResponse
+	19, // 28: service.v1.ServiceService.AssociateUserNode:output_type -> service.v1.AssociateUserNodeResponse
+	21, // 29: service.v1.ServiceService.ListUserNodes:output_type -> service.v1.ListUserNodesResponse
+	20, // [20:30] is the sub-list for method output_type
+	10, // [10:20] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_service_v1_service_proto_init() }
@@ -784,7 +1309,7 @@ func file_service_v1_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_service_v1_service_proto_rawDesc), len(file_service_v1_service_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   13,
+			NumMessages:   22,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

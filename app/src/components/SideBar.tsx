@@ -4,12 +4,16 @@ import {
   FiMessageCircle,
   FiSettings,
   FiList,
+  FiFileText,
 } from "solid-icons/fi";
 import { createSignal, For, Show } from "solid-js";
 import { services, activeTab, setActiveTab, type Tab, fetchServices, isNodeOnline } from "../shared";
 import AddServiceButton from "./AddServiceButton";
 import ServiceItem from "./ServiceItem";
 import ServiceEditSheet from "./ServiceEditSheet";
+import { serviceClient } from "../lib/rpc";
+import { toaster } from "../ark/ArkToast";
+import { ArkSheet } from "../ark/ArkSheet";
 
 interface SideBarProps {
   nodeId: string;
@@ -18,6 +22,9 @@ interface SideBarProps {
 export default function SideBar(props: SideBarProps) {
   const [collapsed, setCollapsed] = createSignal(false);
   const [detailServiceId, setDetailServiceId] = createSignal<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = createSignal(false);
+  const [servicePendingDelete, setServicePendingDelete] = createSignal<{ id: string; name: string } | null>(null);
+  const [isDeletingService, setIsDeletingService] = createSignal(false);
 
   // Check if a service is currently being viewed
   const isServiceActive = (serviceId: string) => {
@@ -37,6 +44,48 @@ export default function SideBar(props: SideBarProps) {
 
   const handleServiceUpdated = async () => {
     await fetchServices(props.nodeId);
+  };
+
+  const openDeleteDialog = (service: { id: string; name: string }) => {
+    setServicePendingDelete(service);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleServiceDeleted = async () => {
+    const service = servicePendingDelete();
+    if (!service) return;
+    setIsDeletingService(true);
+
+    try {
+      await serviceClient.deleteService({ serviceId: service.id });
+
+      const currentTab = activeTab();
+      if (currentTab.type === "view" && currentTab.serviceId === service.id) {
+        setActiveTab({ type: "chat" });
+      }
+      if (detailServiceId() === service.id) {
+        setDetailServiceId(null);
+      }
+
+      await fetchServices(props.nodeId);
+      setDeleteDialogOpen(false);
+      setServicePendingDelete(null);
+
+      toaster.create({
+        title: "Service deleted",
+        description: `"${service.name || service.id}" has been deleted.`,
+        type: "success",
+      });
+    } catch (error) {
+      console.error("Failed to delete service:", error);
+      toaster.create({
+        title: "Failed",
+        description: "There was an error deleting this service. Please try again.",
+        type: "error",
+      });
+    } finally {
+      setIsDeletingService(false);
+    }
   };
 
   return (
@@ -91,6 +140,20 @@ export default function SideBar(props: SideBarProps) {
               <FiList class="w-4 h-4 flex-shrink-0" />
               <Show when={!collapsed()}>
                 <div>Events</div>
+              </Show>
+            </button>
+
+            {/* Settings Tab */}
+            <button
+              onClick={() => setActiveTab({ type: "procedures" })}
+              data-active={activeTab().type === "procedures"}
+              class={`w-full flex items-center ${collapsed() ? "justify-center px-2" : "space-x-3 px-4"
+                } py-2 rounded-xl text-neu-400 hover:bg-neu-800 data-[active=true]:bg-neu-800 data-[active=true]:text-white`}
+              title={collapsed() ? "Procedures" : undefined}
+            >
+              <FiFileText class="w-4 h-4 flex-shrink-0" />
+              <Show when={!collapsed()}>
+                <div>Procedures</div>
               </Show>
             </button>
 
@@ -159,6 +222,10 @@ export default function SideBar(props: SideBarProps) {
                         onMenuSelect={(id) => {
                           if (id === "edit") {
                             setDetailServiceId(service.id);
+                            return;
+                          }
+                          if (id === "delete") {
+                            openDeleteDialog({ id: service.id, name: service.name || service.id });
                           }
                         }}
                       />
@@ -205,6 +272,33 @@ export default function SideBar(props: SideBarProps) {
           />
         )}
       </Show>
+
+      <ArkSheet
+        trigger={() => <></>}
+        title="Delete Service"
+        description={servicePendingDelete() ? `Delete "${servicePendingDelete()!.name}"? This action cannot be undone.` : "This action cannot be undone."}
+        open={deleteDialogOpen()}
+        onOpenChange={(open) => {
+          setDeleteDialogOpen(open);
+          if (!open && !isDeletingService()) {
+            setServicePendingDelete(null);
+          }
+        }}
+      >
+        {() => (
+          <div class="space-y-4">
+            <div class="flex-shrink-0 pt-2">
+              <button
+                onClick={() => void handleServiceDeleted()}
+                disabled={isDeletingService() || !servicePendingDelete()}
+                class="sheet-action-btn sheet-action-btn-danger"
+              >
+                {isDeletingService() ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        )}
+      </ArkSheet>
     </>
   );
 }
