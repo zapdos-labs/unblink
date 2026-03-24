@@ -166,17 +166,19 @@ func (c *Config) ClipsBaseDir() string {
 
 // LoadConfig loads server configuration from environment variables.
 // Environment variables:
+//   - LLM_PROVIDER: Provider preset ("openai", "minimax") - auto-detects if unset
+//   - MINIMAX_API_KEY: MiniMax API key (auto-selects MiniMax provider when set)
 //   - VITE_SERVER_API_PORT: Server listen address (default: :8080)
 //   - DATABASE_URL: PostgreSQL connection string
 //   - JWT_SECRET: JWT signing secret
 //   - DASHBOARD_URL: Dashboard URL for redirects
-//   - CHAT_OPENAI_MODEL: OpenAI model ID for chat
-//   - CHAT_OPENAI_BASE_URL: OpenAI API base URL for chat
-//   - CHAT_OPENAI_API_KEY: OpenAI API key for chat (optional)
-//   - CHAT_MAX_TOKENS: Chat model context length for trimming (default: 128000)
-//   - VLM_OPENAI_MODEL: OpenAI model ID for vision (falls back to CHAT_OPENAI_MODEL)
-//   - VLM_OPENAI_BASE_URL: OpenAI API base URL for vision (falls back to CHAT_OPENAI_BASE_URL)
-//   - VLM_OPENAI_API_KEY: OpenAI API key for vision (falls back to CHAT_OPENAI_API_KEY)
+//   - CHAT_OPENAI_MODEL: OpenAI-compatible model ID for chat (overrides provider default)
+//   - CHAT_OPENAI_BASE_URL: OpenAI-compatible API base URL for chat (overrides provider default)
+//   - CHAT_OPENAI_API_KEY: OpenAI-compatible API key for chat (overrides provider default)
+//   - CHAT_MAX_TOKENS: Chat model context length for trimming (overrides provider default)
+//   - VLM_OPENAI_MODEL: OpenAI-compatible model ID for vision (falls back to CHAT_OPENAI_MODEL)
+//   - VLM_OPENAI_BASE_URL: OpenAI-compatible API base URL for vision (falls back to CHAT_OPENAI_BASE_URL)
+//   - VLM_OPENAI_API_KEY: OpenAI-compatible API key for vision (falls back to CHAT_OPENAI_API_KEY)
 //   - VLM_TIMEOUT_SEC: VLM request timeout in seconds (default: 120)
 //   - CONTENT_TRIM_SAFETY_MARGIN: Content trimming safety margin % (default: 10)
 //   - FRAME_INTERVAL_SECONDS: Frame extraction interval (default: 5.0)
@@ -204,11 +206,26 @@ func LoadConfig() (*Config, error) {
 	// JWT Secret (required - caller should check this exists)
 	cfg.JWTSecret = os.Getenv("JWT_SECRET")
 
-	// Chat model settings
-	cfg.ChatOpenAIModel = getEnv("CHAT_OPENAI_MODEL", "gpt-4o")
-	cfg.ChatOpenAIBaseURL = getEnv("CHAT_OPENAI_BASE_URL", "https://api.openai.com/v1")
+	// Chat model settings (read raw env values first)
+	cfg.ChatOpenAIModel = os.Getenv("CHAT_OPENAI_MODEL")
+	cfg.ChatOpenAIBaseURL = os.Getenv("CHAT_OPENAI_BASE_URL")
 	cfg.ChatOpenAIAPIKey = os.Getenv("CHAT_OPENAI_API_KEY")
-	cfg.ChatMaxTokens = getEnvInt("CHAT_MAX_TOKENS", 128000)
+	cfg.ChatMaxTokens = getEnvInt("CHAT_MAX_TOKENS", 0)
+
+	// Resolve provider preset and apply defaults for unset fields.
+	preset, apiKey := ResolveProvider()
+	ApplyProviderDefaults(cfg, preset, apiKey)
+
+	// Final fallbacks for model settings (if still empty after provider defaults)
+	if cfg.ChatOpenAIModel == "" {
+		cfg.ChatOpenAIModel = "gpt-4o"
+	}
+	if cfg.ChatOpenAIBaseURL == "" {
+		cfg.ChatOpenAIBaseURL = "https://api.openai.com/v1"
+	}
+	if cfg.ChatMaxTokens <= 0 {
+		cfg.ChatMaxTokens = 128000
+	}
 
 	// VLM settings
 	cfg.VLMOpenAIModel = os.Getenv("VLM_OPENAI_MODEL")
