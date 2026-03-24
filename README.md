@@ -81,6 +81,35 @@ Copy `.env.example` to `.env` and configure:
 cp .env.example .env
 ```
 
+### LLM Providers
+
+Unblink supports any OpenAI-compatible LLM provider. Set `LLM_PROVIDER` or let the server auto-detect from your API keys.
+
+#### OpenAI (default)
+
+```bash
+CHAT_OPENAI_API_KEY=sk-your-key-here
+# Model defaults to gpt-4o
+```
+
+#### MiniMax
+
+[MiniMax](https://www.minimaxi.com/) offers the MiniMax-M2.7 model with a 1M token context window and OpenAI-compatible API. Set `MINIMAX_API_KEY` and the provider auto-configures:
+
+```bash
+MINIMAX_API_KEY=your-minimax-key-here
+# Auto-selects: model=MiniMax-M2.7, base_url=https://api.minimax.io/v1, context=1M tokens
+```
+
+Or set the provider explicitly:
+
+```bash
+LLM_PROVIDER=minimax
+MINIMAX_API_KEY=your-minimax-key-here
+```
+
+Individual settings like `CHAT_OPENAI_MODEL` and `CHAT_OPENAI_BASE_URL` override provider defaults.
+
 ## Architecture
 - **Server**: Publicly reachable server that manages nodes, handles authentication, and stores configuration
 - **Node**: Private proxy that runs in your network and forwards traffic to local cameras (RTSP, MJPEG)
